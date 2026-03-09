@@ -1,35 +1,46 @@
-import { useState } from 'react'
-import reactLogo from './assets/react.svg'
-import viteLogo from '/vite.svg'
-import './App.css'
+import { Routes, Route, Navigate } from "react-router-dom";
+import { useSpacetimeDB } from "spacetimedb/react";
+import NavBar from "./components/NavBar";
+
+import { LoginScreen } from "./pages/LoginScreen";
+import { VenuesListScreen } from "./pages/VenuesListScreen";
+import { VenueChannelsScreen } from "./pages/VenueChannelsScreen";
+import { ChannelScreen } from "./pages/ChannelScreen";
 
 function App() {
-  const [count, setCount] = useState(0)
+  const { isActive: connected, connectionError: error } = useSpacetimeDB();
+
+  if (error) {
+    return (
+      <div className="app-container empty-state">
+        <h2 style={{color: "var(--error-color)"}}>Connection Error</h2>
+        <p style={{ marginTop: '12px' }}>{error.message}</p>
+      </div>
+    );
+  }
+
+  if (!connected) {
+    return (
+      <div className="app-container empty-state" style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center' }}>
+        <h2>Connecting to Space...</h2>
+        <div style={{ marginTop: '16px', borderTop: '2px solid var(--accent-color)', width: '40px', borderRadius: '2px', animation: 'spin 1s linear infinite' }}></div>
+      </div>
+    );
+  }
 
   return (
     <>
-      <div>
-        <a href="https://vite.dev" target="_blank">
-          <img src={viteLogo} className="logo" alt="Vite logo" />
-        </a>
-        <a href="https://react.dev" target="_blank">
-          <img src={reactLogo} className="logo react" alt="React logo" />
-        </a>
-      </div>
-      <h1>Vite + React</h1>
-      <div className="card">
-        <button onClick={() => setCount((count) => count + 1)}>
-          count is {count}
-        </button>
-        <p>
-          Edit <code>src/App.tsx</code> and save to test HMR
-        </p>
-      </div>
-      <p className="read-the-docs">
-        Click on the Vite and React logos to learn more
-      </p>
+      <NavBar />
+      <Routes>
+        <Route path="/" element={<Navigate to="/venues" replace />} />
+        <Route path="/login" element={<LoginScreen />} />
+        <Route path="/venues" element={<VenuesListScreen />} />
+        <Route path="/venues/:venueId" element={<VenueChannelsScreen />} />
+        <Route path="/venues/:venueId/channels/:channelId" element={<ChannelScreen />} />
+        <Route path="*" element={<Navigate to="/venues" replace />} />
+      </Routes>
     </>
-  )
+  );
 }
 
-export default App
+export default App;
