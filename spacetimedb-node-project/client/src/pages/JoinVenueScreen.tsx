@@ -6,7 +6,7 @@ import { useAuth } from '../hooks/useAuth';
 import { useReadyTable } from '../hooks/useReadyTable';
 
 export const JoinVenueScreen = () => {
-  const { venueLink } = useParams<{ venueLink: string }>();
+  const { venueLink, token } = useParams<{ venueLink: string, token: string }>();
   const navigate = useNavigate();
   const { user, isLoggedIn } = useAuth();
 
@@ -22,9 +22,9 @@ export const JoinVenueScreen = () => {
   // Redirect unauthenticated users — must be in useEffect to avoid "update during render"
   useEffect(() => {
     if (!isLoggedIn) {
-      navigate(`/login?redirect=/join/${venueLink}`, { replace: true });
+      navigate(`/login?redirect=/join/${venueLink}/${token}`, { replace: true });
     }
-  }, [isLoggedIn, navigate, venueLink]);
+  }, [isLoggedIn, navigate, venueLink, token]);
 
   if (!isLoggedIn || !user) {
     return null;
@@ -87,7 +87,8 @@ export const JoinVenueScreen = () => {
     setErrorText('');
     setLoading(true);
     try {
-      await joinVenue({ venueId: venue.venueId });
+      if (!token) throw new Error("Missing invitation token from link");
+      await joinVenue({ token });
       navigate(`/venues/${venue.link}`);
     } catch (err: unknown) {
       const message = err instanceof Error ? err.message : String(err);

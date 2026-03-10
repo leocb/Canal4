@@ -126,6 +126,7 @@ export const create_venue = spacetimedb.reducer(
       joinDate: ctx.timestamp,
       lastSeen: ctx.timestamp,
       isBlocked: false,
+      role: { tag: "owner", value: "" },
     });
   }
 );
@@ -173,7 +174,12 @@ export const create_channel = spacetimedb.reducer(
     const venue = ctx.db.Venue.venueId.find(venueId);
     if (!venue) throw new SenderError("Venue not found");
 
-    if (venue.ownerId !== userId) {
+    const isVenueOwner = venue.ownerId === userId;
+    const members = [...ctx.db.VenueMember.venue_member_venue_id.filter(venueId)];
+    const myMembership = members.find(m => m.userId === userId);
+    const isVenueAdmin = myMembership?.role.tag === "admin";
+    
+    if (!isVenueOwner && !isVenueAdmin) {
       throw new SenderError("Only owners/admins can create channels");
     }
 
@@ -197,10 +203,41 @@ export const create_channel = spacetimedb.reducer(
 
 /*** MEMBERSHIP & PERMISSIONS ***/
 
-export const join_venue = spacetimedb.reducer(
-  { venueId: t.u64() },
-  (ctx, { venueId }) => {
+export const create_invite_token = spacetimedb.reducer(
+  { venueId: t.u64(), token: t.string() },
+  (ctx, { venueId, token }) => {
     const userId = getUserId(ctx);
+    const venue = ctx.db.Venue.venueId.find(venueId);
+    if (!venue) throw new SenderError("Venue not found");
+
+    const allMembers = [...ctx.db.VenueMember.venue_member_venue_id.filter(venueId)];
+    const myMember = allMembers.find(m => m.userId === userId);
+    if (!myMember || myMember.isBlocked) {
+      throw new SenderError("You are not allowed to create invites.");
+    }
+
+    const expiresAtMicros = ctx.timestamp.microsSinceUnixEpoch + (24n * 3600n * 1000000n);
+    ctx.db.VenueInviteToken.insert({
+      token,
+      venueId,
+      createdAt: ctx.timestamp,
+      expiresAt: { microsSinceUnixEpoch: expiresAtMicros } as any as Timestamp
+    });
+  }
+);
+
+export const join_venue = spacetimedb.reducer(
+  { token: t.string() },
+  (ctx, { token }) => {
+    const userId = getUserId(ctx);
+    
+    const invite = ctx.db.VenueInviteToken.token.find(token);
+    if (!invite) throw new SenderError("Invalid invitation token");
+    if (ctx.timestamp.microsSinceUnixEpoch > invite.expiresAt.microsSinceUnixEpoch) {
+      throw new SenderError("Invitation link has expired");
+    }
+
+    const venueId = invite.venueId;
     const venue = ctx.db.Venue.venueId.find(venueId);
     if (!venue) throw new SenderError("Venue not found");
 
@@ -215,6 +252,7 @@ export const join_venue = spacetimedb.reducer(
       joinDate: ctx.timestamp,
       lastSeen: ctx.timestamp,
       isBlocked: false,
+      role: { tag: "member", value: "" },
     });
   }
 );
@@ -246,6 +284,40 @@ export const leave_venue = spacetimedb.reducer(
     }
 
     ctx.db.VenueMember.delete({ ...membership });
+  }
+);
+
+export const set_venue_role = spacetimedb.reducer(
+  { venueId: t.u64(), targetUserId: t.u64(), role: t.string() },
+  (ctx, { venueId, targetUserId, role }) => {
+    const userId = getUserId(ctx);
+    const venue = ctx.db.Venue.venueId.find(venueId);
+    if (!venue) throw new SenderError("Venue not found");
+
+    const allMembers = [...ctx.db.VenueMember.venue_member_venue_id.filter(venueId)];
+    const callerMember = allMembers.find(m => m.userId === userId);
+    if (!callerMember) throw new SenderError("Not a member of this venue");
+
+    const isVenueOwner = venue.ownerId === userId || callerMember.role.tag === "owner";
+    const isVenueAdmin = callerMember.role.tag === "admin";
+
+    if (!isVenueOwner && !isVenueAdmin) {
+      throw new SenderError("Insufficient permissions to set venue roles");
+    }
+    
+    // Admin cannot grant "owner" or "admin" to others
+    if (isVenueAdmin && !isVenueOwner && (role === "owner" || role === "admin")) {
+      throw new SenderError("Admins can only assign Moderator or Member roles");
+    }
+
+    const targetMember = allMembers.find(r => r.userId === targetUserId);
+    if (!targetMember) throw new SenderError("Target user not found in venue");
+
+    ctx.db.VenueMember.delete({ ...targetMember });
+    ctx.db.VenueMember.insert({
+      ...targetMember,
+      role: { tag: role as any, value: "" },
+    });
   }
 );
 
@@ -294,20 +366,14 @@ export const block_user = spacetimedb.reducer(
     const venue = ctx.db.Venue.venueId.find(venueId);
     if (!venue) throw new SenderError("Venue not found");
 
-    const isVenueOwner = venue.ownerId === userId;
-    let isAdmin = isVenueOwner;
-    if (!isAdmin) {
-      const channels = [...ctx.db.Channel.channel_venue_id.filter(venueId)];
-      const myRolesInVenue = channels.flatMap(ch =>
-        [...ctx.db.ChannelMemberRole.channel_member_role_channel_id.filter(ch.channelId)]
-          .filter(r => r.userId === userId)
-      );
-      isAdmin = myRolesInVenue.some(r => r.role.tag === "owner" || r.role.tag === "admin");
-    }
+    const allMembers = [...ctx.db.VenueMember.venue_member_venue_id.filter(venueId)];
+    const callerMember = allMembers.find(m => m.userId === userId);
+    
+    const isVenueOwner = venue.ownerId === userId || callerMember?.role.tag === "owner";
+    const isAdmin = isVenueOwner || callerMember?.role.tag === "admin";
 
     if (!isAdmin) throw new SenderError("Only venue Admins or Owners can block users");
 
-    const allMembers = [...ctx.db.VenueMember.venue_member_venue_id.filter(venueId)];
     const targetMember = allMembers.find(m => m.userId === targetUserId);
     if (!targetMember) throw new SenderError("Target user is not in this venue");
     if (targetUserId === userId) {
@@ -326,20 +392,14 @@ export const unblock_user = spacetimedb.reducer(
     const venue = ctx.db.Venue.venueId.find(venueId);
     if (!venue) throw new SenderError("Venue not found");
 
-    const isVenueOwner = venue.ownerId === userId;
-    let isAdmin = isVenueOwner;
-    if (!isAdmin) {
-      const channels = [...ctx.db.Channel.channel_venue_id.filter(venueId)];
-      const myRolesInVenue = channels.flatMap(ch =>
-        [...ctx.db.ChannelMemberRole.channel_member_role_channel_id.filter(ch.channelId)]
-          .filter(r => r.userId === userId)
-      );
-      isAdmin = myRolesInVenue.some(r => r.role.tag === "owner" || r.role.tag === "admin");
-    }
+    const allMembers = [...ctx.db.VenueMember.venue_member_venue_id.filter(venueId)];
+    const callerMember = allMembers.find(m => m.userId === userId);
+    
+    const isVenueOwner = venue.ownerId === userId || callerMember?.role.tag === "owner";
+    const isAdmin = isVenueOwner || callerMember?.role.tag === "admin";
 
     if (!isAdmin) throw new SenderError("Only venue Admins or Owners can unblock users");
 
-    const allMembers = [...ctx.db.VenueMember.venue_member_venue_id.filter(venueId)];
     const targetMember = allMembers.find(m => m.userId === targetUserId);
     if (!targetMember) throw new SenderError("Target user is not in this venue");
 

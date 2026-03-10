@@ -139,12 +139,23 @@ export const Venue = __t.object("Venue", {
 });
 export type Venue = __Infer<typeof Venue>;
 
+export const VenueInviteToken = __t.object("VenueInviteToken", {
+  token: __t.string(),
+  venueId: __t.u64(),
+  createdAt: __t.timestamp(),
+  expiresAt: __t.timestamp(),
+});
+export type VenueInviteToken = __Infer<typeof VenueInviteToken>;
+
 export const VenueMember = __t.object("VenueMember", {
   venueId: __t.u64(),
   userId: __t.u64(),
   joinDate: __t.timestamp(),
   lastSeen: __t.timestamp(),
   isBlocked: __t.bool(),
+  get role() {
+    return ChannelRole;
+  },
 });
 export type VenueMember = __Infer<typeof VenueMember>;
 

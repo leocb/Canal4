@@ -52,7 +52,7 @@ function App() {
         <Route path="/venues/:venueLink/channels/:channelId" element={<ChannelScreen />} />
         <Route path="/venues/:venueLink/desktop-displays" element={<DesktopMessengerSyncScreen />} />
         <Route path="/venues/:venueLink/desktop-displays/new" element={<AddNodeScreen />} />
-        <Route path="/join/:venueLink" element={<JoinVenueScreen />} />
+        <Route path="/join/:venueLink/:token" element={<JoinVenueScreen />} />
         <Route path="*" element={<Navigate to="/venues" replace />} />
       </Routes>
     </>

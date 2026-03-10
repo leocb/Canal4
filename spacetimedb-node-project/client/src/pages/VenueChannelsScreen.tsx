@@ -17,10 +17,12 @@ export const VenueChannelsScreen = () => {
   const [channelRoles] = useTable(tables.ChannelMemberRole);
   const [venueMembers, membersReady] = useReadyTable(tables.VenueMember);
   const leaveVenue = useReducer(reducers.leaveVenue);
+  const createInviteToken = useReducer(reducers.createInviteToken);
 
   const [showMenu, setShowMenu] = useState(false);
   const menuRef = useRef<HTMLDivElement>(null);
   const [showInvite, setShowInvite] = useState(false);
+  const [inviteToken, setInviteToken] = useState<string>('');
   const [showLeaveConfirm, setShowLeaveConfirm] = useState(false);
   const [leaveLoading, setLeaveLoading] = useState(false);
   const [leaveErrorText, setLeaveErrorText] = useState('');
@@ -84,11 +86,20 @@ export const VenueChannelsScreen = () => {
     );
   }
 
-  const joinUrl = `${window.location.origin}/join/${venue.link}`;
+  const joinUrl = inviteToken ? `${window.location.origin}/join/${venue?.link}/${inviteToken}` : '';
   const handleCopy = () => {
     navigator.clipboard.writeText(joinUrl);
     setCopied(true);
     setTimeout(() => setCopied(false), 2000);
+  };
+
+  const handleOpenInvite = () => {
+    setShowMenu(false);
+    if (!venue) return;
+    const newToken = Math.random().toString(36).substring(2, 10);
+    setInviteToken(newToken);
+    createInviteToken({ venueId: venue.venueId, token: newToken }).catch(() => {});
+    setShowInvite(true);
   };
 
   const handleShare = async () => {
@@ -171,7 +182,7 @@ export const VenueChannelsScreen = () => {
                   </button>
                 )}
                 <div className="dropdown-divider" />
-                <button className="dropdown-item" onClick={() => { setShowMenu(false); setShowInvite(true); }}>
+                <button className="dropdown-item" onClick={handleOpenInvite}>
                   <UserPlus size={16} /> Invite
                 </button>
                 <button className="dropdown-item" onClick={() => { setShowMenu(false); alert('Notifications (Not yet implemented)'); }}>

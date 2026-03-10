@@ -89,6 +89,7 @@ export const VenueMember = table(
     joinDate: t.timestamp(),
     lastSeen: t.timestamp(),
     isBlocked: t.bool(),
+    role: ChannelRole,
   }
 );
 
@@ -201,6 +202,22 @@ export const MessageDeliveryStatus = table(
   }
 );
 
+export const VenueInviteToken = table(
+  {
+    name: "venue_invite_token",
+    public: true,
+    indexes: [
+      { name: "venue_invite_token_venue_id", accessor: "venue_invite_token_venue_id", algorithm: "btree", columns: ["venueId"] },
+    ] as const,
+  },
+  {
+    token: t.string().primaryKey(),
+    venueId: t.u64(),
+    createdAt: t.timestamp(),
+    expiresAt: t.timestamp(),
+  }
+);
+
 // Final Export Module
 const spacetimedb = schema({
   User,
@@ -215,6 +232,7 @@ const spacetimedb = schema({
   MessengerDevice,
   MessengerPairingPin,
   MessageDeliveryStatus,
+  VenueInviteToken,
 });
 
 export default spacetimedb;
