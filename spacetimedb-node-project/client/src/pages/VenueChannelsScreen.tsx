@@ -164,7 +164,7 @@ export const VenueChannelsScreen = () => {
                   </button>
                 )}
                 {canManageDisplays && (
-                  <button className="dropdown-item" onClick={() => { setShowMenu(false); alert('Permissions (Not yet implemented)'); }}>
+                  <button className="dropdown-item" onClick={() => { setShowMenu(false); navigate(`/venues/${venue.link}/permissions`); }}>
                     <Shield size={16} /> Permissions
                   </button>
                 )}

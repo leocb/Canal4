@@ -12,6 +12,8 @@ import { NewChannelScreen } from "./pages/NewChannelScreen";
 import { AddNodeScreen } from "./pages/AddNodeScreen";
 import { JoinVenueScreen } from "./pages/JoinVenueScreen";
 import { VenueSettingsScreen } from "./pages/VenueSettingsScreen";
+import { VenuePermissionsScreen } from "./pages/VenuePermissionsScreen";
+import { VenueMemberScreen } from "./pages/VenueMemberScreen";
 
 function App() {
   const { isActive: connected, connectionError: error } = useSpacetimeDB();
@@ -44,6 +46,8 @@ function App() {
         <Route path="/venues/new" element={<NewVenueScreen />} />
         <Route path="/venues/:venueLink" element={<VenueChannelsScreen />} />
         <Route path="/venues/:venueLink/settings" element={<VenueSettingsScreen />} />
+        <Route path="/venues/:venueLink/permissions" element={<VenuePermissionsScreen />} />
+        <Route path="/venues/:venueLink/permissions/:memberIdStr" element={<VenueMemberScreen />} />
         <Route path="/venues/:venueLink/channels/new" element={<NewChannelScreen />} />
         <Route path="/venues/:venueLink/channels/:channelId" element={<ChannelScreen />} />
         <Route path="/venues/:venueLink/desktop-displays" element={<DesktopMessengerSyncScreen />} />
