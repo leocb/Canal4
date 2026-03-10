@@ -132,7 +132,7 @@ export const VenueChannelsScreen = () => {
                   </button>
                 )}
                 {isOwner && (
-                  <button className="dropdown-item" onClick={() => { setShowMenu(false); alert('Venue Settings (Not yet implemented)'); }}>
+                  <button className="dropdown-item" onClick={() => { setShowMenu(false); navigate(`/venues/${venue.link}/settings`); }}>
                     <Settings size={16} /> Venue Settings
                   </button>
                 )}
