@@ -8,10 +8,10 @@ export const ChannelScreen = () => {
   const navigate = useNavigate();
   const { identity } = useSpacetimeDB();
 
-  const [venues] = useTable(tables.Venue);
+  const [venues, venuesReady] = useTable(tables.Venue);
   const [channels] = useTable(tables.Channel);
   const [messages] = useTable(tables.Message);
-  const [venueMembers] = useTable(tables.VenueMember);
+  const [venueMembers, membersReady] = useTable(tables.VenueMember);
   
   const sendMessage = useReducer(reducers.sendMessage);
   
@@ -35,6 +35,14 @@ export const ChannelScreen = () => {
   const membership = venue ? venueMembers.find(
     m => m.venueId === venue.venueId && m.userIdentity.toHexString() === identity?.toHexString()
   ) : undefined;
+
+  if (!venuesReady || !membersReady) {
+    return (
+      <div className="app-container empty-state">
+        <h2>Loading...</h2>
+      </div>
+    );
+  }
 
   if (!channel || !venue) {
     return (

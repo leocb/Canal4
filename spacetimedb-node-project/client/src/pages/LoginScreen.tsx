@@ -1,12 +1,14 @@
 import React, { useState, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useLocation } from 'react-router-dom';
 import { reducers, tables } from '../module_bindings/index.ts';
 import { useReducer, useTable } from 'spacetimedb/react';
 import { useAuth } from '../hooks/useAuth';
 
 export const LoginScreen = () => {
   const navigate = useNavigate();
-  const { user, isLoggedIn, connected, identity } = useAuth();
+  const location = useLocation();
+  const redirect = new URLSearchParams(location.search).get('redirect') || '/venues';
+  const { user, isLoggedIn, connected } = useAuth();
   const loginOrCreateUser = useReducer(reducers.loginOrCreateUser);
   
   const [users] = useTable(tables.User);
@@ -16,15 +18,10 @@ export const LoginScreen = () => {
   const [view, setView] = useState<'options' | 'email' | 'name'>('options');
 
   useEffect(() => {
-    console.log('[LoginScreen] Render state:', { isLoggedIn, user, identity: identity?.toHexString(), connected });
-    console.log('[LoginScreen] Users table:', users);
-
     if (isLoggedIn && user?.name) {
-      console.log('[LoginScreen] Fully logged in! Navigating to /venues');
-      // Already fully logged in
-      navigate('/venues', { replace: true });
+      navigate(redirect, { replace: true });
     }
-  }, [isLoggedIn, user, identity, connected, users, navigate]);
+  }, [isLoggedIn, user, navigate, redirect]);
 
   if (isLoggedIn && user?.name) {
     return null;
