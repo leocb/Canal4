@@ -88,7 +88,16 @@ export const VenueChannelsScreen = () => {
 
   const joinUrl = inviteToken ? `${window.location.origin}/join/${venue?.link}/${inviteToken}` : '';
   const handleCopy = () => {
-    navigator.clipboard.writeText(joinUrl);
+    if (navigator.clipboard && window.isSecureContext) {
+      navigator.clipboard.writeText(joinUrl);
+    } else {
+      const textArea = document.createElement("textarea");
+      textArea.value = joinUrl;
+      document.body.appendChild(textArea);
+      textArea.select();
+      try { document.execCommand('copy'); } catch (err) { console.error('fallback copy failed', err) }
+      document.body.removeChild(textArea);
+    }
     setCopied(true);
     setTimeout(() => setCopied(false), 2000);
   };
@@ -103,7 +112,7 @@ export const VenueChannelsScreen = () => {
   };
 
   const handleShare = async () => {
-    if ('share' in navigator) {
+    if (navigator.share) {
       try {
         await navigator.share({
           title: `Join ${venue?.name}`,
@@ -113,6 +122,8 @@ export const VenueChannelsScreen = () => {
       } catch (err) {
         console.error('Error sharing:', err);
       }
+    } else {
+      alert("Sharing is not supported directly on this browser or the connection is unsecured. Please copy the URL manually.");
     }
   };
 
@@ -289,25 +300,23 @@ export const VenueChannelsScreen = () => {
               >
                 {copied ? <><Check size={14} /> Copied!</> : <><Copy size={14} /> Copy</>}
               </button>
-              {('share' in navigator) && (
-                <button
-                  onClick={handleShare}
-                  style={{
-                    padding: '6px 14px',
-                    fontSize: '0.85rem',
-                    display: 'flex',
-                    alignItems: 'center',
-                    gap: '6px',
-                    flexShrink: 0,
-                    background: 'var(--surface-color)',
-                    border: '1px solid var(--surface-border)',
-                    color: 'var(--text-primary)',
-                    transition: 'all 0.2s ease',
-                  }}
-                >
-                  <Share size={14} /> Share
-                </button>
-              )}
+              <button
+                onClick={handleShare}
+                style={{
+                  padding: '6px 14px',
+                  fontSize: '0.85rem',
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '6px',
+                  flexShrink: 0,
+                  background: 'var(--surface-color)',
+                  border: '1px solid var(--surface-border)',
+                  color: 'var(--text-primary)',
+                  transition: 'all 0.2s ease',
+                }}
+              >
+                <Share size={14} /> Share
+              </button>
             </div>
           </div>
         </div>
