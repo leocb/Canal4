@@ -70,6 +70,7 @@ import MessengerDeviceRow from "./messenger_device_table";
 import MessengerPairingPinRow from "./messenger_pairing_pin_table";
 import NotificationFilterRow from "./notification_filter_table";
 import UserRow from "./user_table";
+import UserIdentityRow from "./user_identity_table";
 import VenueRow from "./venue_table";
 import VenueMemberRow from "./venue_member_table";
 
@@ -97,8 +98,8 @@ const tablesSchema = __schema({
       { name: 'channel_member_role_channel_id', algorithm: 'btree', columns: [
         'channelId',
       ] },
-      { name: 'channel_member_role_user_identity', algorithm: 'btree', columns: [
-        'userIdentity',
+      { name: 'channel_member_role_user_id', algorithm: 'btree', columns: [
+        'userId',
       ] },
     ],
     constraints: [
@@ -179,8 +180,8 @@ const tablesSchema = __schema({
       { name: 'notification_filter_channel_id', algorithm: 'btree', columns: [
         'channelId',
       ] },
-      { name: 'notification_filter_user_identity', algorithm: 'btree', columns: [
-        'userIdentity',
+      { name: 'notification_filter_user_id', algorithm: 'btree', columns: [
+        'userId',
       ] },
     ],
     constraints: [
@@ -189,14 +190,28 @@ const tablesSchema = __schema({
   User: __table({
     name: 'user',
     indexes: [
-      { name: 'identity', algorithm: 'btree', columns: [
-        'identity',
+      { name: 'userId', algorithm: 'btree', columns: [
+        'userId',
       ] },
     ],
     constraints: [
-      { name: 'user_identity_key', constraint: 'unique', columns: ['identity'] },
+      { name: 'user_user_id_key', constraint: 'unique', columns: ['userId'] },
     ],
   }, UserRow),
+  UserIdentity: __table({
+    name: 'user_identity',
+    indexes: [
+      { name: 'identity', algorithm: 'btree', columns: [
+        'identity',
+      ] },
+      { name: 'user_identity_user_id', algorithm: 'btree', columns: [
+        'userId',
+      ] },
+    ],
+    constraints: [
+      { name: 'user_identity_identity_key', constraint: 'unique', columns: ['identity'] },
+    ],
+  }, UserIdentityRow),
   Venue: __table({
     name: 'venue',
     indexes: [
@@ -211,8 +226,8 @@ const tablesSchema = __schema({
   VenueMember: __table({
     name: 'venue_member',
     indexes: [
-      { name: 'venue_member_user_identity', algorithm: 'btree', columns: [
-        'userIdentity',
+      { name: 'venue_member_user_id', algorithm: 'btree', columns: [
+        'userId',
       ] },
       { name: 'venue_member_venue_id', algorithm: 'btree', columns: [
         'venueId',

@@ -13,7 +13,7 @@ import {
 export default __t.row({
   messageId: __t.u64().primaryKey().name("message_id"),
   channelId: __t.u64().name("channel_id"),
-  senderIdentity: __t.identity().name("sender_identity"),
+  senderId: __t.u64().name("sender_id"),
   templateId: __t.option(__t.u64()).name("template_id"),
   content: __t.string(),
   sentAt: __t.timestamp().name("sent_at"),

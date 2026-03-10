@@ -1,11 +1,12 @@
 import { useParams, useNavigate } from 'react-router-dom';
-import { useTable, useSpacetimeDB } from 'spacetimedb/react';
+import { useTable } from 'spacetimedb/react';
 import { tables } from '../module_bindings/index.ts';
+import { useAuth } from '../hooks/useAuth';
 
 export const DesktopMessengerSyncScreen = () => {
   const { venueLink } = useParams<{ venueLink: string }>();
   const navigate = useNavigate();
-  const { identity } = useSpacetimeDB();
+  const { user } = useAuth();
   
   const [venues] = useTable(tables.Venue);
   const [channels] = useTable(tables.Channel);
@@ -27,12 +28,12 @@ export const DesktopMessengerSyncScreen = () => {
   }
 
   // Ensure user has permissions to view this screen
-  const isOwner = venue.ownerIdentity.toHexString() === identity?.toHexString();
+  const isOwner = venue.ownerId === user?.userId;
   const userRolesInVenue = channelRoles.filter(r => 
-    r.userIdentity.toHexString() === identity?.toHexString() && 
+    r.userId === user?.userId && 
     venueChannels.some(c => c.channelId === r.channelId)
   );
-  const isAdmin = userRolesInVenue.some(r => r.role.tag === 'Admin');
+  const isAdmin = userRolesInVenue.some(r => r.role.tag === 'Admin' || r.role.tag === 'Owner');
   const canManageDisplays = isOwner || isAdmin;
 
   if (!canManageDisplays) {

@@ -1,15 +1,16 @@
 import { useState, useRef, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { useTable, useSpacetimeDB } from 'spacetimedb/react';
+import { useTable } from 'spacetimedb/react';
 import { tables } from '../module_bindings/index.ts';
 import { MoreVertical, Plus, Monitor, Settings, Shield, UserPlus, Bell, LogOut, Copy, Check, X } from 'lucide-react';
 import { useReadyTable } from '../hooks/useReadyTable';
+import { useAuth } from '../hooks/useAuth';
 
 export const VenueChannelsScreen = () => {
   const { venueLink } = useParams<{ venueLink: string }>();
   const navigate = useNavigate();
 
-  const { identity } = useSpacetimeDB();
+  const { user } = useAuth();
   const [venues, venuesReady] = useReadyTable(tables.Venue);
   const [channels] = useTable(tables.Channel);
   const [channelRoles] = useTable(tables.ChannelMemberRole);
@@ -36,17 +37,17 @@ export const VenueChannelsScreen = () => {
 
   const venueChannels = channels.filter(c => c.venueId === venueIdBigInt);
 
-  const isOwner = venue?.ownerIdentity.toHexString() === identity?.toHexString();
+  const isOwner = venue?.ownerId === user?.userId;
   const userRolesInVenue = channelRoles.filter(r =>
-    r.userIdentity.toHexString() === identity?.toHexString() &&
+    r.userId === user?.userId &&
     venueChannels.some(c => c.channelId === r.channelId)
   );
-  const isAdmin = userRolesInVenue.some(r => r.role.tag === 'Admin');
+  const isAdmin = userRolesInVenue.some(r => r.role.tag === 'Admin' || r.role.tag === 'Owner');
   const canManageDisplays = isOwner || isAdmin;
 
   // Membership check (frontend UX guard — backend is authoritative)
   const isMember = venue ? venueMembers.some(
-    m => m.venueId === venue.venueId && m.userIdentity.toHexString() === identity?.toHexString()
+    m => m.venueId === venue.venueId && m.userId === user?.userId
   ) : false;
 
   if (!venuesReady || !membersReady) {

@@ -12,7 +12,7 @@ import {
 
 export default __t.row({
   venueId: __t.u64().name("venue_id"),
-  userIdentity: __t.identity().name("user_identity"),
+  userId: __t.u64().name("user_id"),
   joinDate: __t.timestamp().name("join_date"),
   lastSeen: __t.timestamp().name("last_seen"),
   isBlocked: __t.bool().name("is_blocked"),

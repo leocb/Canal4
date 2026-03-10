@@ -22,7 +22,7 @@ export const VenuesListScreen = () => {
   // Filter venues to only those where the user is a member
   const myVenueIds = new Set(
     venueMembers
-      .filter(m => m.userIdentity.toHexString() === user.identity.toHexString())
+      .filter(m => m.userId === user.userId)
       .map(m => m.venueId)
   );
 

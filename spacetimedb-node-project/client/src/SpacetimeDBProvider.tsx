@@ -22,6 +22,7 @@ export const SpacetimeDBProvider = ({ children }: { children: ReactNode }) => {
 
         sub.subscribe([
           "SELECT * FROM User",
+          "SELECT * FROM UserIdentity",
           "SELECT * FROM Venue",
           "SELECT * FROM Channel",
           "SELECT * FROM VenueMember",

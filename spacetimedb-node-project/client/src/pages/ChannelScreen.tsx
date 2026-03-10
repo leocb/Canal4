@@ -1,14 +1,15 @@
 import { useState, useRef, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { useTable, useReducer, useSpacetimeDB } from 'spacetimedb/react';
+import { useTable, useReducer } from 'spacetimedb/react';
 import { tables, reducers } from '../module_bindings/index.ts';
 import { useReadyTable } from '../hooks/useReadyTable';
+import { useAuth } from '../hooks/useAuth';
 import { MoreVertical, Settings, Send, History } from 'lucide-react';
 
 export const ChannelScreen = () => {
   const { venueLink, channelId } = useParams<{ venueLink: string, channelId: string }>();
   const navigate = useNavigate();
-  const { identity } = useSpacetimeDB();
+  const { user } = useAuth();
 
   const [venues, venuesReady] = useReadyTable(tables.Venue);
   const [channels] = useTable(tables.Channel);
@@ -59,7 +60,7 @@ export const ChannelScreen = () => {
 
   // Membership + role resolution
   const membership = venue ? (venueMembers as any[]).find(
-    m => m.venueId === venue.venueId && m.userIdentity.toHexString() === identity?.toHexString()
+    m => m.venueId === venue.venueId && m.userId === user?.userId
   ) : undefined;
 
   if (!venuesReady || !membersReady) {
@@ -94,17 +95,17 @@ export const ChannelScreen = () => {
 
   // Role helpers
   const myChannelRole = (channelRoles as any[]).find(
-    r => r.channelId === channelIdBigInt && r.userIdentity.toHexString() === identity?.toHexString()
+    r => r.channelId === channelIdBigInt && r.userId === user?.userId
   );
   const roleTag: string = myChannelRole?.role.tag ?? 'member';
-  const isVenueOwner = venue.ownerIdentity.toHexString() === identity?.toHexString();
+  const isVenueOwner = venue.ownerId === user?.userId;
   const isOwner = isVenueOwner || roleTag === 'owner';
   const isAdmin = isOwner || roleTag === 'admin';
   const isModerator = isAdmin || roleTag === 'moderator';
 
-  const getUserName = (identityHex: string) => {
-    const u = (users as any[]).find(u => u.identity.toHexString() === identityHex);
-    return u?.name || identityHex.slice(0, 10) + '…';
+  const getUserName = (userId: bigint) => {
+    const u = (users as any[]).find(u => u.userId === userId);
+    return u?.name || `user-${userId.toString()}`;
   };
 
   // Messenger devices connected to this venue
@@ -228,7 +229,7 @@ export const ChannelScreen = () => {
             </div>
           ) : (
             channelMessages.map(({ msg, count }: any) => {
-              const isMe = msg.senderIdentity.toHexString() === identity?.toHexString();
+              const isMe = msg.senderId === user?.userId;
               const dateObj = new Date(Number(msg.sentAt.microsSinceUnixEpoch / 1000n));
               const isToday = new Date().toDateString() === dateObj.toDateString();
               const timeString = isToday ? dateObj.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : dateObj.toLocaleString([], { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' });
@@ -308,7 +309,7 @@ export const ChannelScreen = () => {
           <div className="glass-panel" style={{ padding: '8px', minWidth: '260px', display: 'flex', flexDirection: 'column' }}>
             <div style={{ padding: '12px 16px', borderBottom: '1px solid var(--surface-border)', marginBottom: '4px' }}>
               <div style={{ fontSize: '0.85rem', color: 'var(--text-secondary)', marginBottom: '8px' }}>
-                Sent by <span style={{ color: 'var(--text-primary)', fontWeight: 500 }}>{contextMsg.senderIdentity.toHexString() === identity?.toHexString() ? 'You' : getUserName(contextMsg.senderIdentity.toHexString())}</span> on {new Date(Number(contextMsg.sentAt.microsSinceUnixEpoch / 1000n)).toLocaleString()}
+                Sent by <span style={{ color: 'var(--text-primary)', fontWeight: 500 }}>{contextMsg.senderId === user?.userId ? 'You' : getUserName(contextMsg.senderId)}</span> on {new Date(Number(contextMsg.sentAt.microsSinceUnixEpoch / 1000n)).toLocaleString()}
               </div>
               <div style={{ fontSize: '0.95rem', color: 'var(--text-primary)', lineHeight: 1.4, wordBreak: 'break-word' }}>
                 {contextMsg.content}

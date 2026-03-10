@@ -12,5 +12,5 @@ import {
 
 export default {
   venueId: __t.u64(),
-  targetIdentity: __t.identity(),
+  targetUserId: __t.u64(),
 };

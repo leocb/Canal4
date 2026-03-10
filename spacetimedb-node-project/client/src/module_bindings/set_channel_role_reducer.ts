@@ -12,6 +12,6 @@ import {
 
 export default {
   channelId: __t.u64(),
-  targetIdentity: __t.identity(),
+  targetUserId: __t.u64(),
   role: __t.string(),
 };

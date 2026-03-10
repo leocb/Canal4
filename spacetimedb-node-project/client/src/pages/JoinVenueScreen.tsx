@@ -46,7 +46,7 @@ export const JoinVenueScreen = () => {
 
   // Check if already a member
   const isMember = venue ? venueMembers.some(
-    m => m.venueId === venue.venueId && m.userIdentity.toHexString() === user.identity.toHexString()
+    m => m.venueId === venue.venueId && m.userId === user.userId
   ) : false;
 
   if (!venue) {

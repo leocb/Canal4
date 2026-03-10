@@ -24,7 +24,7 @@ export const DeliveryStatus = t.enum("DeliveryStatus", {
 export const User = table(
   { name: "user", public: true },
   {
-    identity: t.identity().primaryKey(),
+    userId: t.u64().primaryKey().autoInc(),
     email: t.string().optional(),
     googleId: t.string().optional(),
     passkeyCredentialId: t.string().optional(),
@@ -34,12 +34,24 @@ export const User = table(
   }
 );
 
+export const UserIdentity = table(
+  {
+    name: "user_identity",
+    public: true,
+    indexes: [{ name: "user_identity_user_id", accessor: "user_identity_user_id", algorithm: "btree", columns: ["userId"] }] as const,
+  },
+  {
+    identity: t.identity().primaryKey(),
+    userId: t.u64(),
+  }
+);
+
 export const Venue = table(
   { name: "venue", public: true },
   {
     venueId: t.u64().primaryKey().autoInc(),
     name: t.string(),
-    ownerIdentity: t.identity(),
+    ownerId: t.u64(),
     link: t.string(),
     createdAt: t.timestamp(),
   }
@@ -68,12 +80,12 @@ export const VenueMember = table(
     public: true,
     indexes: [
       { name: "venue_member_venue_id", accessor: "venue_member_venue_id", algorithm: "btree", columns: ["venueId"] },
-      { name: "venue_member_user_identity", accessor: "venue_member_user_identity", algorithm: "btree", columns: ["userIdentity"] },
+      { name: "venue_member_user_id", accessor: "venue_member_user_id", algorithm: "btree", columns: ["userId"] },
     ] as const,
   },
   {
     venueId: t.u64(),
-    userIdentity: t.identity(),
+    userId: t.u64(),
     joinDate: t.timestamp(),
     lastSeen: t.timestamp(),
     isBlocked: t.bool(),
@@ -86,12 +98,12 @@ export const ChannelMemberRole = table(
     public: true,
     indexes: [
       { name: "channel_member_role_channel_id", accessor: "channel_member_role_channel_id", algorithm: "btree", columns: ["channelId"] },
-      { name: "channel_member_role_user_identity", accessor: "channel_member_role_user_identity", algorithm: "btree", columns: ["userIdentity"] },
+      { name: "channel_member_role_user_id", accessor: "channel_member_role_user_id", algorithm: "btree", columns: ["userId"] },
     ] as const,
   },
   {
     channelId: t.u64(),
-    userIdentity: t.identity(),
+    userId: t.u64(),
     role: ChannelRole,
   }
 );
@@ -102,12 +114,12 @@ export const NotificationFilter = table(
     public: true,
     indexes: [
       { name: "notification_filter_channel_id", accessor: "notification_filter_channel_id", algorithm: "btree", columns: ["channelId"] },
-      { name: "notification_filter_user_identity", accessor: "notification_filter_user_identity", algorithm: "btree", columns: ["userIdentity"] },
+      { name: "notification_filter_user_id", accessor: "notification_filter_user_id", algorithm: "btree", columns: ["userId"] },
     ] as const,
   },
   {
     channelId: t.u64(),
-    userIdentity: t.identity(),
+    userId: t.u64(),
     filterType: NotificationFilterType,
     filterTextsJson: t.string(), // Extracted JSON string
   }
@@ -137,7 +149,7 @@ export const Message = table(
   {
     messageId: t.u64().primaryKey().autoInc(),
     channelId: t.u64(),
-    senderIdentity: t.identity(),
+    senderId: t.u64(),
     templateId: t.u64().optional(),
     content: t.string(),
     sentAt: t.timestamp(),
@@ -192,6 +204,7 @@ export const MessageDeliveryStatus = table(
 // Final Export Module
 const spacetimedb = schema({
   User,
+  UserIdentity,
   Venue,
   Channel,
   VenueMember,
