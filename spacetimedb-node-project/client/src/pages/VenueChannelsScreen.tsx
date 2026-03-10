@@ -2,7 +2,7 @@ import { useState, useRef, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { useTable, useSpacetimeDB } from 'spacetimedb/react';
 import { tables } from '../module_bindings/index.ts';
-import { MoreVertical } from 'lucide-react';
+import { MoreVertical, Plus, Monitor, Settings, Shield, UserPlus, Bell, LogOut } from 'lucide-react';
 
 export const VenueChannelsScreen = () => {
   const { venueLink } = useParams<{ venueLink: string }>();
@@ -78,28 +78,45 @@ export const VenueChannelsScreen = () => {
           <h2>{venue.name}</h2>
         </div>
         <div style={{ position: 'relative' }} ref={menuRef}>
-          <button 
-            className="icon-button" 
+          <button
+            className="icon-button"
             onClick={() => setShowMenu(!showMenu)}
-            style={{ padding: '8px', background: 'transparent', border: 'none', cursor: 'pointer', color: 'var(--text-primary)' }}
           >
-            <MoreVertical size={24} />
+            <MoreVertical size={20} />
           </button>
           {showMenu && (
-            <div className="dropdown-menu glass-panel" style={{ position: 'absolute', right: 0, top: '40px', zIndex: 100, minWidth: '180px', display: 'flex', flexDirection: 'column' }}>
-              <button className="dropdown-item" onClick={() => { setShowMenu(false); navigate(`/venues/${venue.link}/channels/new`); }}>New Channel</button>
+            <div className="dropdown-menu glass-panel" style={{ position: 'absolute', right: 0, top: '48px', zIndex: 100, minWidth: '200px', display: 'flex', flexDirection: 'column' }}>
+              {isOwner && (
+                <button className="dropdown-item" onClick={() => { setShowMenu(false); navigate(`/venues/${venue.link}/channels/new`); }}>
+                  <Plus size={16} /> New Channel
+                </button>
+              )}
               {canManageDisplays && (
-                <button className="dropdown-item" onClick={() => navigate(`/venues/${venue.link}/desktop-displays`)}>Display Nodes</button>
+                <button className="dropdown-item" onClick={() => { setShowMenu(false); navigate(`/venues/${venue.link}/desktop-displays`); }}>
+                  <Monitor size={16} /> Display Nodes
+                </button>
               )}
               {isOwner && (
-                <button className="dropdown-item" onClick={() => alert('Venue Settings (Not yet implemented)')}>Venue Settings</button>
+                <button className="dropdown-item" onClick={() => { setShowMenu(false); alert('Venue Settings (Not yet implemented)'); }}>
+                  <Settings size={16} /> Venue Settings
+                </button>
               )}
               {canManageDisplays && (
-                <button className="dropdown-item" onClick={() => alert('Permissions (Not yet implemented)')}>Permissions</button>
+                <button className="dropdown-item" onClick={() => { setShowMenu(false); alert('Permissions (Not yet implemented)'); }}>
+                  <Shield size={16} /> Permissions
+                </button>
               )}
-              <button className="dropdown-item" onClick={() => alert('Invite (Not yet implemented)')}>Invite</button>
-              <button className="dropdown-item" onClick={() => alert('Notifications (Not yet implemented)')}>Notifications</button>
-              <button className="dropdown-item" style={{ color: 'var(--error-color)' }} onClick={() => alert('Leave Venue (Not yet implemented)')}>Leave Venue</button>
+              <div className="dropdown-divider" />
+              <button className="dropdown-item" onClick={() => { setShowMenu(false); alert('Invite (Not yet implemented)'); }}>
+                <UserPlus size={16} /> Invite
+              </button>
+              <button className="dropdown-item" onClick={() => { setShowMenu(false); alert('Notifications (Not yet implemented)'); }}>
+                <Bell size={16} /> Notifications
+              </button>
+              <div className="dropdown-divider" />
+              <button className="dropdown-item danger" onClick={() => { setShowMenu(false); alert('Leave Venue (Not yet implemented)'); }}>
+                <LogOut size={16} /> Leave Venue
+              </button>
             </div>
           )}
         </div>
