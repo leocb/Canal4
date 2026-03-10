@@ -4,7 +4,7 @@ import { useTable, useReducer } from 'spacetimedb/react';
 import { tables, reducers } from '../module_bindings/index.ts';
 import { useReadyTable } from '../hooks/useReadyTable';
 import { useAuth } from '../hooks/useAuth';
-import { MoreVertical, Settings, Send, History } from 'lucide-react';
+import { MoreVertical, Settings, Send, History, LayoutTemplate } from 'lucide-react';
 
 export const ChannelScreen = () => {
   const { venueLink, channelId } = useParams<{ venueLink: string, channelId: string }>();
@@ -194,9 +194,14 @@ export const ChannelScreen = () => {
             {showMenu && (
               <div className="dropdown-menu glass-panel" style={{ position: 'absolute', right: 0, top: '48px', zIndex: 100, minWidth: '180px', display: 'flex', flexDirection: 'column' }}>
                 {isOwner && (
-                  <button className="dropdown-item" onClick={() => { setShowMenu(false); navigate(`/venues/${venue.link}/channels/${channel.channelId}/settings`); }}>
-                    <Settings size={16} /> Channel Settings
-                  </button>
+                  <>
+                    <button className="dropdown-item" onClick={() => { setShowMenu(false); navigate(`/venues/${venue.link}/channels/${channel.channelId}/settings`); }}>
+                      <Settings size={16} /> Channel Settings
+                    </button>
+                    <button className="dropdown-item" onClick={() => { setShowMenu(false); alert('Templates configuration not yet implemented'); }}>
+                      <LayoutTemplate size={16} /> Configure Templates
+                    </button>
+                  </>
                 )}
                 {!isOwner && (
                   <div style={{ padding: '12px 16px', color: 'var(--text-secondary)', fontSize: '0.85rem' }}>

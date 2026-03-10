@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
-import { Trash2, ArrowLeft, LayoutTemplate } from 'lucide-react';
+import { Trash2, ArrowLeft } from 'lucide-react';
 import { useAuth } from '../hooks/useAuth';
 import { useTable, useReducer } from 'spacetimedb/react';
 import { reducers, tables } from '../module_bindings/index.ts';
@@ -166,6 +166,7 @@ export const ChannelSettingsScreen = () => {
               required
               disabled={loading}
               placeholder="e.g., General Announcements"
+              style={{ width: '100%' }}
             />
           </div>
 
@@ -177,6 +178,7 @@ export const ChannelSettingsScreen = () => {
               onChange={(e) => setDescription(e.target.value)}
               disabled={loading}
               placeholder="e.g., Main channel for all members"
+              style={{ width: '100%' }}
             />
           </div>
 
@@ -197,29 +199,23 @@ export const ChannelSettingsScreen = () => {
           </div>
 
           <div style={{ marginBottom: '24px' }}>
-            <label style={{ display: 'block', marginBottom: '8px', fontWeight: 500, fontSize: '0.9rem' }}>Message Max Age (Hours)</label>
-            <input 
-              type="number" 
-              min="1"
-              max="8760"
-              value={maxAgeHours}
-              onChange={(e) => setMaxAgeHours(e.target.value)}
-              required
-              disabled={loading}
-            />
+            <label style={{ display: 'block', marginBottom: '8px', fontWeight: 500, fontSize: '0.9rem' }}>Members can only view messages of the last</label>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+              <input 
+                type="number" 
+                min="1"
+                max="8760"
+                value={maxAgeHours}
+                onChange={(e) => setMaxAgeHours(e.target.value)}
+                required
+                disabled={loading}
+                style={{ width: '100px' }}
+              />
+              <span style={{ color: 'var(--text-secondary)' }}>hours</span>
+            </div>
           </div>
 
           <div className="flex-col" style={{ gap: '12px', marginTop: '8px' }}>
-            <button 
-              type="button" 
-              className="secondary"
-              disabled={loading}
-              onClick={() => alert("Templates configuration not yet implemented")}
-              style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px' }}
-            >
-              <LayoutTemplate size={18} /> Configure templates
-            </button>
-            
             <button type="submit" disabled={loading || !name.trim()}>
               {loading ? 'Saving...' : 'Confirm'}
             </button>
