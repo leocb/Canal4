@@ -201,6 +201,76 @@ export const create_channel = spacetimedb.reducer(
   }
 );
 
+export const update_channel = spacetimedb.reducer(
+  { channelId: t.u64(), name: t.string(), description: t.string(), minRole: t.string(), maxAgeHours: t.u64() },
+  (ctx, { channelId, name, description, minRole, maxAgeHours }) => {
+    const userId = getUserId(ctx);
+    const channel = ctx.db.Channel.channelId.find(channelId);
+    if (!channel) throw new SenderError("Channel not found");
+
+    const venue = ctx.db.Venue.venueId.find(channel.venueId);
+    if (!venue) throw new SenderError("Venue not found");
+
+    const isVenueOwner = venue.ownerId === userId;
+    const roles = [...ctx.db.ChannelMemberRole.channel_member_role_channel_id.filter(channelId)];
+    const myRole = roles.find(r => r.userId === userId);
+    const isChannelOwner = myRole?.role.tag === "owner";
+
+    if (!isVenueOwner && !isChannelOwner) {
+      throw new SenderError("Only owners can update the channel");
+    }
+
+    ctx.db.Channel.channelId.update({
+      ...channel,
+      name,
+      description,
+      minimumRoleToView: { tag: minRole as any, value: "" },
+      messageMaxAgeHours: maxAgeHours,
+    });
+  }
+);
+
+export const delete_channel = spacetimedb.reducer(
+  { channelId: t.u64(), confirmationName: t.string() },
+  (ctx, { channelId, confirmationName }) => {
+    const userId = getUserId(ctx);
+    const channel = ctx.db.Channel.channelId.find(channelId);
+    if (!channel) throw new SenderError("Channel not found");
+
+    if (channel.name !== confirmationName) {
+      throw new SenderError("Confirmation name does not match channel name");
+    }
+
+    const venue = ctx.db.Venue.venueId.find(channel.venueId);
+    if (!venue) throw new SenderError("Venue not found");
+
+    const isVenueOwner = venue.ownerId === userId;
+    const roles = [...ctx.db.ChannelMemberRole.channel_member_role_channel_id.filter(channelId)];
+    const myRole = roles.find(r => r.userId === userId);
+    const isChannelOwner = myRole?.role.tag === "owner";
+
+    if (!isVenueOwner && !isChannelOwner) {
+      throw new SenderError("Only owners can delete the channel");
+    }
+
+    // Delete associated data
+    for (const msg of ctx.db.Message.message_channel_id.filter(channelId)) {
+      ctx.db.Message.messageId.delete(msg.messageId);
+    }
+    for (const tpl of ctx.db.MessageTemplate.message_template_channel_id.filter(channelId)) {
+      ctx.db.MessageTemplate.templateId.delete(tpl.templateId);
+    }
+    for (const role of roles) {
+      ctx.db.ChannelMemberRole.delete({ ...role });
+    }
+    for (const nf of ctx.db.NotificationFilter.notification_filter_channel_id.filter(channelId)) {
+      ctx.db.NotificationFilter.delete({ ...nf });
+    }
+
+    ctx.db.Channel.channelId.delete(channelId);
+  }
+);
+
 /*** MEMBERSHIP & PERMISSIONS ***/
 
 export const create_invite_token = spacetimedb.reducer(

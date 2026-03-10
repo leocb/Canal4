@@ -194,7 +194,7 @@ export const ChannelScreen = () => {
             {showMenu && (
               <div className="dropdown-menu glass-panel" style={{ position: 'absolute', right: 0, top: '48px', zIndex: 100, minWidth: '180px', display: 'flex', flexDirection: 'column' }}>
                 {isOwner && (
-                  <button className="dropdown-item" onClick={() => { setShowMenu(false); alert('Channel Settings (Not yet implemented)'); }}>
+                  <button className="dropdown-item" onClick={() => { setShowMenu(false); navigate(`/venues/${venue.link}/channels/${channel.channelId}/settings`); }}>
                     <Settings size={16} /> Channel Settings
                   </button>
                 )}
