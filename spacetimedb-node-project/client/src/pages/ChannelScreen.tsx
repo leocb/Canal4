@@ -199,7 +199,7 @@ export const ChannelScreen = () => {
                       <Settings size={16} /> Channel Settings
                     </button>
                     <button className="dropdown-item" onClick={() => { setShowMenu(false); alert('Templates configuration not yet implemented'); }}>
-                      <LayoutTemplate size={16} /> Configure Templates
+                      <LayoutTemplate size={16} /> Templates
                     </button>
                   </>
                 )}
