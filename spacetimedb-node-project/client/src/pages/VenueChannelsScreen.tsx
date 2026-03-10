@@ -2,9 +2,10 @@ import { useState, useRef, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { useTable } from 'spacetimedb/react';
 import { tables } from '../module_bindings/index.ts';
-import { MoreVertical, Plus, Monitor, Settings, Shield, UserPlus, Bell, LogOut, Copy, Check, X } from 'lucide-react';
+import { MoreVertical, Plus, Monitor, Settings, Shield, UserPlus, Bell, LogOut, Copy, Check, X, Share } from 'lucide-react';
 import { useReadyTable } from '../hooks/useReadyTable';
 import { useAuth } from '../hooks/useAuth';
+import QRCode from "react-qr-code";
 
 export const VenueChannelsScreen = () => {
   const { venueLink } = useParams<{ venueLink: string }>();
@@ -82,6 +83,20 @@ export const VenueChannelsScreen = () => {
     navigator.clipboard.writeText(joinUrl);
     setCopied(true);
     setTimeout(() => setCopied(false), 2000);
+  };
+
+  const handleShare = async () => {
+    if ('share' in navigator) {
+      try {
+        await navigator.share({
+          title: `Join ${venue?.name}`,
+          text: `You've been invited to join ${venue?.name} on Courier Notifications!`,
+          url: joinUrl,
+        });
+      } catch (err) {
+        console.error('Error sharing:', err);
+      }
+    }
   };
 
   return (
@@ -187,8 +202,15 @@ export const VenueChannelsScreen = () => {
                 <X size={18} />
               </button>
             </div>
-            <p style={{ color: 'var(--text-secondary)', fontSize: '0.9rem', marginBottom: '20px', lineHeight: 1.6 }}>
-              Share this link with anyone you want to invite. They'll be taken to a join page where they can join this venue.
+
+            <div style={{ display: 'flex', justifyContent: 'center', marginBottom: '24px' }}>
+              <div style={{ background: 'white', padding: '16px', borderRadius: '12px' }}>
+                <QRCode value={joinUrl} size={180} />
+              </div>
+            </div>
+
+            <p style={{ color: 'var(--text-secondary)', fontSize: '0.9rem', marginBottom: '20px', lineHeight: 1.6, textAlign: 'center' }}>
+              Scan the QR code to join this venue, or share the link below.
             </p>
             <div style={{
               display: 'flex',
@@ -227,6 +249,25 @@ export const VenueChannelsScreen = () => {
               >
                 {copied ? <><Check size={14} /> Copied!</> : <><Copy size={14} /> Copy</>}
               </button>
+              {('share' in navigator) && (
+                <button
+                  onClick={handleShare}
+                  style={{
+                    padding: '6px 14px',
+                    fontSize: '0.85rem',
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: '6px',
+                    flexShrink: 0,
+                    background: 'var(--surface-color)',
+                    border: '1px solid var(--surface-border)',
+                    color: 'var(--text-primary)',
+                    transition: 'all 0.2s ease',
+                  }}
+                >
+                  <Share size={14} /> Share
+                </button>
+              )}
             </div>
           </div>
         </div>
