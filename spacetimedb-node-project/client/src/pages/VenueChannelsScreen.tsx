@@ -1,7 +1,7 @@
 import { useState, useRef, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { useTable } from 'spacetimedb/react';
-import { tables } from '../module_bindings/index.ts';
+import { useTable, useReducer } from 'spacetimedb/react';
+import { tables, reducers } from '../module_bindings/index.ts';
 import { MoreVertical, Plus, Monitor, Settings, Shield, UserPlus, Bell, LogOut, Copy, Check, X, Share } from 'lucide-react';
 import { useReadyTable } from '../hooks/useReadyTable';
 import { useAuth } from '../hooks/useAuth';
@@ -16,10 +16,14 @@ export const VenueChannelsScreen = () => {
   const [channels] = useTable(tables.Channel);
   const [channelRoles] = useTable(tables.ChannelMemberRole);
   const [venueMembers, membersReady] = useReadyTable(tables.VenueMember);
+  const leaveVenue = useReducer(reducers.leaveVenue);
 
   const [showMenu, setShowMenu] = useState(false);
   const menuRef = useRef<HTMLDivElement>(null);
   const [showInvite, setShowInvite] = useState(false);
+  const [showLeaveConfirm, setShowLeaveConfirm] = useState(false);
+  const [leaveLoading, setLeaveLoading] = useState(false);
+  const [leaveErrorText, setLeaveErrorText] = useState('');
   const [copied, setCopied] = useState(false);
 
   // Close menu on click outside
@@ -99,6 +103,29 @@ export const VenueChannelsScreen = () => {
     }
   };
 
+  const handleLeaveVenueClick = () => {
+    setShowMenu(false);
+    if (isOwner) {
+      alert('You cannot leave a venue you own. Please delete the venue settings, or promote another member to owner first (not yet implemented).');
+      return;
+    }
+    setShowLeaveConfirm(true);
+  };
+
+  const confirmLeaveVenue = async () => {
+    if (!venue) return;
+    setLeaveErrorText('');
+    setLeaveLoading(true);
+    try {
+      await leaveVenue({ venueId: venue.venueId });
+      navigate('/venues', { replace: true });
+    } catch (err: unknown) {
+      const message = err instanceof Error ? err.message : String(err);
+      setLeaveErrorText(message || 'Failed to leave venue. Please try again.');
+      setLeaveLoading(false);
+    }
+  };
+
   return (
     <>
       <div className="app-container">
@@ -149,7 +176,7 @@ export const VenueChannelsScreen = () => {
                   <Bell size={16} /> Notifications
                 </button>
                 <div className="dropdown-divider" />
-                <button className="dropdown-item danger" onClick={() => { setShowMenu(false); alert('Leave Venue (Not yet implemented)'); }}>
+                <button className="dropdown-item danger" onClick={handleLeaveVenueClick}>
                   <LogOut size={16} /> Leave Venue
                 </button>
               </div>
@@ -268,6 +295,65 @@ export const VenueChannelsScreen = () => {
                   <Share size={14} /> Share
                 </button>
               )}
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Leave Venue Confirm Modal */}
+      {showLeaveConfirm && (
+        <div
+          style={{
+            position: 'fixed', inset: 0, zIndex: 200,
+            background: 'rgba(0,0,0,0.6)',
+            backdropFilter: 'blur(4px)',
+            display: 'flex', alignItems: 'center', justifyContent: 'center',
+            padding: '24px',
+          }}
+          onClick={(e) => { if (e.target === e.currentTarget && !leaveLoading) setShowLeaveConfirm(false); }}
+        >
+          <div className="glass-panel" style={{ padding: '32px', width: '100%', maxWidth: '400px' }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px' }}>
+              <h3 style={{ fontSize: '1.3rem', color: 'var(--error-color)' }}>Leave Venue?</h3>
+              <button className="icon-button" onClick={() => setShowLeaveConfirm(false)} disabled={leaveLoading}>
+                <X size={18} />
+              </button>
+            </div>
+            <p style={{ color: 'var(--text-secondary)', fontSize: '0.9rem', marginBottom: '24px', lineHeight: 1.6 }}>
+              Are you sure you want to leave <strong>{venue.name}</strong>? You will lose access to all channels and messages.
+            </p>
+
+            {leaveErrorText && (
+              <div style={{
+                color: 'var(--error-color)',
+                marginBottom: '16px',
+                fontSize: '0.9rem',
+                padding: '12px',
+                background: 'rgba(255,80,80,0.1)',
+                borderRadius: '8px',
+                border: '1px solid var(--error-color)',
+              }}>
+                ⚠️ {leaveErrorText}
+              </div>
+            )}
+
+            <div className="flex-row" style={{ gap: '12px', justifyContent: 'flex-end' }}>
+              <button 
+                className="secondary" 
+                onClick={() => setShowLeaveConfirm(false)}
+                disabled={leaveLoading}
+                style={{ flex: 1 }}
+              >
+                Cancel
+              </button>
+              <button 
+                className="danger" 
+                onClick={confirmLeaveVenue}
+                disabled={leaveLoading}
+                style={{ flex: 1 }}
+              >
+                {leaveLoading ? 'Leaving...' : 'Yes, Leave'}
+              </button>
             </div>
           </div>
         </div>
