@@ -46,11 +46,15 @@ export const ChannelScreen = () => {
   }, []);
 
   // Role helpers (need this before messages filtering)
+  const myVenueMembership = venueMembers.find(m => m.venueId === venue?.venueId && m.userId === user?.userId);
+  const isBlocked = myVenueMembership?.isBlocked ?? false;
+
   const myChannelRole = (channelRoles as any[]).find(
     r => r.channelId === channelIdBigInt && r.userId === user?.userId
   );
-  const roleTag: string = (myChannelRole?.role.tag ?? 'member').toLowerCase();
-  const isVenueOwner = venue?.ownerId === user?.userId;
+  
+  const roleTag: string = isBlocked ? 'member' : (myChannelRole?.role.tag ?? 'member').toLowerCase();
+  const isVenueOwner = !isBlocked && venue?.ownerId === user?.userId;
   const isOwner = isVenueOwner || roleTag === 'owner';
   const isAdmin = isOwner || roleTag === 'admin';
   const isModerator = isAdmin || roleTag === 'moderator';

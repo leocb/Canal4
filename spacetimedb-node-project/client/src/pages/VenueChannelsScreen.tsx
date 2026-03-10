@@ -42,18 +42,20 @@ export const VenueChannelsScreen = () => {
 
   const venueChannels = channels.filter(c => c.venueId === venueIdBigInt);
 
-  const isOwner = venue?.ownerId === user?.userId;
+  // Membership check (frontend UX guard — backend is authoritative)
+  const myMember = venue ? venueMembers.find(
+    m => m.venueId === venue.venueId && m.userId === user?.userId
+  ) : undefined;
+  const isMember = !!myMember;
+  const isBlocked = myMember?.isBlocked ?? false;
+
+  const isOwner = !isBlocked && venue?.ownerId === user?.userId;
   const userRolesInVenue = channelRoles.filter(r =>
     r.userId === user?.userId &&
     venueChannels.some(c => c.channelId === r.channelId)
   );
-  const isAdmin = userRolesInVenue.some(r => r.role.tag === 'Admin' || r.role.tag === 'Owner');
+  const isAdmin = !isBlocked && userRolesInVenue.some(r => r.role.tag.toLowerCase() === 'admin' || r.role.tag.toLowerCase() === 'owner');
   const canManageDisplays = isOwner || isAdmin;
-
-  // Membership check (frontend UX guard — backend is authoritative)
-  const isMember = venue ? venueMembers.some(
-    m => m.venueId === venue.venueId && m.userId === user?.userId
-  ) : false;
 
   if (!venuesReady || !membersReady) {
     return (
