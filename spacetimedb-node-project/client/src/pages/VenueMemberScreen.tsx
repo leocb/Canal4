@@ -46,6 +46,24 @@ export const VenueMemberScreen = () => {
     return <div className="app-container empty-state"><h2>Access Denied</h2></div>;
   }
 
+  const getHighestRole = (userId: bigint) => {
+    if (venue.ownerId === userId) return 'Owner';
+    const roles = channelRoles.filter(r => r.userId === userId && venueChannels.some(c => c.channelId === r.channelId));
+    let hasAdmin = false;
+    let hasMod = false;
+    for (const r of roles) {
+      const t = r.role.tag.toLowerCase();
+      if (t === 'owner') return 'Owner';
+      if (t === 'admin') hasAdmin = true;
+      if (t === 'moderator') hasMod = true;
+    }
+    if (hasAdmin) return 'Admin';
+    if (hasMod) return 'Moderator';
+    return 'Member';
+  };
+
+  const highestRoleString = getHighestRole(memberId);
+
   // Get user's last message in the venue
   const userMessages = messages
     .filter(m => m.senderId === memberId && venueChannels.some(c => c.channelId === m.channelId))
@@ -118,10 +136,9 @@ export const VenueMemberScreen = () => {
   const availableRoles = ['Owner', 'Admin', 'Moderator', 'Member'];
 
   // A helper to format dates from spacetime timestamp
-  const formatDate = (ts: unknown) => {
-    if (!ts) return 'Never';
-    // SpacetimeDB timestamp is microseconds usually
-    const date = new Date(Number(ts) / 1000);
+  const formatDate = (ts: any) => {
+    if (!ts || !ts.microsSinceUnixEpoch) return 'Never';
+    const date = new Date(Number(ts.microsSinceUnixEpoch / 1000n));
     return date.toLocaleString();
   };
 
@@ -160,6 +177,20 @@ export const VenueMemberScreen = () => {
             <p style={{ margin: '4px 0 0 0', color: 'var(--text-secondary)', fontSize: '0.9rem' }}>
               Last Seen: {formatDate(targetMember.lastSeen)}
             </p>
+            
+            <div style={{ marginTop: '12px', display: 'flex', alignItems: 'center', gap: '8px' }}>
+              <span style={{ fontSize: '0.9rem', color: 'var(--text-secondary)', fontWeight: 500 }}>Venue Role:</span>
+              <select 
+                value={highestRoleString}
+                onChange={(e) => {
+                  if (e.target.value) handleApplyToAllChannels(e.target.value);
+                }}
+                disabled={loading || targetMember.isBlocked}
+                style={{ padding: '6px 12px', fontSize: '0.9rem', borderRadius: '6px', border: '1px solid var(--surface-border)', background: 'var(--surface-color)' }}
+              >
+                {availableRoles.map(r => <option key={r} value={r}>{r}</option>)}
+              </select>
+            </div>
           </div>
           <div>
             <button className={targetMember.isBlocked ? "primary" : "danger"} onClick={toggleBlock} disabled={loading}>
@@ -179,24 +210,6 @@ export const VenueMemberScreen = () => {
       <div style={{ marginTop: '32px' }}>
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px' }}>
           <h3>Channel Permissions</h3>
-          {venueChannels.length > 0 && (
-            <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
-              <span style={{ fontSize: '0.9rem', color: 'var(--text-secondary)' }}>Apply to all:</span>
-              <select
-                onChange={(e) => {
-                  if (e.target.value) {
-                    handleApplyToAllChannels(e.target.value);
-                    e.target.value = '';
-                  }
-                }}
-                disabled={loading || targetMember.isBlocked}
-                style={{ padding: '6px 12px', fontSize: '0.9rem' }}
-              >
-                <option value="">- Select -</option>
-                {availableRoles.map(r => <option key={r} value={r}>{r}</option>)}
-              </select>
-            </div>
-          )}
         </div>
 
         <div className="flex-col" style={{ gap: '12px' }}>

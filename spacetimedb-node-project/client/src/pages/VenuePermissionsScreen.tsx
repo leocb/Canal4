@@ -1,4 +1,4 @@
-
+import { useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { useTable } from 'spacetimedb/react';
 import { tables } from '../module_bindings/index.ts';
@@ -19,6 +19,9 @@ export const VenuePermissionsScreen = () => {
 
   const venue = venues.find((v) => v.link === venueLink);
   const venueIdBigInt = venue?.venueId;
+
+  const [searchTerm, setSearchTerm] = useState('');
+  const [roleFilter, setRoleFilter] = useState('');
 
   // Permissions check
   const venueChannels = channels.filter(c => c.venueId === venueIdBigInt);
@@ -55,17 +58,20 @@ export const VenuePermissionsScreen = () => {
   const getHighestRole = (userId: bigint): { level: number, name: string } => {
     if (venue.ownerId === userId) return { level: 4, name: 'Owner' };
     
-    // get user's channel roles in this venue
     const roles = channelRoles.filter(r => r.userId === userId && venueChannels.some(c => c.channelId === r.channelId));
     
+    let hasOwner = false;
     let hasAdmin = false;
     let hasMod = false;
     
     for (const r of roles) {
-      if (r.role.tag === 'Admin' || r.role.tag === 'Owner') hasAdmin = true;
-      if (r.role.tag === 'Moderator') hasMod = true;
+      const tag = r.role.tag.toLowerCase();
+      if (tag === 'owner') hasOwner = true;
+      if (tag === 'admin') hasAdmin = true;
+      if (tag === 'moderator') hasMod = true;
     }
     
+    if (hasOwner) return { level: 4, name: 'Owner' };
     if (hasAdmin) return { level: 3, name: 'Admin' };
     if (hasMod)  return { level: 2, name: 'Moderator' };
     return { level: 1, name: 'Member' };
@@ -87,6 +93,12 @@ export const VenuePermissionsScreen = () => {
   processedMembers.sort((a, b) => {
     if (a.roleLevel !== b.roleLevel) return b.roleLevel - a.roleLevel;
     return a.name.localeCompare(b.name);
+  });
+
+  const filteredMembers = processedMembers.filter(m => {
+    const matchesSearch = m.name.toLowerCase().includes(searchTerm.toLowerCase());
+    const matchesRole = roleFilter ? m.highestRole === roleFilter : true;
+    return matchesSearch && matchesRole;
   });
 
   const getRoleBadgeColor = (role: string, isBlocked: boolean) => {
@@ -113,8 +125,29 @@ export const VenuePermissionsScreen = () => {
         </div>
       </div>
 
+      <div className="flex-row" style={{ marginTop: '16px', gap: '12px' }}>
+        <input 
+          type="text" 
+          placeholder="Search members..." 
+          value={searchTerm} 
+          onChange={(e) => setSearchTerm(e.target.value)}
+          style={{ flex: 1, padding: '10px 14px', borderRadius: '8px', border: '1px solid var(--surface-border)', background: 'var(--surface-color)' }}
+        />
+        <select 
+          value={roleFilter} 
+          onChange={(e) => setRoleFilter(e.target.value)}
+          style={{ padding: '10px 14px', borderRadius: '8px', border: '1px solid var(--surface-border)', background: 'var(--surface-color)' }}
+        >
+          <option value="">All Roles</option>
+          <option value="Owner">Owner</option>
+          <option value="Admin">Admin</option>
+          <option value="Moderator">Moderator</option>
+          <option value="Member">Member</option>
+        </select>
+      </div>
+
       <div className="flex-col" style={{ marginTop: '24px', gap: '12px' }}>
-        {processedMembers.map((member) => {
+        {filteredMembers.map((member) => {
           const badge = getRoleBadgeColor(member.highestRole, member.isBlocked);
           return (
             <div 
@@ -149,7 +182,7 @@ export const VenuePermissionsScreen = () => {
             </div>
           );
         })}
-        {processedMembers.length === 0 && (
+        {filteredMembers.length === 0 && (
            <p style={{ textAlign: 'center', color: 'var(--text-secondary)', padding: '24px' }}>No members found.</p>
         )}
       </div>
