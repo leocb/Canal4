@@ -3,7 +3,7 @@ import { useParams, useNavigate } from 'react-router-dom';
 import { useTable, useReducer, useSpacetimeDB } from 'spacetimedb/react';
 import { tables, reducers } from '../module_bindings/index.ts';
 import { useReadyTable } from '../hooks/useReadyTable';
-import { MoreVertical, Settings } from 'lucide-react';
+import { MoreVertical, Settings, Send, History } from 'lucide-react';
 
 export const ChannelScreen = () => {
   const { venueLink, channelId } = useParams<{ venueLink: string, channelId: string }>();
@@ -30,8 +30,6 @@ export const ChannelScreen = () => {
   const [body, setBody] = useState('');
   const [sendError, setSendError] = useState('');
   const [contextMsg, setContextMsg] = useState<any | null>(null);
-  const messagesEndRef = useRef<HTMLDivElement>(null);
-  const longPressTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   // Menu state
   const [showMenu, setShowMenu] = useState(false);
@@ -45,15 +43,10 @@ export const ChannelScreen = () => {
     return () => document.removeEventListener('mousedown', handler);
   }, []);
 
-  // Messages: reverse chronological (newest at bottom means we scroll to bottom; spec says reverse chron but typical chat UX keeps newest at bottom)
-  // Spec says "reverse chronological" but also "scroll to bottom", so newest at bottom (ascending by sent_at) is correct UX
+  // Messages: reverse chronological (newest at top per spec and notification style UX)
   const channelMessages = [...(messages as any[])]
     .filter(m => m.channelId === channelIdBigInt)
-    .sort((a, b) => Number(a.sentAt.microsSinceUnixEpoch - b.sentAt.microsSinceUnixEpoch));
-
-  useEffect(() => {
-    messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
-  }, [channelMessages.length]);
+    .sort((a, b) => Number(b.sentAt.microsSinceUnixEpoch - a.sentAt.microsSinceUnixEpoch));
 
   // Membership + role resolution
   const membership = venue ? (venueMembers as any[]).find(
@@ -117,17 +110,9 @@ export const ChannelScreen = () => {
   };
 
   const STATUS_ICON: Record<string, string> = {
-    Enqueued:   '🕐',
+    Enqueued: '🕐',
     InProgress: '▶️',
-    Shown:      '✅',
-  };
-
-  // Long-press handling for touch + right-click for desktop
-  const startLongPress = (msg: any) => {
-    longPressTimer.current = setTimeout(() => setContextMsg(msg), 500);
-  };
-  const cancelLongPress = () => {
-    if (longPressTimer.current) clearTimeout(longPressTimer.current);
+    Shown: '✅',
   };
 
   const handleSend = async (e: React.FormEvent) => {
@@ -189,61 +174,9 @@ export const ChannelScreen = () => {
           </div>
         </div>
 
-        {/* Messages list — newest at bottom, scroll to bottom */}
-        <div className="flex-col" style={{ flex: 1, overflowY: 'auto', padding: '24px 0', gap: '12px' }}>
-          {channelMessages.length === 0 ? (
-            <div className="empty-state glass-panel" style={{ margin: '0 24px' }}>
-              <h3 style={{ color: 'var(--text-primary)' }}>No new messages</h3>
-              <p style={{ marginTop: '8px' }}>
-                {isModerator ? 'Send a message using the form below.' : 'Messages from moderators will appear here.'}
-              </p>
-            </div>
-          ) : (
-            channelMessages.map((msg: any) => {
-              const isMe = msg.senderIdentity.toHexString() === identity?.toHexString();
-              return (
-                <div
-                  key={msg.messageId}
-                  className={`glass-panel flex-col`}
-                  style={{
-                    padding: '12px 16px',
-                    margin: '0 24px',
-                    alignSelf: isMe ? 'flex-end' : 'flex-start',
-                    maxWidth: '75%',
-                    backgroundColor: isMe ? 'rgba(78, 204, 163, 0.15)' : 'var(--glass-bg)',
-                    borderColor: isMe ? 'rgba(78, 204, 163, 0.3)' : 'var(--glass-border)',
-                    cursor: isModerator ? 'context-menu' : 'default',
-                    userSelect: 'none',
-                  }}
-                  onContextMenu={e => { e.preventDefault(); if (isModerator) setContextMsg(msg); }}
-                  onTouchStart={() => { if (isModerator) startLongPress(msg); }}
-                  onTouchEnd={cancelLongPress}
-                  onTouchMove={cancelLongPress}
-                >
-                  <div style={{ fontSize: '0.8rem', color: 'var(--text-secondary)', marginBottom: '4px', display: 'flex', justifyContent: 'space-between', gap: '12px' }}>
-                    <span>{isMe ? 'You' : getUserName(msg.senderIdentity.toHexString())} • {new Date(Number(msg.sentAt.microsSinceUnixEpoch / 1000n)).toLocaleTimeString()}</span>
-                    {/* Delivery status icons — moderators and above only */}
-                    {isModerator && hasDevices && (
-                      <span style={{ display: 'flex', gap: '4px' }}>
-                        {connectedDevices.map((d: any) => (
-                          <span key={d.messengerId} title={d.name} style={{ fontSize: '0.75rem' }}>
-                            {STATUS_ICON[getDeliveryStatus(msg.messageId, d.messengerId)] ?? '⏳'}
-                          </span>
-                        ))}
-                      </span>
-                    )}
-                  </div>
-                  <div style={{ lineHeight: '1.4' }}>{msg.content}</div>
-                </div>
-              );
-            })
-          )}
-          <div ref={messagesEndRef} />
-        </div>
-
         {/* Send message — moderators and above only */}
         {isModerator && (
-          <div style={{ margin: '0 24px 24px' }}>
+          <div style={{ padding: '24px 24px 0' }}>
             {sendError && (
               <div style={{
                 color: 'var(--error-color)', fontSize: '0.85rem',
@@ -257,20 +190,86 @@ export const ChannelScreen = () => {
             <form
               onSubmit={handleSend}
               className="glass-panel"
-              style={{ padding: '16px', display: 'flex', gap: '12px', alignItems: 'center' }}
+              style={{ padding: '8px', display: 'flex', gap: '8px', alignItems: 'center', background: 'var(--surface-bg)' }}
             >
               <input
                 type="text"
-                placeholder="Send a message to this channel..."
+                placeholder="Compose new notification..."
                 value={body}
                 onChange={e => setBody(e.target.value)}
-                style={{ flex: 1, marginBottom: 0 }}
+                style={{ flex: 1, marginBottom: 0, padding: '12px 16px', background: 'transparent', border: 'none', boxShadow: 'none' }}
                 autoFocus
               />
-              <button type="submit" disabled={!body.trim()}>Send</button>
+              <button type="submit" disabled={!body.trim()} style={{ display: 'flex', alignItems: 'center', gap: '6px', padding: '10px 16px', borderRadius: '8px' }}>
+                <Send size={16} /> Send
+              </button>
             </form>
           </div>
         )}
+
+        {/* Messages list — newest at top, notification panel style */}
+        <div className="flex-col" style={{ flex: 1, overflowY: 'auto', padding: '24px', gap: '12px' }}>
+          {channelMessages.length === 0 ? (
+            <div className="empty-state glass-panel">
+              <History size={48} style={{ opacity: 0.2, marginBottom: '16px' }} />
+              <h3 style={{ color: 'var(--text-primary)' }}>No recent notifications</h3>
+              <p style={{ marginTop: '8px' }}>
+                {isModerator ? 'Use the form above to send the first broadcast.' : 'Notifications from moderators will appear here.'}
+              </p>
+            </div>
+          ) : (
+            channelMessages.map((msg: any) => {
+              const isMe = msg.senderIdentity.toHexString() === identity?.toHexString();
+              const dateObj = new Date(Number(msg.sentAt.microsSinceUnixEpoch / 1000n));
+              const isToday = new Date().toDateString() === dateObj.toDateString();
+              const timeString = isToday ? dateObj.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : dateObj.toLocaleString([], { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' });
+
+              return (
+                <div
+                  key={msg.messageId}
+                  className="glass-panel"
+                  style={{
+                    padding: '16px 20px',
+                    backgroundColor: 'rgba(255, 255, 255, 0.03)',
+                    border: '1px solid rgba(255, 255, 255, 0.04)',
+                    borderLeft: `3px solid ${isMe ? 'var(--accent-color)' : 'rgba(255, 255, 255, 0.15)'}`,
+                    borderRadius: '12px',
+                    boxShadow: '0 4px 20px rgba(0, 0, 0, 0.15)',
+                    cursor: isModerator ? 'pointer' : 'default',
+                    userSelect: 'none',
+                    display: 'flex',
+                    flexDirection: 'column',
+                    gap: '8px',
+                    transition: 'all 0.2s ease',
+                  }}
+                  onClick={() => { if (isModerator) setContextMsg(msg); }}
+                >
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                      <span style={{ fontSize: '0.8rem', color: 'var(--text-secondary)' }}>
+                        {timeString}
+                      </span>
+                    </div>
+
+                    {/* Delivery status icons — moderators and above only */}
+                    {isModerator && hasDevices && (
+                      <span style={{ display: 'flex', gap: '4px', background: 'rgba(0,0,0,0.1)', padding: '2px 6px', borderRadius: '12px' }}>
+                        {connectedDevices.map((d: any) => (
+                          <span key={d.messengerId} title={d.name} style={{ fontSize: '0.75rem' }}>
+                            {STATUS_ICON[getDeliveryStatus(msg.messageId, d.messengerId)] ?? '⏳'}
+                          </span>
+                        ))}
+                      </span>
+                    )}
+                  </div>
+                  <div style={{ fontSize: '1.05rem', lineHeight: '1.4', wordBreak: 'break-word', color: 'rgba(255,255,255,0.9)' }}>
+                    {msg.content}
+                  </div>
+                </div>
+              );
+            })
+          )}
+        </div>
       </div>
 
       {/* Message context menu (long press / right click) */}
@@ -285,9 +284,14 @@ export const ChannelScreen = () => {
           }}
           onClick={e => { if (e.target === e.currentTarget) setContextMsg(null); }}
         >
-          <div className="glass-panel" style={{ padding: '8px', minWidth: '220px', display: 'flex', flexDirection: 'column' }}>
-            <div style={{ padding: '12px 16px', fontSize: '0.8rem', color: 'var(--text-secondary)', borderBottom: '1px solid var(--surface-border)', marginBottom: '4px' }}>
-              {contextMsg.content.length > 40 ? contextMsg.content.slice(0, 40) + '…' : contextMsg.content}
+          <div className="glass-panel" style={{ padding: '8px', minWidth: '260px', display: 'flex', flexDirection: 'column' }}>
+            <div style={{ padding: '12px 16px', borderBottom: '1px solid var(--surface-border)', marginBottom: '4px' }}>
+              <div style={{ fontSize: '0.85rem', color: 'var(--text-secondary)', marginBottom: '8px' }}>
+                Sent by <span style={{ color: 'var(--text-primary)', fontWeight: 500 }}>{contextMsg.senderIdentity.toHexString() === identity?.toHexString() ? 'You' : getUserName(contextMsg.senderIdentity.toHexString())}</span> on {new Date(Number(contextMsg.sentAt.microsSinceUnixEpoch / 1000n)).toLocaleString()}
+              </div>
+              <div style={{ fontSize: '0.95rem', color: 'var(--text-primary)', lineHeight: 1.4, wordBreak: 'break-word' }}>
+                {contextMsg.content}
+              </div>
             </div>
             <button className="dropdown-item" onClick={() => handleRepeat(contextMsg)}>
               🔁 Display Again
