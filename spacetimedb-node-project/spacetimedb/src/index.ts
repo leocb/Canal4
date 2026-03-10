@@ -295,7 +295,17 @@ export const block_user = spacetimedb.reducer(
     if (!venue) throw new SenderError("Venue not found");
 
     const isVenueOwner = venue.ownerId === userId;
-    if (!isVenueOwner) throw new SenderError("Only venue owners can block users");
+    let isAdmin = isVenueOwner;
+    if (!isAdmin) {
+      const channels = [...ctx.db.Channel.channel_venue_id.filter(venueId)];
+      const myRolesInVenue = channels.flatMap(ch =>
+        [...ctx.db.ChannelMemberRole.channel_member_role_channel_id.filter(ch.channelId)]
+          .filter(r => r.userId === userId)
+      );
+      isAdmin = myRolesInVenue.some(r => r.role.tag === "owner" || r.role.tag === "admin");
+    }
+
+    if (!isAdmin) throw new SenderError("Only venue Admins or Owners can block users");
 
     const allMembers = [...ctx.db.VenueMember.venue_member_venue_id.filter(venueId)];
     const targetMember = allMembers.find(m => m.userId === targetUserId);
@@ -317,7 +327,17 @@ export const unblock_user = spacetimedb.reducer(
     if (!venue) throw new SenderError("Venue not found");
 
     const isVenueOwner = venue.ownerId === userId;
-    if (!isVenueOwner) throw new SenderError("Only venue owners can unblock users");
+    let isAdmin = isVenueOwner;
+    if (!isAdmin) {
+      const channels = [...ctx.db.Channel.channel_venue_id.filter(venueId)];
+      const myRolesInVenue = channels.flatMap(ch =>
+        [...ctx.db.ChannelMemberRole.channel_member_role_channel_id.filter(ch.channelId)]
+          .filter(r => r.userId === userId)
+      );
+      isAdmin = myRolesInVenue.some(r => r.role.tag === "owner" || r.role.tag === "admin");
+    }
+
+    if (!isAdmin) throw new SenderError("Only venue Admins or Owners can unblock users");
 
     const allMembers = [...ctx.db.VenueMember.venue_member_venue_id.filter(venueId)];
     const targetMember = allMembers.find(m => m.userId === targetUserId);

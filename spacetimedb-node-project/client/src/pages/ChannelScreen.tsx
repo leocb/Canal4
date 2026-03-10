@@ -23,6 +23,7 @@ export const ChannelScreen = () => {
   const sendMessage = useReducer(reducers.sendMessage);
   const deleteMessage = useReducer(reducers.deleteMessage);
   const repeatMessage = useReducer(reducers.repeatMessage);
+  const blockUser = useReducer(reducers.blockUser);
 
   const venue = venues.find((v: any) => v.link === venueLink);
   const channelIdBigInt = BigInt(channelId || 0);
@@ -44,9 +45,25 @@ export const ChannelScreen = () => {
     return () => document.removeEventListener('mousedown', handler);
   }, []);
 
+  // Role helpers (need this before messages filtering)
+  const myChannelRole = (channelRoles as any[]).find(
+    r => r.channelId === channelIdBigInt && r.userId === user?.userId
+  );
+  const roleTag: string = myChannelRole?.role.tag ?? 'member';
+  const isVenueOwner = venue?.ownerId === user?.userId;
+  const isOwner = isVenueOwner || roleTag === 'owner';
+  const isAdmin = isOwner || roleTag === 'admin';
+  const isModerator = isAdmin || roleTag === 'moderator';
+
   // Messages: reverse chronological (newest at top per spec and notification style UX)
   const channelMessages = [...(messages as any[])]
     .filter(m => m.channelId === channelIdBigInt)
+    .filter(m => {
+      if (isModerator) return true;
+      const ageMicros = BigInt(Date.now()) * 1000n - m.sentAt.microsSinceUnixEpoch;
+      const maxAgeMicros = BigInt(channel?.messageMaxAgeHours || 4) * 3600n * 1000000n;
+      return ageMicros <= maxAgeMicros;
+    })
     .sort((a, b) => Number(b.sentAt.microsSinceUnixEpoch - a.sentAt.microsSinceUnixEpoch))
     .reduce((acc: any[], msg: any) => {
       const lastGroup = acc[acc.length - 1];
@@ -93,15 +110,7 @@ export const ChannelScreen = () => {
     );
   }
 
-  // Role helpers
-  const myChannelRole = (channelRoles as any[]).find(
-    r => r.channelId === channelIdBigInt && r.userId === user?.userId
-  );
-  const roleTag: string = myChannelRole?.role.tag ?? 'member';
-  const isVenueOwner = venue.ownerId === user?.userId;
-  const isOwner = isVenueOwner || roleTag === 'owner';
-  const isAdmin = isOwner || roleTag === 'admin';
-  const isModerator = isAdmin || roleTag === 'moderator';
+
 
   const getUserName = (userId: bigint) => {
     const u = (users as any[]).find(u => u.userId === userId);
@@ -145,6 +154,17 @@ export const ChannelScreen = () => {
   const handleRepeat = async (msg: any) => {
     setContextMsg(null);
     try { await repeatMessage({ messageId: msg.messageId }); } catch { /* backend will reject if no permission */ }
+  };
+
+  const handleDeleteAndBlock = async (msg: any) => {
+    if (!window.confirm('Are you sure you want to delete this message and block the user?')) return;
+    setContextMsg(null);
+    try {
+      await deleteMessage({ messageId: msg.messageId });
+      await blockUser({ venueId: venue.venueId, targetUserId: msg.senderId });
+    } catch (err: unknown) {
+      alert(err instanceof Error ? err.message : String(err));
+    }
   };
 
   return (
@@ -318,9 +338,12 @@ export const ChannelScreen = () => {
             <button className="dropdown-item" onClick={() => handleRepeat(contextMsg)}>
               🔁 Display Again
             </button>
-            {isAdmin && (
-              <button className="dropdown-item danger" onClick={() => handleDelete(contextMsg)}>
-                🗑️ Delete
+            <button className="dropdown-item danger" onClick={() => handleDelete(contextMsg)}>
+              🗑️ Delete
+            </button>
+            {isAdmin && contextMsg.senderId !== user?.userId && (
+              <button className="dropdown-item danger" onClick={() => handleDeleteAndBlock(contextMsg)}>
+                🚫 Delete & Block
               </button>
             )}
             <button className="dropdown-item" style={{ color: 'var(--text-secondary)' }} onClick={() => setContextMsg(null)}>
