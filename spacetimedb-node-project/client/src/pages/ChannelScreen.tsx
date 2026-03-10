@@ -11,6 +11,7 @@ export const ChannelScreen = () => {
   const [venues] = useTable(tables.Venue);
   const [channels] = useTable(tables.Channel);
   const [messages] = useTable(tables.Message);
+  const [venueMembers] = useTable(tables.VenueMember);
   
   const sendMessage = useReducer(reducers.sendMessage);
   
@@ -30,11 +31,36 @@ export const ChannelScreen = () => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
   }, [channelMessages.length]);
 
+  // Membership guard (frontend UX — backend is authoritative)
+  const membership = venue ? venueMembers.find(
+    m => m.venueId === venue.venueId && m.userIdentity.toHexString() === identity?.toHexString()
+  ) : undefined;
+
   if (!channel || !venue) {
     return (
       <div className="app-container empty-state">
         <h2>Channel not found</h2>
         <button onClick={() => navigate(-1)} style={{ marginTop: '16px' }}>Go back</button>
+      </div>
+    );
+  }
+
+  if (!membership) {
+    return (
+      <div className="app-container empty-state">
+        <h2>Access Denied</h2>
+        <p style={{ marginTop: '8px', color: 'var(--text-secondary)' }}>You are not a member of this venue.</p>
+        <button onClick={() => navigate('/venues')} style={{ marginTop: '16px' }}>Go back</button>
+      </div>
+    );
+  }
+
+  if (membership.isBlocked) {
+    return (
+      <div className="app-container empty-state">
+        <h2>Access Denied</h2>
+        <p style={{ marginTop: '8px', color: 'var(--text-secondary)' }}>You have been blocked in this venue.</p>
+        <button onClick={() => navigate('/venues')} style={{ marginTop: '16px' }}>Go back</button>
       </div>
     );
   }

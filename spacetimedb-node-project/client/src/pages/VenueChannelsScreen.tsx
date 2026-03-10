@@ -7,11 +7,12 @@ import { MoreVertical } from 'lucide-react';
 export const VenueChannelsScreen = () => {
   const { venueLink } = useParams<{ venueLink: string }>();
   const navigate = useNavigate();
-  
+
   const { identity } = useSpacetimeDB();
   const [venues] = useTable(tables.Venue);
   const [channels] = useTable(tables.Channel);
   const [channelRoles] = useTable(tables.ChannelMemberRole);
+  const [venueMembers] = useTable(tables.VenueMember);
   
   const [showMenu, setShowMenu] = useState(false);
   const menuRef = useRef<HTMLDivElement>(null);
@@ -29,21 +30,36 @@ export const VenueChannelsScreen = () => {
 
   const venue = venues.find(v => v.link === venueLink);
   const venueIdBigInt = venue ? venue.venueId : 0n;
-  
+
   const venueChannels = channels.filter(c => c.venueId === venueIdBigInt);
 
   const isOwner = venue?.ownerIdentity.toHexString() === identity?.toHexString();
-  const userRolesInVenue = channelRoles.filter(r => 
-    r.userIdentity.toHexString() === identity?.toHexString() && 
+  const userRolesInVenue = channelRoles.filter(r =>
+    r.userIdentity.toHexString() === identity?.toHexString() &&
     venueChannels.some(c => c.channelId === r.channelId)
   );
   const isAdmin = userRolesInVenue.some(r => r.role.tag === 'Admin');
   const canManageDisplays = isOwner || isAdmin;
 
+  // Membership check (frontend UX guard — backend is authoritative)
+  const isMember = venue ? venueMembers.some(
+    m => m.venueId === venue.venueId && m.userIdentity.toHexString() === identity?.toHexString()
+  ) : false;
+
   if (!venue) {
     return (
       <div className="app-container empty-state">
         <h2>Venue not found</h2>
+        <button onClick={() => navigate('/venues')} style={{ marginTop: '16px' }}>Go back</button>
+      </div>
+    );
+  }
+
+  if (!isMember) {
+    return (
+      <div className="app-container empty-state">
+        <h2>Access Denied</h2>
+        <p style={{ marginTop: '8px', color: 'var(--text-secondary)' }}>You are not a member of this venue.</p>
         <button onClick={() => navigate('/venues')} style={{ marginTop: '16px' }}>Go back</button>
       </div>
     );
@@ -71,7 +87,7 @@ export const VenueChannelsScreen = () => {
           </button>
           {showMenu && (
             <div className="dropdown-menu glass-panel" style={{ position: 'absolute', right: 0, top: '40px', zIndex: 100, minWidth: '180px', display: 'flex', flexDirection: 'column' }}>
-              <button className="dropdown-item" onClick={() => navigate(`/venues/${venue.link}/channels/new`)}>New Channel</button>
+              <button className="dropdown-item" onClick={() => { setShowMenu(false); navigate(`/venues/${venue.link}/channels/new`); }}>New Channel</button>
               {canManageDisplays && (
                 <button className="dropdown-item" onClick={() => navigate(`/venues/${venue.link}/desktop-displays`)}>Display Nodes</button>
               )}
