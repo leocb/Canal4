@@ -5,14 +5,24 @@ import { DbConnection } from "./module_bindings/index.ts";
 export const SpacetimeDBProvider = ({ children }: { children: ReactNode }) => {
   const token = localStorage.getItem("auth_token") || undefined;
   
-  const SPACETIMEDB_URI = import.meta.env.DEV
-    ? `ws://${window.location.hostname}:3000`
-    : "wss://maincloud.spacetimedb.com";
+  const DB_NAME = import.meta.env.VITE_SPACETIMEDB_NAME;
+  const URI_DEV = import.meta.env.VITE_SPACETIMEDB_URI_DEV;
+  const URI_PROD = import.meta.env.VITE_SPACETIMEDB_URI_PROD;
+
+  if (!DB_NAME) {
+    throw new Error("Missing VITE_SPACETIMEDB_NAME in environment configuration. Please check your .env file.");
+  }
+
+  const SPACETIMEDB_URI = import.meta.env.DEV ? URI_DEV : URI_PROD;
+
+  if (!SPACETIMEDB_URI) {
+    throw new Error(`Missing SpacetimeDB URI for ${import.meta.env.DEV ? 'development' : 'production'} mode. Please check your .env file.`);
+  }
 
   const builder = useMemo(() => {
     return DbConnection.builder()
       .withUri(SPACETIMEDB_URI)
-      .withDatabaseName("spacetimedb-node-project-gybhi")
+      .withDatabaseName(DB_NAME)
       .withToken(token)
       .onConnect((connection, _identity, token) => {
         console.log("Connected to SpacetimeDB");
