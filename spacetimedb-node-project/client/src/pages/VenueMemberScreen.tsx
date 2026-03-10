@@ -23,7 +23,7 @@ export const VenueMemberScreen = () => {
 
   const venue = venues.find(v => v.link === venueLink);
   const memberId = BigInt(memberIdStr || '0');
-  
+
   const targetMember = venueMembers.find(m => m.venueId === venue?.venueId && m.userId === memberId);
   const targetUser = users.find(u => u.userId === memberId);
 
@@ -41,7 +41,7 @@ export const VenueMemberScreen = () => {
   if (!venue || !targetMember || !targetUser) {
     return <div className="app-container empty-state"><h2>Member not found</h2></div>;
   }
-  
+
   if (!isOwner && !isAdmin) {
     return <div className="app-container empty-state"><h2>Access Denied</h2></div>;
   }
@@ -59,7 +59,7 @@ export const VenueMemberScreen = () => {
       await setChannelRole({
         channelId: channelId,
         targetUserId: memberId,
-        role: roleString
+        role: roleString.toLowerCase()
       });
     } catch (err: unknown) {
       const message = err instanceof Error ? err.message : String(err);
@@ -74,18 +74,18 @@ export const VenueMemberScreen = () => {
     setErrorText('');
     setLoading(true);
     try {
-        for (const channel of venueChannels) {
-            await setChannelRole({
-                channelId: channel.channelId,
-                targetUserId: memberId,
-                role: roleString
-            });
-        }
+      for (const channel of venueChannels) {
+        await setChannelRole({
+          channelId: channel.channelId,
+          targetUserId: memberId,
+          role: roleString.toLowerCase()
+        });
+      }
     } catch (err: unknown) {
-        const message = err instanceof Error ? err.message : String(err);
-        setErrorText(message || 'Failed to update roles. Please try again.');
+      const message = err instanceof Error ? err.message : String(err);
+      setErrorText(message || 'Failed to update roles. Please try again.');
     } finally {
-        setLoading(false);
+      setLoading(false);
     }
   };
 
@@ -116,20 +116,20 @@ export const VenueMemberScreen = () => {
   };
 
   const availableRoles = ['Owner', 'Admin', 'Moderator', 'Member'];
-  
+
   // A helper to format dates from spacetime timestamp
   const formatDate = (ts: unknown) => {
-      if (!ts) return 'Never';
-      // SpacetimeDB timestamp is microseconds usually
-      const date = new Date(Number(ts) / 1000);
-      return date.toLocaleString();
+    if (!ts) return 'Never';
+    // SpacetimeDB timestamp is microseconds usually
+    const date = new Date(Number(ts) / 1000);
+    return date.toLocaleString();
   };
 
   return (
     <div className="app-container">
       <div className="screen-header">
         <div className="flex-col" style={{ gap: '4px' }}>
-          <span 
+          <span
             style={{ fontSize: '0.9rem', color: 'var(--accent-color)', cursor: 'pointer', fontWeight: 500, display: 'flex', alignItems: 'center', gap: '4px' }}
             onClick={() => navigate(`/venues/${venue.link}/permissions`)}
           >
@@ -163,40 +163,40 @@ export const VenueMemberScreen = () => {
           </div>
           <div>
             <button className={targetMember.isBlocked ? "primary" : "danger"} onClick={toggleBlock} disabled={loading}>
-                {targetMember.isBlocked ? 'Unblock User' : 'Block User'}
+              {targetMember.isBlocked ? 'Unblock User' : 'Block User'}
             </button>
           </div>
         </div>
 
         {lastMessage && (
-            <div style={{ marginTop: '16px', padding: '16px', background: 'rgba(0,0,0,0.2)', borderRadius: '8px' }}>
-                <p style={{ margin: 0, fontSize: '0.9rem', color: 'var(--text-secondary)', marginBottom: '8px' }}>Last Message ({formatDate(lastMessage.sentAt)}):</p>
-                <p style={{ margin: 0 }}>"{lastMessage.content}"</p>
-            </div>
+          <div style={{ marginTop: '16px', padding: '16px', background: 'rgba(0,0,0,0.2)', borderRadius: '8px' }}>
+            <p style={{ margin: 0, fontSize: '0.9rem', color: 'var(--text-secondary)', marginBottom: '8px' }}>Last Message ({formatDate(lastMessage.sentAt)}):</p>
+            <p style={{ margin: 0 }}>"{lastMessage.content}"</p>
+          </div>
         )}
       </div>
 
       <div style={{ marginTop: '32px' }}>
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px' }}>
-            <h3>Channel Permissions</h3>
-            {venueChannels.length > 0 && (
-                <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
-                    <span style={{ fontSize: '0.9rem', color: 'var(--text-secondary)' }}>Apply to all:</span>
-                    <select 
-                        onChange={(e) => { 
-                            if(e.target.value) { 
-                                handleApplyToAllChannels(e.target.value); 
-                                e.target.value = ''; 
-                            } 
-                        }} 
-                        disabled={loading || targetMember.isBlocked}
-                        style={{ padding: '6px 12px', fontSize: '0.9rem' }}
-                    >
-                        <option value="">- Select -</option>
-                        {availableRoles.map(r => <option key={r} value={r}>{r}</option>)}
-                    </select>
-                </div>
-            )}
+          <h3>Channel Permissions</h3>
+          {venueChannels.length > 0 && (
+            <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+              <span style={{ fontSize: '0.9rem', color: 'var(--text-secondary)' }}>Apply to all:</span>
+              <select
+                onChange={(e) => {
+                  if (e.target.value) {
+                    handleApplyToAllChannels(e.target.value);
+                    e.target.value = '';
+                  }
+                }}
+                disabled={loading || targetMember.isBlocked}
+                style={{ padding: '6px 12px', fontSize: '0.9rem' }}
+              >
+                <option value="">- Select -</option>
+                {availableRoles.map(r => <option key={r} value={r}>{r}</option>)}
+              </select>
+            </div>
+          )}
         </div>
 
         <div className="flex-col" style={{ gap: '12px' }}>
@@ -207,7 +207,8 @@ export const VenueMemberScreen = () => {
           ) : (
             venueChannels.map(channel => {
               const currentRoleRow = channelRoles.find(r => r.userId === memberId && r.channelId === channel.channelId);
-              const currentRole = currentRoleRow?.role.tag || 'Member';
+              const tag = currentRoleRow?.role.tag || 'member';
+              const currentRole = tag.charAt(0).toUpperCase() + tag.slice(1);
 
               return (
                 <div key={channel.channelId.toString()} className="glass-panel flex-row" style={{ padding: '16px 20px', alignItems: 'center', justifyContent: 'space-between' }}>
