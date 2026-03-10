@@ -46,7 +46,16 @@ export const ChannelScreen = () => {
   // Messages: reverse chronological (newest at top per spec and notification style UX)
   const channelMessages = [...(messages as any[])]
     .filter(m => m.channelId === channelIdBigInt)
-    .sort((a, b) => Number(b.sentAt.microsSinceUnixEpoch - a.sentAt.microsSinceUnixEpoch));
+    .sort((a, b) => Number(b.sentAt.microsSinceUnixEpoch - a.sentAt.microsSinceUnixEpoch))
+    .reduce((acc: any[], msg: any) => {
+      const lastGroup = acc[acc.length - 1];
+      if (lastGroup && lastGroup.msg.content === msg.content) {
+        lastGroup.count += 1;
+      } else {
+        acc.push({ msg, count: 1 });
+      }
+      return acc;
+    }, []);
 
   // Membership + role resolution
   const membership = venue ? (venueMembers as any[]).find(
@@ -218,7 +227,7 @@ export const ChannelScreen = () => {
               </p>
             </div>
           ) : (
-            channelMessages.map((msg: any) => {
+            channelMessages.map(({ msg, count }: any) => {
               const isMe = msg.senderIdentity.toHexString() === identity?.toHexString();
               const dateObj = new Date(Number(msg.sentAt.microsSinceUnixEpoch / 1000n));
               const isToday = new Date().toDateString() === dateObj.toDateString();
@@ -249,6 +258,18 @@ export const ChannelScreen = () => {
                       <span style={{ fontSize: '0.8rem', color: 'var(--text-secondary)' }}>
                         {timeString}
                       </span>
+                      {count > 1 && (
+                        <span style={{ 
+                          fontSize: '0.7rem', 
+                          fontWeight: 600, 
+                          color: '#fff', 
+                          backgroundColor: 'var(--accent-color)', 
+                          padding: '2px 8px', 
+                          borderRadius: '12px' 
+                        }}>
+                          {count}x
+                        </span>
+                      )}
                     </div>
 
                     {/* Delivery status icons — moderators and above only */}
