@@ -57,7 +57,7 @@ export const ChannelSettingsScreen = () => {
     if (channel && name === '') {
       setName(channel.name);
       setDescription(channel.description);
-      setMinRole(channel.minimumRoleToView.tag);
+      setMinRole(channel.minimumRoleToView.tag.toLowerCase());
       setMaxAgeHours(channel.messageMaxAgeHours.toString());
     }
   }, [isLoggedIn, navigate, venueLink, channelId, channel, name]);
