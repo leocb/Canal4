@@ -291,7 +291,7 @@ export const create_invite_token = spacetimedb.reducer(
       token,
       venueId,
       createdAt: ctx.timestamp,
-      expiresAt: { microsSinceUnixEpoch: expiresAtMicros } as any as Timestamp
+      expiresAt: new Timestamp(expiresAtMicros)
     });
   }
 );
