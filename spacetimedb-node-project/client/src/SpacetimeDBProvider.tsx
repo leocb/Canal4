@@ -7,7 +7,7 @@ export const SpacetimeDBProvider = ({ children }: { children: ReactNode }) => {
   
   const builder = useMemo(() => {
     return DbConnection.builder()
-      .withUri("ws://127.0.0.1:3000") // TODO: Move to env variable
+      .withUri(`ws://${window.location.hostname}:3000`) // Dynamically use the host to work across the local network
       .withDatabaseName("spacetimedb-node-project-gybhi")
       .withToken(token)
       .onConnect((connection, _identity, token) => {
