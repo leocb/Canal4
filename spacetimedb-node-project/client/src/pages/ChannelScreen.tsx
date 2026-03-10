@@ -49,7 +49,7 @@ export const ChannelScreen = () => {
   const myChannelRole = (channelRoles as any[]).find(
     r => r.channelId === channelIdBigInt && r.userId === user?.userId
   );
-  const roleTag: string = myChannelRole?.role.tag ?? 'member';
+  const roleTag: string = (myChannelRole?.role.tag ?? 'member').toLowerCase();
   const isVenueOwner = venue?.ownerId === user?.userId;
   const isOwner = isVenueOwner || roleTag === 'owner';
   const isAdmin = isOwner || roleTag === 'admin';

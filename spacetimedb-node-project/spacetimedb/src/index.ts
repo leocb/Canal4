@@ -462,9 +462,9 @@ export const delete_message = spacetimedb.reducer(
       const isVenueOwner = venue?.ownerId === userId;
       const roles = [...ctx.db.ChannelMemberRole.channel_member_role_channel_id.filter(msg.channelId)];
       const myRole = roles.find(r => r.userId === userId);
-      const isChannelManager = myRole?.role.tag === "owner" || myRole?.role.tag === "admin";
+      const isChannelManager = myRole?.role.tag === "owner" || myRole?.role.tag === "admin" || myRole?.role.tag === "moderator";
       if (!isVenueOwner && !isChannelManager) {
-        throw new SenderError("You can only delete your own messages, or must be a channel admin/venue owner.");
+        throw new SenderError("You can only delete your own messages, or must be a channel admin/moderator/venue owner.");
       }
     }
 
