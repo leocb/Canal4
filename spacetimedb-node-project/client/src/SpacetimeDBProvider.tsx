@@ -5,9 +5,13 @@ import { DbConnection } from "./module_bindings/index.ts";
 export const SpacetimeDBProvider = ({ children }: { children: ReactNode }) => {
   const token = localStorage.getItem("auth_token") || undefined;
   
+  const SPACETIMEDB_URI = import.meta.env.DEV
+    ? `ws://${window.location.hostname}:3000`
+    : "wss://maincloud.spacetimedb.com";
+
   const builder = useMemo(() => {
     return DbConnection.builder()
-      .withUri("wss://maincloud.spacetimedb.com")
+      .withUri(SPACETIMEDB_URI)
       .withDatabaseName("spacetimedb-node-project-gybhi")
       .withToken(token)
       .onConnect((connection, _identity, token) => {
