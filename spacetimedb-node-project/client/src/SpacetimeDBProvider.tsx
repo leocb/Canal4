@@ -7,7 +7,7 @@ export const SpacetimeDBProvider = ({ children }: { children: ReactNode }) => {
   
   const builder = useMemo(() => {
     return DbConnection.builder()
-      .withUri(`ws://${window.location.hostname}:3000`) // Dynamically use the host to work across the local network
+      .withUri("wss://maincloud.spacetimedb.com")
       .withDatabaseName("spacetimedb-node-project-gybhi")
       .withToken(token)
       .onConnect((connection, _identity, token) => {
@@ -32,7 +32,8 @@ export const SpacetimeDBProvider = ({ children }: { children: ReactNode }) => {
           "SELECT * FROM NotificationFilter",
           "SELECT * FROM MessengerDevice",
           "SELECT * FROM MessengerPairingPin",
-          "SELECT * FROM MessageDeliveryStatus"
+          "SELECT * FROM MessageDeliveryStatus",
+          "SELECT * FROM VenueInviteToken"
         ]);
       })
       .onConnectError((_ctx, err: unknown) => {

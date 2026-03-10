@@ -15,10 +15,13 @@ export const LoginScreen = () => {
   const [email, setEmail] = useState('');
   const [name, setName] = useState('');
   const [loading, setLoading] = useState(false);
+  const [errorText, setErrorText] = useState('');
   const [view, setView] = useState<'options' | 'email' | 'name'>('options');
 
+  // If already logging in (loading=true), keep spinner until auth resolves
   useEffect(() => {
     if (isLoggedIn && user?.name) {
+      setLoading(false);
       navigate(redirect, { replace: true });
     }
   }, [isLoggedIn, user, navigate, redirect]);
@@ -30,6 +33,7 @@ export const LoginScreen = () => {
   const handleEmailSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!email) return;
+    setErrorText('');
 
     const normalizedEmail = email.trim().toLowerCase();
     const isKnown = users.some(u => 
@@ -44,7 +48,8 @@ export const LoginScreen = () => {
          googleId: undefined,
          name: '' // Ignored by backend for existing users
       });
-      setTimeout(() => setLoading(false), 1500);
+      // If auth hasn't resolved in 8 seconds, show error
+      setTimeout(() => setLoading(prev => { if (prev) setErrorText('Login timed out. Please try again.'); return false; }), 8000);
     } else {
       setView('name');
     }
@@ -53,20 +58,36 @@ export const LoginScreen = () => {
   const handleNameSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!email || !name) return;
-    
+    setErrorText('');
     setLoading(true);
     loginOrCreateUser({
        email: email.trim().toLowerCase(),
        googleId: undefined,
        name: name.trim()
     });
-    setTimeout(() => setLoading(false), 1500);
+    // If auth hasn't resolved in 8 seconds, show error
+    setTimeout(() => setLoading(prev => { if (prev) setErrorText('Sign-up timed out. Please try again.'); return false; }), 8000);
   };
 
   return (
     <div className="app-container" style={{ alignItems: 'center', justifyContent: 'center' }}>
       <div className="glass-panel" style={{ padding: '40px', textAlign: 'center', width: '100%', maxWidth: '400px' }}>
         <h2 style={{ marginBottom: '24px', fontSize: '1.8rem' }}>Courier Notifications</h2>
+
+        {errorText && (
+          <div style={{
+            color: 'var(--error-color)',
+            marginBottom: '16px',
+            fontSize: '0.9rem',
+            padding: '10px 14px',
+            background: 'rgba(255,80,80,0.1)',
+            borderRadius: '8px',
+            border: '1px solid var(--error-color)',
+            textAlign: 'left',
+          }}>
+            ⚠️ {errorText}
+          </div>
+        )}
         
         {view === 'options' && (
           <div className="flex-col">
