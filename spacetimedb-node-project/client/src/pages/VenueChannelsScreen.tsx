@@ -3,16 +3,17 @@ import { useParams, useNavigate } from 'react-router-dom';
 import { useTable, useSpacetimeDB } from 'spacetimedb/react';
 import { tables } from '../module_bindings/index.ts';
 import { MoreVertical, Plus, Monitor, Settings, Shield, UserPlus, Bell, LogOut, Copy, Check, X } from 'lucide-react';
+import { useReadyTable } from '../hooks/useReadyTable';
 
 export const VenueChannelsScreen = () => {
   const { venueLink } = useParams<{ venueLink: string }>();
   const navigate = useNavigate();
 
   const { identity } = useSpacetimeDB();
-  const [venues, venuesReady] = useTable(tables.Venue);
+  const [venues, venuesReady] = useReadyTable(tables.Venue);
   const [channels] = useTable(tables.Channel);
   const [channelRoles] = useTable(tables.ChannelMemberRole);
-  const [venueMembers, membersReady] = useTable(tables.VenueMember);
+  const [venueMembers, membersReady] = useReadyTable(tables.VenueMember);
 
   const [showMenu, setShowMenu] = useState(false);
   const menuRef = useRef<HTMLDivElement>(null);

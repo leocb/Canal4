@@ -2,16 +2,17 @@ import { useState, useRef, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { useTable, useReducer, useSpacetimeDB } from 'spacetimedb/react';
 import { tables, reducers } from '../module_bindings/index.ts';
+import { useReadyTable } from '../hooks/useReadyTable';
 
 export const ChannelScreen = () => {
   const { venueLink, channelId } = useParams<{ venueLink: string, channelId: string }>();
   const navigate = useNavigate();
   const { identity } = useSpacetimeDB();
 
-  const [venues, venuesReady] = useTable(tables.Venue);
+  const [venues, venuesReady] = useReadyTable(tables.Venue);
   const [channels] = useTable(tables.Channel);
   const [messages] = useTable(tables.Message);
-  const [venueMembers, membersReady] = useTable(tables.VenueMember);
+  const [venueMembers, membersReady] = useReadyTable(tables.VenueMember);
   
   const sendMessage = useReducer(reducers.sendMessage);
   

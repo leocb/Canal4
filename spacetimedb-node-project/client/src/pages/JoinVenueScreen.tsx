@@ -3,14 +3,16 @@ import { useParams, useNavigate } from 'react-router-dom';
 import { useTable, useReducer } from 'spacetimedb/react';
 import { tables, reducers } from '../module_bindings/index.ts';
 import { useAuth } from '../hooks/useAuth';
+import { useReadyTable } from '../hooks/useReadyTable';
 
 export const JoinVenueScreen = () => {
   const { venueLink } = useParams<{ venueLink: string }>();
   const navigate = useNavigate();
   const { user, isLoggedIn } = useAuth();
 
-  // useTable returns [rows, subscribeApplied] — wait for subscribeApplied before deciding "not found"
-  const [venues, venuesReady] = useTable(tables.Venue);
+  // useReadyTable latches ready=true permanently once the first snapshot arrives,
+  // preventing flicker when other clients trigger subscription re-evaluations
+  const [venues, venuesReady] = useReadyTable(tables.Venue);
   const [venueMembers] = useTable(tables.VenueMember);
   const joinVenue = useReducer(reducers.joinVenue);
 
