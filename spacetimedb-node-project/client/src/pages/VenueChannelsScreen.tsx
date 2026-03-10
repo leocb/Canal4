@@ -52,6 +52,35 @@ export const VenueChannelsScreen = () => {
   const isBlocked = myMember?.isBlocked ?? false;
 
   const isOwner = !isBlocked && venue?.ownerId === user?.userId;
+
+  const getRoleLevel = (role: string) => {
+    switch (role.toLowerCase()) {
+      case 'owner': return 4;
+      case 'admin': return 3;
+      case 'moderator': return 2;
+      default: return 1;
+    }
+  };
+
+  const getRoleBadgeColor = (role: string) => {
+    switch (role.toLowerCase()) {
+      case 'owner': return { bg: 'rgba(234, 179, 8, 0.15)', text: '#eab308' };
+      case 'admin': return { bg: 'rgba(56, 189, 248, 0.15)', text: '#38bdf8' };
+      case 'moderator': return { bg: 'rgba(52, 211, 153, 0.15)', text: '#34d399' };
+      default: return { bg: 'var(--surface-color)', text: 'var(--text-secondary)' };
+    }
+  };
+
+  const visibleChannels = venueChannels.filter(c => {
+    const minRoleLevel = getRoleLevel(c.minimumRoleToView.tag);
+    if (minRoleLevel <= 1) return true; // Anyone can see
+    if (isOwner) return true;
+    
+    const userChannelRole = channelRoles.find(r => r.userId === user?.userId && r.channelId === c.channelId)?.role.tag;
+    const userRoleLevel = userChannelRole ? getRoleLevel(userChannelRole) : 1;
+    
+    return userRoleLevel >= minRoleLevel;
+  });
   const userRolesInVenue = channelRoles.filter(r =>
     r.userId === user?.userId &&
     venueChannels.some(c => c.channelId === r.channelId)
@@ -209,27 +238,45 @@ export const VenueChannelsScreen = () => {
         </div>
 
         <div className="flex-col" style={{ marginTop: '16px' }}>
-          {venueChannels.length === 0 ? (
+          {visibleChannels.length === 0 ? (
             <div className="empty-state glass-panel">
-              <h3 style={{ color: 'var(--text-primary)'}}>No channels yet</h3>
+              <h3 style={{ color: 'var(--text-primary)'}}>No channels to display</h3>
               <p style={{ marginTop: '8px' }}>Create a channel from the menu to configure notifications.</p>
             </div>
           ) : (
-            venueChannels.map(channel => (
-              <div
-                key={channel.channelId.toString()}
-                className="glass-panel-interactive flex-row"
-                style={{ padding: '16px 24px', justifyContent: 'space-between', marginBottom: '12px' }}
-                onClick={() => navigate(`/venues/${venue.link}/channels/${channel.channelId}`)}
-              >
-                <div>
-                  <h3 style={{ fontSize: '1.2rem', margin: 0 }}>{channel.name}</h3>
-                  <p style={{ margin: '4px 0 0 0', color: 'var(--text-secondary)', fontSize: '0.9rem' }}>
-                    {channel.description || 'No description provided.'}
-                  </p>
+            visibleChannels.map(channel => {
+              const minRole = channel.minimumRoleToView.tag.toLowerCase();
+              const badge = getRoleBadgeColor(minRole);
+              return (
+                <div
+                  key={channel.channelId.toString()}
+                  className="glass-panel-interactive flex-row"
+                  style={{ padding: '16px 24px', justifyContent: 'space-between', alignItems: 'center', marginBottom: '12px' }}
+                  onClick={() => navigate(`/venues/${venue.link}/channels/${channel.channelId}`)}
+                >
+                  <div>
+                    <h3 style={{ fontSize: '1.2rem', margin: 0, display: 'flex', alignItems: 'center', gap: '8px' }}>
+                      {channel.name}
+                      {minRole !== 'member' && (
+                        <span style={{
+                          background: badge.bg,
+                          color: badge.text,
+                          padding: '2px 8px',
+                          borderRadius: '12px',
+                          fontSize: '0.75rem',
+                          fontWeight: 600,
+                        }}>
+                          {channel.minimumRoleToView.tag.charAt(0).toUpperCase() + channel.minimumRoleToView.tag.slice(1).toLowerCase()}
+                        </span>
+                      )}
+                    </h3>
+                    <p style={{ margin: '4px 0 0 0', color: 'var(--text-secondary)', fontSize: '0.9rem' }}>
+                      {channel.description || 'No description provided.'}
+                    </p>
+                  </div>
                 </div>
-              </div>
-            ))
+              );
+            })
           )}
         </div>
       </div>
