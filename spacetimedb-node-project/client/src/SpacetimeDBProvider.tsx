@@ -6,11 +6,16 @@ export const SpacetimeDBProvider = ({ children }: { children: ReactNode }) => {
   const token = localStorage.getItem("auth_token") || undefined;
   
   const DB_NAME = import.meta.env.VITE_SPACETIMEDB_NAME;
-  const URI_DEV = import.meta.env.VITE_SPACETIMEDB_URI_DEV;
+  let URI_DEV = import.meta.env.VITE_SPACETIMEDB_URI_DEV;
   const URI_PROD = import.meta.env.VITE_SPACETIMEDB_URI_PROD;
 
   if (!DB_NAME) {
     throw new Error("Missing VITE_SPACETIMEDB_NAME in environment configuration. Please check your .env file.");
+  }
+
+  // If accessed from a phone/other device on LAN, convert localhost to the actual IP.
+  if (URI_DEV && (URI_DEV.includes('localhost') || URI_DEV.includes('127.0.0.1')) && window.location.hostname !== 'localhost' && window.location.hostname !== '127.0.0.1') {
+    URI_DEV = URI_DEV.replace(/(localhost|127\.0\.0\.1)/, window.location.hostname);
   }
 
   const SPACETIMEDB_URI = import.meta.env.DEV ? URI_DEV : URI_PROD;
