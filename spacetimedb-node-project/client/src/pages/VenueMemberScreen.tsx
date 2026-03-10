@@ -18,6 +18,7 @@ export const VenueMemberScreen = () => {
   const [messages] = useTable(tables.Message);
 
   const setChannelRole = useReducer(reducers.setChannelRole);
+  const setVenueRole = useReducer(reducers.setVenueRole);
   const blockUser = useReducer(reducers.blockUser);
   const unblockUser = useReducer(reducers.unblockUser);
 
@@ -46,28 +47,12 @@ export const VenueMemberScreen = () => {
     return <div className="app-container empty-state"><h2>Access Denied</h2></div>;
   }
 
-  const getHighestRole = (userId: bigint) => {
-    if (venue.ownerId === userId) return 'Owner';
-    const roles = channelRoles.filter(r => r.userId === userId && venueChannels.some(c => c.channelId === r.channelId));
-    let hasAdmin = false;
-    let hasMod = false;
-    for (const r of roles) {
-      const t = r.role.tag.toLowerCase();
-      if (t === 'owner') return 'Owner';
-      if (t === 'admin') hasAdmin = true;
-      if (t === 'moderator') hasMod = true;
-    }
-    if (hasAdmin) return 'Admin';
-    if (hasMod) return 'Moderator';
-    return 'Member';
-  };
 
-  const highestRoleString = getHighestRole(memberId);
 
   // Get user's last message in the venue
   const userMessages = messages
     .filter(m => m.senderId === memberId && venueChannels.some(c => c.channelId === m.channelId))
-    .sort((a, b) => Number(b.sentAt) - Number(a.sentAt));
+    .sort((a, b) => Number(b.sentAt.microsSinceUnixEpoch / 1000n) - Number(a.sentAt.microsSinceUnixEpoch / 1000n));
   const lastMessage = userMessages[0];
 
   const handleRoleChange = async (channelId: bigint, roleString: string) => {
@@ -102,6 +87,23 @@ export const VenueMemberScreen = () => {
     } catch (err: unknown) {
       const message = err instanceof Error ? err.message : String(err);
       setErrorText(message || 'Failed to update roles. Please try again.');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleVenueRoleChange = async (roleString: string) => {
+    setErrorText('');
+    setLoading(true);
+    try {
+      await setVenueRole({
+        venueId: venue.venueId,
+        targetUserId: memberId,
+        role: roleString.toLowerCase()
+      });
+    } catch (err: unknown) {
+      const message = err instanceof Error ? err.message : String(err);
+      setErrorText(message || 'Failed to update venue role. Please try again.');
     } finally {
       setLoading(false);
     }
@@ -178,18 +180,34 @@ export const VenueMemberScreen = () => {
               Last Seen: {formatDate(targetMember.lastSeen)}
             </p>
             
-            <div style={{ marginTop: '12px', display: 'flex', alignItems: 'center', gap: '8px' }}>
-              <span style={{ fontSize: '0.9rem', color: 'var(--text-secondary)', fontWeight: 500 }}>Venue Role:</span>
+            <div style={{ marginTop: '12px', display: 'flex', flexWrap: 'wrap', alignItems: 'center', gap: '8px' }}>
+              <span style={{ fontSize: '0.9rem', color: 'var(--text-secondary)', fontWeight: 500 }}>Venue Base Role:</span>
               <select 
-                value={highestRoleString}
+                value={targetMember.role.tag.toLowerCase()}
                 onChange={(e) => {
-                  if (e.target.value) handleApplyToAllChannels(e.target.value);
+                  if (e.target.value) handleVenueRoleChange(e.target.value);
                 }}
                 disabled={loading || targetMember.isBlocked}
-                style={{ padding: '6px 12px', fontSize: '0.9rem', borderRadius: '6px', border: '1px solid var(--surface-border)', background: 'var(--surface-color)' }}
+                style={{ padding: '6px 12px', fontSize: '0.9rem', borderRadius: '6px', border: '1px solid var(--surface-border)', background: 'var(--surface-color)', textTransform: 'capitalize' }}
               >
-                {availableRoles.map(r => <option key={r} value={r}>{r}</option>)}
+                {availableRoles.map(r => <option key={r.toLowerCase()} value={r.toLowerCase()}>{r}</option>)}
               </select>
+
+              <button 
+                className="secondary" 
+                onClick={() => {
+                   const role = prompt("Enter role to apply to all channels (Owner, Admin, Moderator, Member):");
+                   if (role) {
+                      const normalized = role.charAt(0).toUpperCase() + role.slice(1).toLowerCase();
+                      if (availableRoles.includes(normalized)) handleApplyToAllChannels(normalized);
+                      else alert("Invalid role entered.");
+                   }
+                }} 
+                style={{ fontSize: '0.8rem', padding: '6px 10px' }}
+                disabled={loading || targetMember.isBlocked}
+              >
+                Apply to all channels
+              </button>
             </div>
           </div>
           <div>
