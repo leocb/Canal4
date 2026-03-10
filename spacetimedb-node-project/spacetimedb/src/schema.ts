@@ -40,6 +40,7 @@ export const Venue = table(
     venueId: t.u64().primaryKey().autoInc(),
     name: t.string(),
     ownerIdentity: t.identity(),
+    link: t.string(),
     createdAt: t.timestamp(),
   }
 );
@@ -54,6 +55,7 @@ export const Channel = table(
     channelId: t.u64().primaryKey().autoInc(),
     venueId: t.u64(),
     name: t.string(),
+    description: t.string(),
     minimumRoleToView: ChannelRole,
     messageMaxAgeHours: t.u64(),
     createdAt: t.timestamp(),

@@ -23,7 +23,10 @@ const NavBar = () => {
       </div>
       
       <div style={{ display: 'flex', gap: '16px', alignItems: 'center' }}>
-        <button className="secondary" style={{ padding: '8px 12px' }} onClick={() => navigate('/login')}>
+        <button className="secondary" style={{ padding: '8px 12px' }} onClick={() => {
+          localStorage.removeItem('auth_token');
+          window.location.href = '/login';
+        }}>
           <LogOut size={16} />
           <span style={{ fontSize: '0.9rem' }}>Logout</span>
         </button>

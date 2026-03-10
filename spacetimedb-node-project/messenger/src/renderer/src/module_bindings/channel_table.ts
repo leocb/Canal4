@@ -18,6 +18,7 @@ export default __t.row({
   channelId: __t.u64().primaryKey().name("channel_id"),
   venueId: __t.u64().name("venue_id"),
   name: __t.string(),
+  description: __t.string(),
   get minimumRoleToView() {
     return ChannelRole.name("minimum_role_to_view");
   },

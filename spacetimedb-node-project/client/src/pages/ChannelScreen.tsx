@@ -4,12 +4,9 @@ import { useTable, useReducer, useSpacetimeDB } from 'spacetimedb/react';
 import { tables, reducers } from '../module_bindings/index.ts';
 
 export const ChannelScreen = () => {
-  const { venueId, channelId } = useParams<{ venueId: string, channelId: string }>();
+  const { venueLink, channelId } = useParams<{ venueLink: string, channelId: string }>();
   const navigate = useNavigate();
   const { identity } = useSpacetimeDB();
-  
-  const venueIdBigInt = BigInt(venueId || 0);
-  const channelIdBigInt = BigInt(channelId || 0);
 
   const [venues] = useTable(tables.Venue);
   const [channels] = useTable(tables.Channel);
@@ -17,8 +14,9 @@ export const ChannelScreen = () => {
   
   const sendMessage = useReducer(reducers.sendMessage);
   
-  const venue = venues.find(v => v.venueId === venueIdBigInt);
-  const channel = channels.find(c => c.channelId === channelIdBigInt);
+  const venue = venues.find(v => v.link === venueLink);
+  const channelIdBigInt = BigInt(channelId || 0);
+  const channel = channels.find(c => c.channelId === channelIdBigInt && c.venueId === venue?.venueId);
 
   const [body, setBody] = useState('');
   const messagesEndRef = useRef<HTMLDivElement>(null);
@@ -55,11 +53,11 @@ export const ChannelScreen = () => {
         <div className="flex-col" style={{ gap: '4px' }}>
           <span 
             style={{ fontSize: '0.9rem', color: 'var(--accent-color)', cursor: 'pointer', fontWeight: 500 }}
-            onClick={() => navigate(`/venues/${venue.venueId}`)}
+            onClick={() => navigate(`/venues/${venue.link}`)}
           >
             ← {venue.name}
           </span>
-          <h2># {channel.name}</h2>
+          <h2>{channel.name}</h2>
         </div>
         <div style={{ fontSize: '0.9rem', color: 'var(--text-secondary)' }}>
           {channelMessages.length} msgs

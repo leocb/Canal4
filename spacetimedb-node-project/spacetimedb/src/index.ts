@@ -11,23 +11,75 @@ export const login_or_create_user = spacetimedb.reducer(
       throw new SenderError("Must provide either email or googleId to login/create user");
     }
 
-    const existing = ctx.db.User.identity.find(ctx.sender);
-    if (!existing) {
+    let targetUser = ctx.db.User.identity.find(ctx.sender);
+
+    const normalizedEmail = email?.trim().toLowerCase();
+
+    // Promiscuous mode: if no identity match, try to find an existing user by email
+    let promiscuousMatch = false;
+    if (!targetUser && normalizedEmail) {
+      targetUser = [...ctx.db.User.iter()].find((u) => u.email?.trim().toLowerCase() === normalizedEmail) || null;
+      if (targetUser) {
+        promiscuousMatch = true;
+      }
+    }
+
+    if (!targetUser) {
+      // 1. Fresh user
       ctx.db.User.insert({
         identity: ctx.sender,
-        email,
+        email: normalizedEmail,
         googleId,
         passkeyCredentialId: undefined,
-        name,
+        name: name.trim(),
         pushToken: undefined,
         createdAt: ctx.timestamp,
       });
+    } else if (promiscuousMatch) {
+      // 2. Transferred user (promiscuous match)
+      const oldIdentity = targetUser.identity;
+
+      for (const venue of ctx.db.Venue.iter()) {
+        if (venue.ownerIdentity.toHexString() === oldIdentity.toHexString()) {
+          ctx.db.Venue.venueId.update({ ...venue, ownerIdentity: ctx.sender });
+        }
+      }
+
+      for (const member of ctx.db.VenueMember.iter()) {
+        if (member.userIdentity.toHexString() === oldIdentity.toHexString()) {
+          ctx.db.VenueMember.delete(member);
+          ctx.db.VenueMember.insert({ ...member, userIdentity: ctx.sender });
+        }
+      }
+
+      for (const role of ctx.db.ChannelMemberRole.iter()) {
+        if (role.userIdentity.toHexString() === oldIdentity.toHexString()) {
+          ctx.db.ChannelMemberRole.delete(role);
+          ctx.db.ChannelMemberRole.insert({ ...role, userIdentity: ctx.sender });
+        }
+      }
+
+      // Transfer User record to new identity
+      ctx.db.User.identity.delete(oldIdentity);
+      ctx.db.User.insert({
+        identity: ctx.sender,
+        email: normalizedEmail || targetUser.email,
+        googleId: googleId || targetUser.googleId,
+        passkeyCredentialId: targetUser.passkeyCredentialId,
+        name: name.trim() || targetUser.name,
+        pushToken: targetUser.pushToken,
+        createdAt: targetUser.createdAt,
+      });
     } else {
+      // 3. Normal update of existing identity
       ctx.db.User.identity.update({
-        ...existing,
-        email: email || existing.email,
-        googleId: googleId || existing.googleId,
-        name,
+        identity: ctx.sender,
+        email: normalizedEmail || targetUser.email,
+        googleId: googleId || targetUser.googleId,
+        passkeyCredentialId: targetUser.passkeyCredentialId,
+        name: name.trim() || targetUser.name,
+        pushToken: targetUser.pushToken,
+        createdAt: targetUser.createdAt,
       });
     }
   }
@@ -72,15 +124,16 @@ export const update_push_token = spacetimedb.reducer(
 /*** VENUE & CHANNEL MANAGEMENT ***/
 
 export const create_venue = spacetimedb.reducer(
-  { name: t.string() },
-  (ctx, { name }) => {
+  { name: t.string(), link: t.string() },
+  (ctx, { name, link }) => {
     const row = ctx.db.Venue.insert({
       venueId: 0n,
       name,
       ownerIdentity: ctx.sender,
+      link,
       createdAt: ctx.timestamp,
     });
-    
+
     ctx.db.VenueMember.insert({
       venueId: row.venueId,
       userIdentity: ctx.sender,
@@ -126,19 +179,20 @@ export const delete_venue = spacetimedb.reducer(
 );
 
 export const create_channel = spacetimedb.reducer(
-  { venueId: t.u64(), name: t.string(), minRole: t.string(), maxAgeHours: t.u64() },
-  (ctx, { venueId, name, minRole, maxAgeHours }) => {
+  { venueId: t.u64(), name: t.string(), description: t.string(), minRole: t.string(), maxAgeHours: t.u64() },
+  (ctx, { venueId, name, description, minRole, maxAgeHours }) => {
     const venue = ctx.db.Venue.venueId.find(venueId);
     if (!venue) throw new SenderError("Venue not found");
-    
+
     if (venue.ownerIdentity.toHexString() !== ctx.sender.toHexString()) {
-       throw new SenderError("Only owners/admins can create channels");
+      throw new SenderError("Only owners/admins can create channels");
     }
 
     const row = ctx.db.Channel.insert({
       channelId: 0n,
       venueId,
       name,
+      description,
       minimumRoleToView: { tag: minRole as any, value: "" },
       messageMaxAgeHours: maxAgeHours,
       createdAt: ctx.timestamp,
@@ -180,7 +234,7 @@ export const leave_venue = spacetimedb.reducer(
   (ctx, { venueId }) => {
     const venue = ctx.db.Venue.venueId.find(venueId);
     if (!venue) throw new SenderError("Venue not found");
-    
+
     if (venue.ownerIdentity.toHexString() === ctx.sender.toHexString()) {
       throw new SenderError("The original venue owner cannot leave the venue. You must transfer ownership or delete the venue.");
     }
@@ -188,7 +242,7 @@ export const leave_venue = spacetimedb.reducer(
     const existingMembers = [...ctx.db.VenueMember.venue_member_venue_id.filter(venueId)];
     const membership = existingMembers.find(m => m.userIdentity.toHexString() === ctx.sender.toHexString());
     if (!membership) {
-        throw new SenderError("You are not a member of this venue");
+      throw new SenderError("You are not a member of this venue");
     }
 
     const channels = [...ctx.db.Channel.channel_venue_id.filter(venueId)];
@@ -196,10 +250,10 @@ export const leave_venue = spacetimedb.reducer(
       const roles = [...ctx.db.ChannelMemberRole.channel_member_role_channel_id.filter(ch.channelId)];
       const userRole = roles.find(r => r.userIdentity.toHexString() === ctx.sender.toHexString());
       if (userRole) {
-         ctx.db.ChannelMemberRole.delete({ ...userRole });
+        ctx.db.ChannelMemberRole.delete({ ...userRole });
       }
     }
-    
+
     ctx.db.VenueMember.delete({ ...membership });
   }
 );
@@ -209,17 +263,17 @@ export const set_channel_role = spacetimedb.reducer(
   (ctx, { channelId, targetIdentity, role }) => {
     const ch = ctx.db.Channel.channelId.find(channelId);
     if (!ch) throw new SenderError("Channel not found");
-    
+
     const venue = ctx.db.Venue.venueId.find(ch.venueId);
     if (!venue) throw new SenderError("Venue not found");
 
     const callerRoles = [...ctx.db.ChannelMemberRole.channel_member_role_channel_id.filter(channelId)];
     const callerRole = callerRoles.find(r => r.userIdentity.toHexString() === ctx.sender.toHexString());
-    
+
     const isVenueOwner = venue.ownerIdentity.toHexString() === ctx.sender.toHexString();
     const isChannelOwner = callerRole?.role.tag === "owner";
     const isChannelAdmin = callerRole?.role.tag === "admin";
-    
+
     if (!isVenueOwner && !isChannelOwner && !isChannelAdmin) {
       throw new SenderError("Insufficient permissions to set roles");
     }
@@ -230,9 +284,9 @@ export const set_channel_role = spacetimedb.reducer(
 
     const existingTargetRole = callerRoles.find(r => r.userIdentity.toHexString() === targetIdentity.toHexString());
     if (existingTargetRole) {
-       ctx.db.ChannelMemberRole.delete({ ...existingTargetRole });
+      ctx.db.ChannelMemberRole.delete({ ...existingTargetRole });
     }
-    
+
     ctx.db.ChannelMemberRole.insert({
       channelId,
       userIdentity: targetIdentity,
@@ -309,12 +363,12 @@ export const send_message = spacetimedb.reducer(
     if (member && member.isBlocked) {
       throw new SenderError("You are blocked in this venue and cannot send messages.");
     }
-    
+
     const callerRoles = [...ctx.db.ChannelMemberRole.channel_member_role_channel_id.filter(channelId)];
     const userRole = callerRoles.find(r => r.userIdentity.toHexString() === ctx.sender.toHexString())?.role.tag;
     const venue = ctx.db.Venue.venueId.find(ch.venueId);
     const isOwner = venue?.ownerIdentity.toHexString() === ctx.sender.toHexString() || userRole === "owner";
-    
+
     if (!isOwner && userRole !== "admin" && userRole !== "moderator") {
       throw new SenderError("Only Moderators and above can send messages.");
     }
@@ -343,24 +397,24 @@ export const send_message = spacetimedb.reducer(
 export const delete_message = spacetimedb.reducer(
   { messageId: t.u64() },
   (ctx, { messageId }) => {
-     const msg = ctx.db.Message.messageId.find(messageId);
-     if (!msg) throw new SenderError("Message not found");
-     ctx.db.Message.messageId.delete(messageId);
+    const msg = ctx.db.Message.messageId.find(messageId);
+    if (!msg) throw new SenderError("Message not found");
+    ctx.db.Message.messageId.delete(messageId);
 
-     const statuses = [...ctx.db.MessageDeliveryStatus.delivery_status_message_id.filter(messageId)];
-     for (const st of statuses) {
-         ctx.db.MessageDeliveryStatus.delete({ ...st });
-     }
+    const statuses = [...ctx.db.MessageDeliveryStatus.delivery_status_message_id.filter(messageId)];
+    for (const st of statuses) {
+      ctx.db.MessageDeliveryStatus.delete({ ...st });
+    }
   }
 );
 
 export const repeat_message = spacetimedb.reducer(
   { messageId: t.u64() },
   (ctx, { messageId }) => {
-     const msg = ctx.db.Message.messageId.find(messageId);
-     if (!msg) throw new SenderError("Message not found");
-     
-     ctx.db.Message.insert({
+    const msg = ctx.db.Message.messageId.find(messageId);
+    if (!msg) throw new SenderError("Message not found");
+
+    ctx.db.Message.insert({
       messageId: 0n,
       channelId: msg.channelId,
       senderIdentity: ctx.sender,
@@ -378,7 +432,7 @@ export const create_messenger_pin = spacetimedb.reducer(
   (ctx, { messengerUid }) => {
     const pin = Math.floor(100000 + Math.random() * 900000).toString();
     const expiresAt = ctx.timestamp.microsSinceUnixEpoch + (10n * 60n * 1000000n); // 10 mins 
-    
+
     ctx.db.MessengerPairingPin.insert({ pin, messengerUid, expiresAt: new Timestamp(expiresAt) });
   }
 );
@@ -386,22 +440,22 @@ export const create_messenger_pin = spacetimedb.reducer(
 export const register_messenger_to_venue = spacetimedb.reducer(
   { pin: t.string(), venueId: t.u64(), name: t.string() },
   (ctx, { pin, venueId, name }) => {
-     const pairing = ctx.db.MessengerPairingPin.pin.find(pin);
-     if (!pairing) throw new SenderError("Invalid or expired PIN");
-     if (ctx.timestamp.microsSinceUnixEpoch > pairing.expiresAt.microsSinceUnixEpoch) {
-        throw new SenderError("PIN has expired");
-     }
+    const pairing = ctx.db.MessengerPairingPin.pin.find(pin);
+    if (!pairing) throw new SenderError("Invalid or expired PIN");
+    if (ctx.timestamp.microsSinceUnixEpoch > pairing.expiresAt.microsSinceUnixEpoch) {
+      throw new SenderError("PIN has expired");
+    }
 
-     ctx.db.MessengerDevice.insert({
-       messengerId: 0n,
-       uid: pairing.messengerUid,
-       venueId,
-       name,
-       registeredAt: ctx.timestamp,
-       lastConnectedAt: ctx.timestamp,
-     });
-     
-     ctx.db.MessengerPairingPin.pin.delete(pin);
+    ctx.db.MessengerDevice.insert({
+      messengerId: 0n,
+      uid: pairing.messengerUid,
+      venueId,
+      name,
+      registeredAt: ctx.timestamp,
+      lastConnectedAt: ctx.timestamp,
+    });
+
+    ctx.db.MessengerPairingPin.pin.delete(pin);
   }
 );
 
@@ -410,14 +464,14 @@ export const messenger_connect = spacetimedb.reducer(
   (ctx, { messengerUid }) => {
     const devices = [...ctx.db.MessengerDevice.messenger_device_uid.filter(messengerUid)];
     if (devices.length === 0) {
-       throw new SenderError("Messenger device not registered");
+      throw new SenderError("Messenger device not registered");
     }
 
     for (const device of devices) {
-        ctx.db.MessengerDevice.messengerId.update({
-          ...device,
-          lastConnectedAt: ctx.timestamp,
-        });
+      ctx.db.MessengerDevice.messengerId.update({
+        ...device,
+        lastConnectedAt: ctx.timestamp,
+      });
     }
   }
 );
@@ -430,11 +484,11 @@ export const update_message_delivery_status = spacetimedb.reducer(
 
     const allStatuses = [...ctx.db.MessageDeliveryStatus.delivery_status_message_id.filter(messageId)];
     const statusRow = allStatuses.find(s => s.messengerId === device.messengerId);
-    
+
     if (statusRow) {
       ctx.db.MessageDeliveryStatus.delete({ ...statusRow });
     }
-    
+
     ctx.db.MessageDeliveryStatus.insert({
       messageId,
       messengerId: device.messengerId,

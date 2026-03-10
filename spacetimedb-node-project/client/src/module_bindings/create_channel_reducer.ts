@@ -13,6 +13,7 @@ import {
 export default {
   venueId: __t.u64(),
   name: __t.string(),
+  description: __t.string(),
   minRole: __t.string(),
   maxAgeHours: __t.u64(),
 };

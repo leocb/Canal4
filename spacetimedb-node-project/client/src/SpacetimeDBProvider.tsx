@@ -8,7 +8,7 @@ export const SpacetimeDBProvider = ({ children }: { children: ReactNode }) => {
   const builder = useMemo(() => {
     return DbConnection.builder()
       .withUri("ws://127.0.0.1:3000") // TODO: Move to env variable
-      .withDatabaseName("courier-notifications")
+      .withDatabaseName("spacetimedb-node-project-gybhi")
       .withToken(token)
       .onConnect((connection, _identity, token) => {
         console.log("Connected to SpacetimeDB");

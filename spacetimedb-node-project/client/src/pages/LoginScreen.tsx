@@ -1,45 +1,69 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { reducers } from '../module_bindings/index.ts';
-import { useReducer } from 'spacetimedb/react';
+import { reducers, tables } from '../module_bindings/index.ts';
+import { useReducer, useTable } from 'spacetimedb/react';
 import { useAuth } from '../hooks/useAuth';
 
 export const LoginScreen = () => {
   const navigate = useNavigate();
-  const { user, isLoggedIn, connected } = useAuth();
+  const { user, isLoggedIn, connected, identity } = useAuth();
   const loginOrCreateUser = useReducer(reducers.loginOrCreateUser);
   
+  const [users] = useTable(tables.User);
   const [email, setEmail] = useState('');
   const [name, setName] = useState('');
   const [loading, setLoading] = useState(false);
-  const [view, setView] = useState<'options' | 'email'>('options');
+  const [view, setView] = useState<'options' | 'email' | 'name'>('options');
+
+  useEffect(() => {
+    console.log('[LoginScreen] Render state:', { isLoggedIn, user, identity: identity?.toHexString(), connected });
+    console.log('[LoginScreen] Users table:', users);
+
+    if (isLoggedIn && user?.name) {
+      console.log('[LoginScreen] Fully logged in! Navigating to /venues');
+      // Already fully logged in
+      navigate('/venues', { replace: true });
+    }
+  }, [isLoggedIn, user, identity, connected, users, navigate]);
 
   if (isLoggedIn && user?.name) {
-    // Already fully logged in
-    navigate('/venues', { replace: true });
     return null;
   }
 
-  const handleEmailLogin = async (e: React.FormEvent) => {
+  const handleEmailSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!email) return;
+
+    const normalizedEmail = email.trim().toLowerCase();
+    const isKnown = users.some(u => 
+      u.email?.trim().toLowerCase() === normalizedEmail && 
+      u.name?.trim() !== ''
+    );
+
+    if (isKnown) {
+      setLoading(true);
+      loginOrCreateUser({
+         email: normalizedEmail,
+         googleId: undefined,
+         name: '' // Ignored by backend for existing users
+      });
+      setTimeout(() => setLoading(false), 1500);
+    } else {
+      setView('name');
+    }
+  };
+
+  const handleNameSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!email || !name) return;
     
     setLoading(true);
-    // In a real app we'd initiate email OTP here, but per specification
-    // we use `loginOrCreateUser` passing the email and name to simulate the process prototype.
-    // We will ask for name if it's the first time later, but we need it for the reducer schema now.
-    const provisionalName = name || email.split('@')[0];
-    
     loginOrCreateUser({
-       email: email || undefined,
+       email: email.trim().toLowerCase(),
        googleId: undefined,
-       name: provisionalName
+       name: name.trim()
     });
-
-    // We rely on the hook to transition us when `user` populates
-    setTimeout(() => {
-        setLoading(false);
-    }, 1500); // safety fallback
+    setTimeout(() => setLoading(false), 1500);
   };
 
   return (
@@ -67,7 +91,7 @@ export const LoginScreen = () => {
         )}
 
         {view === 'email' && (
-          <form onSubmit={handleEmailLogin} className="flex-col">
+          <form onSubmit={handleEmailSubmit} className="flex-col">
             <h3 style={{ marginBottom: '16px' }}>Sign-in via email</h3>
             
             <input 
@@ -77,25 +101,44 @@ export const LoginScreen = () => {
               onChange={(e) => setEmail(e.target.value)}
               required
               disabled={loading || !connected}
+              autoFocus
             />
 
-            {!isLoggedIn && (
-               <input 
-                type="text" 
-                placeholder="What should we call you?" 
-                value={name}
-                onChange={(e) => setName(e.target.value)}
-                required
-                disabled={loading || !connected}
-               />
-            )}
-
             <button type="submit" disabled={loading || !connected} style={{ marginTop: '8px' }}>
-              {loading ? 'Connecting...' : 'Sign-in'}
+              {loading ? 'Connecting...' : 'Continue'}
             </button>
 
             <div style={{ marginTop: '16px' }}>
               <a href="#" style={{ fontSize: '0.9rem' }} onClick={(e) => { e.preventDefault(); setView('options'); }}>
+                Go back
+              </a>
+            </div>
+          </form>
+        )}
+
+        {view === 'name' && (
+          <form onSubmit={handleNameSubmit} className="flex-col">
+            <h3 style={{ marginBottom: '16px' }}>Welcome!</h3>
+            <p style={{ fontSize: '0.9rem', color: 'var(--text-secondary)', marginBottom: '16px', marginTop: 0 }}>
+              It looks like you're new here.
+            </p>
+            
+            <input 
+              type="text" 
+              placeholder="What should we call you?" 
+              value={name}
+              onChange={(e) => setName(e.target.value)}
+              required
+              disabled={loading || !connected}
+              autoFocus
+            />
+
+            <button type="submit" disabled={loading || !connected} style={{ marginTop: '8px' }}>
+              {loading ? 'Creating account...' : 'Complete Sign-up'}
+            </button>
+
+            <div style={{ marginTop: '16px' }}>
+              <a href="#" style={{ fontSize: '0.9rem' }} onClick={(e) => { e.preventDefault(); setView('email'); }}>
                 Go back
               </a>
             </div>

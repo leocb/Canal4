@@ -14,6 +14,7 @@ export const Channel = __t.object("Channel", {
   channelId: __t.u64(),
   venueId: __t.u64(),
   name: __t.string(),
+  description: __t.string(),
   get minimumRoleToView() {
     return ChannelRole;
   },
@@ -127,6 +128,7 @@ export const Venue = __t.object("Venue", {
   venueId: __t.u64(),
   name: __t.string(),
   ownerIdentity: __t.identity(),
+  link: __t.string(),
   createdAt: __t.timestamp(),
 });
 export type Venue = __Infer<typeof Venue>;

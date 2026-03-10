@@ -1,26 +1,44 @@
-import { useState } from 'react';
+import { useState, useRef, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { useTable, useReducer } from 'spacetimedb/react';
-import { tables, reducers } from '../module_bindings/index.ts';
+import { useTable, useSpacetimeDB } from 'spacetimedb/react';
+import { tables } from '../module_bindings/index.ts';
+import { MoreVertical } from 'lucide-react';
 
 export const VenueChannelsScreen = () => {
-  const { venueId } = useParams<{ venueId: string }>();
+  const { venueLink } = useParams<{ venueLink: string }>();
   const navigate = useNavigate();
   
+  const { identity } = useSpacetimeDB();
   const [venues] = useTable(tables.Venue);
   const [channels] = useTable(tables.Channel);
+  const [channelRoles] = useTable(tables.ChannelMemberRole);
   
-  const createChannel = useReducer(reducers.createChannel);
-  const registerMessenger = useReducer(reducers.registerMessengerToVenue);
-  const [isCreating, setIsCreating] = useState(false);
-  const [newChannelName, setNewChannelName] = useState('');
-  const [pinInput, setPinInput] = useState('');
-  const [newMessengerName, setNewMessengerName] = useState('');
+  const [showMenu, setShowMenu] = useState(false);
+  const menuRef = useRef<HTMLDivElement>(null);
 
-  const venueIdBigInt = BigInt(venueId || 0);
-  const venue = venues.find(v => v.venueId === venueIdBigInt);
+  // Close menu on click outside
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (menuRef.current && !menuRef.current.contains(event.target as Node)) {
+        setShowMenu(false);
+      }
+    };
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => document.removeEventListener("mousedown", handleClickOutside);
+  }, []);
+
+  const venue = venues.find(v => v.link === venueLink);
+  const venueIdBigInt = venue ? venue.venueId : 0n;
   
   const venueChannels = channels.filter(c => c.venueId === venueIdBigInt);
+
+  const isOwner = venue?.ownerIdentity.toHexString() === identity?.toHexString();
+  const userRolesInVenue = channelRoles.filter(r => 
+    r.userIdentity.toHexString() === identity?.toHexString() && 
+    venueChannels.some(c => c.channelId === r.channelId)
+  );
+  const isAdmin = userRolesInVenue.some(r => r.role.tag === 'Admin');
+  const canManageDisplays = isOwner || isAdmin;
 
   if (!venue) {
     return (
@@ -30,23 +48,6 @@ export const VenueChannelsScreen = () => {
       </div>
     );
   }
-
-  const handleCreateChannel = (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!newChannelName.trim()) return;
-    
-    createChannel({ venueId: venueIdBigInt, name: newChannelName.trim(), minRole: 'Member', maxAgeHours: BigInt(24) });
-    setNewChannelName('');
-    setIsCreating(false);
-  };
-
-  const handleRegisterPin = (e: React.FormEvent) => {
-    e.preventDefault();
-    if (pinInput.length !== 6 || !newMessengerName.trim()) return;
-    registerMessenger({ venueId: venueIdBigInt, name: newMessengerName.trim(), pin: pinInput });
-    setPinInput('');
-    setNewMessengerName('');
-  };
 
   return (
     <div className="app-container">
@@ -60,77 +61,53 @@ export const VenueChannelsScreen = () => {
           </span>
           <h2>{venue.name}</h2>
         </div>
-        <button onClick={() => setIsCreating(!isCreating)}>
-          {isCreating ? 'Cancel' : 'New Channel'}
-        </button>
+        <div style={{ position: 'relative' }} ref={menuRef}>
+          <button 
+            className="icon-button" 
+            onClick={() => setShowMenu(!showMenu)}
+            style={{ padding: '8px', background: 'transparent', border: 'none', cursor: 'pointer', color: 'var(--text-primary)' }}
+          >
+            <MoreVertical size={24} />
+          </button>
+          {showMenu && (
+            <div className="dropdown-menu glass-panel" style={{ position: 'absolute', right: 0, top: '40px', zIndex: 100, minWidth: '180px', display: 'flex', flexDirection: 'column' }}>
+              <button className="dropdown-item" onClick={() => navigate(`/venues/${venue.link}/channels/new`)}>New Channel</button>
+              {canManageDisplays && (
+                <button className="dropdown-item" onClick={() => navigate(`/venues/${venue.link}/desktop-displays`)}>Display Nodes</button>
+              )}
+              {isOwner && (
+                <button className="dropdown-item" onClick={() => alert('Venue Settings (Not yet implemented)')}>Venue Settings</button>
+              )}
+              {canManageDisplays && (
+                <button className="dropdown-item" onClick={() => alert('Permissions (Not yet implemented)')}>Permissions</button>
+              )}
+              <button className="dropdown-item" onClick={() => alert('Invite (Not yet implemented)')}>Invite</button>
+              <button className="dropdown-item" onClick={() => alert('Notifications (Not yet implemented)')}>Notifications</button>
+              <button className="dropdown-item" style={{ color: 'var(--error-color)' }} onClick={() => alert('Leave Venue (Not yet implemented)')}>Leave Venue</button>
+            </div>
+          )}
+        </div>
       </div>
 
-      {isCreating && (
-        <form onSubmit={handleCreateChannel} className="glass-panel" style={{ padding: '24px', marginBottom: '24px' }}>
-          <h3 style={{ marginBottom: '16px' }}>Create a New Channel</h3>
-          <div className="flex-row">
-            <input 
-              type="text" 
-              placeholder="Channel Name (e.g. alerts-prod)" 
-              value={newChannelName}
-              onChange={e => setNewChannelName(e.target.value)}
-              style={{ flex: 1 }}
-              autoFocus
-            />
-            <button type="submit">Create</button>
-          </div>
-        </form>
-      )}
-
-      {/* Messenger App Pairing Display */}
-      <form onSubmit={handleRegisterPin} className="glass-panel" style={{ padding: '16px 24px', marginBottom: '24px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-        <div>
-          <h4 style={{ margin: '0 0 4px', color: 'var(--text-primary)' }}>Desktop Messenger Sync</h4>
-          <p style={{ margin: 0, fontSize: '0.85rem', color: 'var(--text-secondary)' }}>
-            Enter the 6-digit PIN from the Electron app to pair it to this venue.
-          </p>
-        </div>
-        <div style={{ display: 'flex', gap: '8px' }}>
-          <input 
-             type="text"
-             placeholder="Node name"
-             value={newMessengerName}
-             onChange={e => setNewMessengerName(e.target.value)}
-             style={{ margin: 0 }}
-             required
-          />
-          <input 
-            type="text" 
-            placeholder="000000" 
-            maxLength={6}
-            value={pinInput}
-            onChange={e => setPinInput(e.target.value.toUpperCase())}
-            style={{ width: '100px', textAlign: 'center', letterSpacing: '4px', margin: 0 }}
-            required
-          />
-          <button type="submit" className="secondary" disabled={pinInput.length !== 6 || !newMessengerName.trim()}>Pair</button>
-        </div>
-      </form>
-
-      <div className="flex-col">
-        {venueChannels.length === 0 && !isCreating ? (
+      <div className="flex-col" style={{ marginTop: '16px' }}>
+        {venueChannels.length === 0 ? (
           <div className="empty-state glass-panel">
             <h3 style={{ color: 'var(--text-primary)'}}>No channels yet</h3>
-            <p style={{ marginTop: '8px' }}>Create a channel to start configuring notifications.</p>
+            <p style={{ marginTop: '8px' }}>Create a channel from the menu to configure notifications.</p>
           </div>
         ) : (
           venueChannels.map(channel => (
             <div 
-              key={channel.channelId} 
+              key={channel.channelId.toString()} 
               className="glass-panel-interactive flex-row" 
-              style={{ padding: '20px 24px', justifyContent: 'space-between' }}
-              onClick={() => navigate(`/venues/${venue.venueId}/channels/${channel.channelId}`)}
+              style={{ padding: '16px 24px', justifyContent: 'space-between', marginBottom: '12px' }}
+              onClick={() => navigate(`/venues/${venue.link}/channels/${channel.channelId}`)}
             >
               <div>
-                <h3 style={{ fontSize: '1.1rem', margin: 0 }}># {channel.name}</h3>
-              </div>
-              <div style={{ color: 'var(--text-secondary)' }}>
-                →
+                <h3 style={{ fontSize: '1.2rem', margin: 0 }}>{channel.name}</h3>
+                <p style={{ margin: '4px 0 0 0', color: 'var(--text-secondary)', fontSize: '0.9rem' }}>
+                  {channel.description || 'No description provided.'}
+                </p>
               </div>
             </div>
           ))

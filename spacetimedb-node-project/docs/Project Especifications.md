@@ -61,11 +61,12 @@ More permisseve roles have the same capabilities of lower permission roles
 
 #### Connecting the messenger to a venue
 
-1. On the app, the user configures a new display, give it a name, then the app asks for the 6 digit pin from the messenger
-2. On the messenger, the user click on "Register new Venue" a 6 digit PIN is created and is valid for 10 minutes
-3. The user enters the 6 digit PIN on the app
-4. The app connects to the SpacetimeDB database and retrieves the venue information
-5. The app shows the venue information on the screen and asks for confirmation, OK saves that venue on the app and on the database
+1. The user navigates to a Venue, then clicks the "View Desktop Displays" button at the bottom of the channel list. Only Admins and Owners can see this button.
+2. In the "Desktop Displays" screen, the app displays a list of the currently connected nodes. At the bottom, a form helps to pair a new node.
+3. On the messenger, the user click on "Register new Venue" a 6 digit PIN is created and is valid for 10 minutes
+4. The user enters the 6 digit PIN on the app form under "Pair New Display"
+5. The app connects to the SpacetimeDB database and retrieves the venue information
+6. The app shows the venue information on the screen and asks for confirmation, OK saves that venue on the app and on the database
 
 #### Screens
 
@@ -225,8 +226,18 @@ Screen for managing notifications of that channels is shown
 - A textbox for the user to enter the filtered text is shown, can be several texts, comma separated texts. If a message is received and contains any of the texts in the filter, then the user is notified.
 - A "Ask for notification permission" is requested if the user enables notifications and the device is not yet authorized to receive notifications from the website/PWA.
 
+###### Venue - Channel List - "Desktop Displays" Screen
+
+- Owners and Admins only
+- A screen for viewing and pairing desktop displays is shown
+- At the top "[Venue name] Desktop Displays" is shown
+- A "Back" button appears at the top left
+- Centered on screen, a list of current messenger nodes connected to this venue is shown
+- At the top right of the screen header, an "Add Node" button directs the user to a standalone screen to enter a Node Name and the 6-digit PIN from the Electron app.
+
 ##### Channel Screen
 
+- Channels are accessed by ID. Venue URLs are represented by a random 2-word passphrase (e.g. `fast-bunny`) instead of an ID. If a collision occurs, additional words are added.
 - The screen has the channel name on top
 - A "Back" button appears at the top left
 - Centered on screen, a list of messages is shown in reverse chronological order, max 50, default message max age for members: 4 hours old (configurable), no max age for moderators and above
