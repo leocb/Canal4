@@ -97,7 +97,8 @@ export const VenuePermissionsScreen = () => {
 
   const filteredMembers = processedMembers.filter(m => {
     const matchesSearch = m.name.toLowerCase().includes(searchTerm.toLowerCase());
-    const matchesRole = roleFilter ? m.highestRole === roleFilter : true;
+    const effectiveRole = m.isBlocked ? 'Blocked' : m.highestRole;
+    const matchesRole = roleFilter ? effectiveRole === roleFilter : true;
     return matchesSearch && matchesRole;
   });
 
@@ -143,6 +144,7 @@ export const VenuePermissionsScreen = () => {
           <option value="Admin">Admin</option>
           <option value="Moderator">Moderator</option>
           <option value="Member">Member</option>
+          <option value="Blocked">Blocked</option>
         </select>
       </div>
 
