@@ -92,3 +92,4 @@ Thumbs.db
 # SpacetimeDB
 spacetime.local.json
 .spacetime/
+module_bindings/
