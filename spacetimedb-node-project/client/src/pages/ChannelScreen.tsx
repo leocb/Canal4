@@ -4,7 +4,7 @@ import { useTable, useReducer } from 'spacetimedb/react';
 import { tables, reducers } from '../module_bindings/index.ts';
 import { useReadyTable } from '../hooks/useReadyTable';
 import { useAuth } from '../hooks/useAuth';
-import { MoreVertical, Settings, Send, History, LayoutTemplate } from 'lucide-react';
+import { MoreVertical, Settings, Send, History, LayoutTemplate, Repeat, Trash2, UserX } from 'lucide-react';
 
 export const ChannelScreen = () => {
   const { venueLink, channelId } = useParams<{ venueLink: string, channelId: string }>();
@@ -52,7 +52,7 @@ export const ChannelScreen = () => {
   const myChannelRole = (channelRoles as any[]).find(
     r => r.channelId === channelIdBigInt && r.userId === user?.userId
   );
-  
+
   const roleTag: string = isBlocked ? 'member' : (myChannelRole?.role.tag ?? 'member').toLowerCase();
   const isVenueOwner = !isBlocked && venue?.ownerId === user?.userId;
   const isOwner = isVenueOwner || roleTag === 'owner';
@@ -289,13 +289,13 @@ export const ChannelScreen = () => {
                         {timeString}
                       </span>
                       {count > 1 && (
-                        <span style={{ 
-                          fontSize: '0.7rem', 
-                          fontWeight: 600, 
-                          color: '#fff', 
-                          backgroundColor: 'var(--accent-color)', 
-                          padding: '2px 8px', 
-                          borderRadius: '12px' 
+                        <span style={{
+                          fontSize: '0.7rem',
+                          fontWeight: 600,
+                          color: '#fff',
+                          backgroundColor: 'var(--accent-color)',
+                          padding: '2px 8px',
+                          borderRadius: '12px'
                         }}>
                           {count}x
                         </span>
@@ -337,26 +337,31 @@ export const ChannelScreen = () => {
         >
           <div className="glass-panel" style={{ padding: '8px', minWidth: '260px', display: 'flex', flexDirection: 'column' }}>
             <div style={{ padding: '12px 16px', borderBottom: '1px solid var(--surface-border)', marginBottom: '4px' }}>
-              <div style={{ fontSize: '0.85rem', color: 'var(--text-secondary)', marginBottom: '8px' }}>
-                Sent by <span style={{ color: 'var(--text-primary)', fontWeight: 500 }}>{contextMsg.senderId === user?.userId ? 'You' : getUserName(contextMsg.senderId)}</span> on {new Date(Number(contextMsg.sentAt.microsSinceUnixEpoch / 1000n)).toLocaleString()}
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '4px', marginBottom: '12px' }}>
+                <div style={{ fontSize: '0.75rem', color: 'var(--text-secondary)' }}>
+                  {new Date(Number(contextMsg.sentAt.microsSinceUnixEpoch / 1000n)).toLocaleString()}
+                </div>
+                <div style={{ fontSize: '0.75rem', color: 'var(--text-secondary)' }}>
+                  By: {contextMsg.senderId === user?.userId ? 'You' : getUserName(contextMsg.senderId)}
+                </div>
               </div>
-              <div style={{ fontSize: '0.95rem', color: 'var(--text-primary)', lineHeight: 1.4, wordBreak: 'break-word' }}>
+              <div style={{ fontSize: '0.95rem', color: 'var(--text-primary)', lineHeight: 1.4, wordBreak: 'break-word', padding: '0px', borderRadius: '8px' }}>
                 {contextMsg.content}
               </div>
             </div>
-            <button className="dropdown-item" onClick={() => handleRepeat(contextMsg)}>
-              🔁 Display Again
+            <button className="dropdown-item" onClick={() => handleRepeat(contextMsg)} style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+              <Repeat size={16} /> Display Again
             </button>
-            <button className="dropdown-item danger" onClick={() => handleDelete(contextMsg)}>
-              🗑️ Delete
+            <button className="dropdown-item danger" onClick={() => handleDelete(contextMsg)} style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+              <Trash2 size={16} /> Delete
             </button>
             {isAdmin && contextMsg.senderId !== user?.userId && (
-              <button className="dropdown-item danger" onClick={() => handleDeleteAndBlock(contextMsg)}>
-                🚫 Delete & Block
+              <button className="dropdown-item danger" onClick={() => handleDeleteAndBlock(contextMsg)} style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                <UserX size={16} /> Delete & Block
               </button>
             )}
-            <button className="dropdown-item" style={{ color: 'var(--text-secondary)' }} onClick={() => setContextMsg(null)}>
-              Cancel
+            <button className="dropdown-item" style={{ color: 'var(--text-secondary)', display: 'flex', alignItems: 'center', gap: '8px', marginTop: '4px' }} onClick={() => setContextMsg(null)}>
+              Close
             </button>
           </div>
         </div>
