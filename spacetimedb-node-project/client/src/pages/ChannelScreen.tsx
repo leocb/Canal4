@@ -118,7 +118,7 @@ export const ChannelScreen = () => {
 
   const getUserName = (userId: bigint) => {
     const u = (users as any[]).find(u => u.userId === userId);
-    return u?.name || `user-${userId.toString()}`;
+    return u?.name || `[deleted user]`;
   };
 
   // Messenger devices connected to this venue
