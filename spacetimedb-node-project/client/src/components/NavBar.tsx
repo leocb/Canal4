@@ -1,9 +1,11 @@
 import { useNavigate, useLocation } from 'react-router-dom';
-import { Bell, LogOut } from 'lucide-react';
+import { Bell, LogOut, Pencil } from 'lucide-react';
+import { useAuth } from '../hooks/useAuth';
 
 const NavBar = () => {
   const navigate = useNavigate();
   const location = useLocation();
+  const { user } = useAuth();
 
   if (location.pathname === '/login') {
     return null;
@@ -23,6 +25,19 @@ const NavBar = () => {
       </div>
       
       <div style={{ display: 'flex', gap: '16px', alignItems: 'center' }}>
+        {user && (
+          <div 
+            style={{ display: 'flex', alignItems: 'center', gap: '6px', cursor: 'pointer', padding: '4px 8px', borderRadius: '8px' }} 
+            className="hover-bg"
+            onClick={() => navigate('/profile')}
+            title="Edit Profile"
+          >
+            <span style={{ fontSize: '0.9rem', color: 'var(--text-secondary)', fontWeight: 500 }}>
+              {user.name}
+            </span>
+            <Pencil size={14} color="var(--text-secondary)" />
+          </div>
+        )}
         <button className="secondary" style={{ padding: '8px 12px' }} onClick={() => {
           localStorage.removeItem('auth_token');
           window.location.href = '/login';

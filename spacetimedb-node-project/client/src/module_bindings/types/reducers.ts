@@ -32,6 +32,7 @@ import UpdateChannelReducer from "../update_channel_reducer";
 import UpdateMessageDeliveryStatusReducer from "../update_message_delivery_status_reducer";
 import UpdateMessageTemplateReducer from "../update_message_template_reducer";
 import UpdatePushTokenReducer from "../update_push_token_reducer";
+import UpdateUserNameReducer from "../update_user_name_reducer";
 import UpdateVenueReducer from "../update_venue_reducer";
 
 export type BlockUserParams = __Infer<typeof BlockUserReducer>;
@@ -60,5 +61,6 @@ export type UpdateChannelParams = __Infer<typeof UpdateChannelReducer>;
 export type UpdateMessageDeliveryStatusParams = __Infer<typeof UpdateMessageDeliveryStatusReducer>;
 export type UpdateMessageTemplateParams = __Infer<typeof UpdateMessageTemplateReducer>;
 export type UpdatePushTokenParams = __Infer<typeof UpdatePushTokenReducer>;
+export type UpdateUserNameParams = __Infer<typeof UpdateUserNameReducer>;
 export type UpdateVenueParams = __Infer<typeof UpdateVenueReducer>;
 

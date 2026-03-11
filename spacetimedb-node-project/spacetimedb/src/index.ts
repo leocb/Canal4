@@ -40,7 +40,7 @@ export const login_or_create_user = spacetimedb.reducer(
         ...user,
         email: normalizedEmail || user.email,
         googleId: googleId || user.googleId,
-        name: name.trim() || user.name,
+        // Intentionally do not allow updating the name through login_or_create_user to prevent spoofing
       });
     }
 
@@ -57,6 +57,26 @@ export const login_or_create_user = spacetimedb.reducer(
         userId: user.userId,
       });
     }
+  }
+);
+
+export const update_user_name = spacetimedb.reducer(
+  { userId: t.u64(), newName: t.string() },
+  (ctx, { userId, newName }) => {
+    const callerId = getUserId(ctx);
+    
+    // Explicitly block others from changing names of other users
+    if (callerId !== userId) {
+      throw new SenderError("You are only permitted to change your own name.");
+    }
+    
+    const user = ctx.db.User.userId.find(userId);
+    if (!user) throw new SenderError("User not found");
+    
+    ctx.db.User.userId.update({
+      ...user,
+      name: newName.trim(),
+    });
   }
 );
 

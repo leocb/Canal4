@@ -90,6 +90,8 @@ Thumbs.db
 *.sw?
 
 # SpacetimeDB
+node_modules
+dist
+*.log
+.DS_Store
 spacetime.local.json
-.spacetime/
-module_bindings/
