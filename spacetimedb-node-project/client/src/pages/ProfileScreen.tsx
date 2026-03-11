@@ -8,17 +8,17 @@ import { ArrowLeft, Trash2 } from 'lucide-react';
 export const ProfileScreen = () => {
   const navigate = useNavigate();
   const { user, isLoggedIn } = useAuth();
-  
+
   const [name, setName] = useState('');
   const [isSaving, setIsSaving] = useState(false);
   const [errorText, setErrorText] = useState('');
-  
+
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
   const [deleteConfirmationName, setDeleteConfirmationName] = useState('');
-  
+
   const updateUserName = useReducer(reducers.updateUserName);
   const deleteUserAccount = useReducer(reducers.deleteUserAccount);
-  
+
   useEffect(() => {
     if (user?.name) {
       setName(user.name);
@@ -35,13 +35,13 @@ export const ProfileScreen = () => {
       navigate(-1);
       return;
     }
-    
+
     setIsSaving(true);
     updateUserName({
       userId: user.userId,
       newName: name.trim()
     });
-    
+
     // Simplistic approach for demo: Optimistically wait a bit, then return
     setTimeout(() => {
       setIsSaving(false);
@@ -59,7 +59,7 @@ export const ProfileScreen = () => {
     try {
       await deleteUserAccount({
         userId: user.userId,
-        confirmationName: deleteConfirmationName 
+        confirmationName: deleteConfirmationName
       });
       localStorage.removeItem('auth_token');
       window.location.href = '/login';
@@ -74,7 +74,7 @@ export const ProfileScreen = () => {
     <div className="app-container">
       <div className="screen-header">
         <div className="flex-col" style={{ gap: '4px' }}>
-          <span 
+          <span
             style={{ fontSize: '0.9rem', color: 'var(--accent-color)', cursor: 'pointer', fontWeight: 500, display: 'flex', alignItems: 'center', gap: '4px' }}
             onClick={() => navigate(-1)}
           >
@@ -88,9 +88,9 @@ export const ProfileScreen = () => {
         <div className="flex-col" style={{ gap: '16px', textAlign: 'left' }}>
           <label style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
             <span style={{ fontWeight: 500 }}>Name</span>
-            <input 
-              type="text" 
-              placeholder="Your name" 
+            <input
+              type="text"
+              placeholder="Your name"
               value={name}
               onChange={(e) => setName(e.target.value)}
               required
@@ -113,7 +113,7 @@ export const ProfileScreen = () => {
 
       <div style={{ marginTop: '48px', paddingTop: '24px', borderTop: '1px solid var(--surface-border)', width: '100%', maxWidth: '500px' }}>
         <h3 style={{ color: 'var(--error-color)' }}>Danger Zone</h3>
-        
+
         {errorText && (
           <div style={{ color: 'var(--error-color)', marginTop: '16px', padding: '12px', background: 'rgba(255,80,80,0.1)', borderRadius: '8px' }}>
             {errorText}
@@ -121,8 +121,8 @@ export const ProfileScreen = () => {
         )}
 
         {!showDeleteConfirm ? (
-          <button 
-            className="danger" 
+          <button
+            className="danger"
             style={{ marginTop: '16px', display: 'flex', alignItems: 'center', gap: '8px' }}
             onClick={() => setShowDeleteConfirm(true)}
           >
@@ -131,6 +131,8 @@ export const ProfileScreen = () => {
         ) : (
           <div className="glass-panel" style={{ marginTop: '16px', padding: '16px', borderColor: 'var(--error-color)' }}>
             <p style={{ marginBottom: '12px', fontSize: '0.9rem' }}>
+              Are you sure you want to delete your account? This action is irreversible!
+              <br />
               To confirm deletion, type your name (<strong>{user?.name}</strong>) below:
             </p>
             <input
@@ -141,16 +143,16 @@ export const ProfileScreen = () => {
               style={{ width: '100%', marginBottom: '12px' }}
             />
             <div className="flex-row" style={{ gap: '8px' }}>
-              <button 
-                className="danger" 
-                onClick={handleDeleteAccount} 
+              <button
+                className="danger"
+                onClick={handleDeleteAccount}
                 disabled={isSaving || deleteConfirmationName !== user?.name}
                 style={{ flex: 1 }}
               >
                 Confirm Delete
               </button>
-              <button 
-                className="secondary" 
+              <button
+                className="secondary"
                 onClick={() => { setShowDeleteConfirm(false); setDeleteConfirmationName(''); }}
                 disabled={isSaving}
                 style={{ flex: 1 }}
