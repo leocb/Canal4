@@ -80,6 +80,46 @@ export const update_user_name = spacetimedb.reducer(
   }
 );
 
+export const delete_user_account = spacetimedb.reducer(
+  { userId: t.u64(), confirmationName: t.string() },
+  (ctx, { userId, confirmationName }) => {
+    const callerId = getUserId(ctx);
+    
+    // Explicitly block others from deleting other users' accounts
+    if (callerId !== userId) {
+      throw new SenderError("You are only permitted to delete your own account.");
+    }
+
+    const user = ctx.db.User.userId.find(userId);
+    if (!user) throw new SenderError("User not found");
+    
+    if (user.name !== confirmationName) {
+      throw new SenderError("Confirmation name does not match");
+    }
+
+    // Delete user identities
+    const identities = [...ctx.db.UserIdentity.iter()].filter(ui => ui.userId === userId);
+    for (const identity of identities) {
+      ctx.db.UserIdentity.identity.delete(identity.identity);
+    }
+    
+    // Delete venue memberships
+    const memberships = [...ctx.db.VenueMember.iter()].filter(m => m.userId === userId);
+    for (const m of memberships) {
+      ctx.db.VenueMember.delete({ ...m });
+    }
+    
+    // Delete channel roles
+    const roles = [...ctx.db.ChannelMemberRole.iter()].filter(r => r.userId === userId);
+    for (const r of roles) {
+      ctx.db.ChannelMemberRole.delete({ ...r });
+    }
+
+    // Finally delete the user
+    ctx.db.User.userId.delete(userId);
+  }
+);
+
 export const register_passkey = spacetimedb.reducer(
   { credentialId: t.string() },
   (ctx, { credentialId }) => {

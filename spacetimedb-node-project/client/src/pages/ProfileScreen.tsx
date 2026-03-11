@@ -3,7 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../hooks/useAuth';
 import { useReducer } from 'spacetimedb/react';
 import { reducers } from '../module_bindings/index.ts';
-import { ArrowLeft } from 'lucide-react';
+import { ArrowLeft, Trash2 } from 'lucide-react';
 
 export const ProfileScreen = () => {
   const navigate = useNavigate();
@@ -11,8 +11,13 @@ export const ProfileScreen = () => {
   
   const [name, setName] = useState('');
   const [isSaving, setIsSaving] = useState(false);
+  const [errorText, setErrorText] = useState('');
+  
+  const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
+  const [deleteConfirmationName, setDeleteConfirmationName] = useState('');
   
   const updateUserName = useReducer(reducers.updateUserName);
+  const deleteUserAccount = useReducer(reducers.deleteUserAccount);
   
   useEffect(() => {
     if (user?.name) {
@@ -42,6 +47,27 @@ export const ProfileScreen = () => {
       setIsSaving(false);
       navigate(-1);
     }, 500);
+  };
+
+  const handleDeleteAccount = async () => {
+    setErrorText('');
+    if (deleteConfirmationName !== user?.name) {
+      setErrorText('Confirmation name does not match');
+      return;
+    }
+    setIsSaving(true);
+    try {
+      await deleteUserAccount({
+        userId: user.userId,
+        confirmationName: deleteConfirmationName 
+      });
+      localStorage.removeItem('auth_token');
+      window.location.href = '/login';
+    } catch (err: unknown) {
+      const msg = err instanceof Error ? err.message : String(err);
+      setErrorText(msg);
+      setIsSaving(false);
+    }
   };
 
   return (
@@ -84,6 +110,57 @@ export const ProfileScreen = () => {
           </div>
         </div>
       </form>
+
+      <div style={{ marginTop: '48px', paddingTop: '24px', borderTop: '1px solid var(--surface-border)', width: '100%', maxWidth: '500px' }}>
+        <h3 style={{ color: 'var(--error-color)' }}>Danger Zone</h3>
+        
+        {errorText && (
+          <div style={{ color: 'var(--error-color)', marginTop: '16px', padding: '12px', background: 'rgba(255,80,80,0.1)', borderRadius: '8px' }}>
+            {errorText}
+          </div>
+        )}
+
+        {!showDeleteConfirm ? (
+          <button 
+            className="danger" 
+            style={{ marginTop: '16px', display: 'flex', alignItems: 'center', gap: '8px' }}
+            onClick={() => setShowDeleteConfirm(true)}
+          >
+            <Trash2 size={16} /> Delete Account
+          </button>
+        ) : (
+          <div className="glass-panel" style={{ marginTop: '16px', padding: '16px', borderColor: 'var(--error-color)' }}>
+            <p style={{ marginBottom: '12px', fontSize: '0.9rem' }}>
+              To confirm deletion, type your name (<strong>{user?.name}</strong>) below:
+            </p>
+            <input
+              type="text"
+              value={deleteConfirmationName}
+              onChange={(e) => setDeleteConfirmationName(e.target.value)}
+              placeholder={user?.name ?? ''}
+              style={{ width: '100%', marginBottom: '12px' }}
+            />
+            <div className="flex-row" style={{ gap: '8px' }}>
+              <button 
+                className="danger" 
+                onClick={handleDeleteAccount} 
+                disabled={isSaving || deleteConfirmationName !== user?.name}
+                style={{ flex: 1 }}
+              >
+                Confirm Delete
+              </button>
+              <button 
+                className="secondary" 
+                onClick={() => { setShowDeleteConfirm(false); setDeleteConfirmationName(''); }}
+                disabled={isSaving}
+                style={{ flex: 1 }}
+              >
+                Cancel
+              </button>
+            </div>
+          </div>
+        )}
+      </div>
     </div>
   );
 };

@@ -43,6 +43,7 @@ import CreateVenueReducer from "./create_venue_reducer";
 import DeleteChannelReducer from "./delete_channel_reducer";
 import DeleteMessageReducer from "./delete_message_reducer";
 import DeleteMessageTemplateReducer from "./delete_message_template_reducer";
+import DeleteUserAccountReducer from "./delete_user_account_reducer";
 import DeleteVenueReducer from "./delete_venue_reducer";
 import JoinVenueReducer from "./join_venue_reducer";
 import LeaveVenueReducer from "./leave_venue_reducer";
@@ -269,6 +270,7 @@ const reducersSchema = __reducers(
   __reducerSchema("delete_channel", DeleteChannelReducer),
   __reducerSchema("delete_message", DeleteMessageReducer),
   __reducerSchema("delete_message_template", DeleteMessageTemplateReducer),
+  __reducerSchema("delete_user_account", DeleteUserAccountReducer),
   __reducerSchema("delete_venue", DeleteVenueReducer),
   __reducerSchema("join_venue", JoinVenueReducer),
   __reducerSchema("leave_venue", LeaveVenueReducer),
