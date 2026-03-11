@@ -9,7 +9,7 @@ export const VenueSettingsScreen = () => {
   const { venueLink } = useParams<{ venueLink: string }>();
   const navigate = useNavigate();
   const { user } = useAuth();
-  
+
   const [venues] = useTable(tables.Venue);
   const updateVenue = useReducer(reducers.updateVenue);
   const deleteVenue = useReducer(reducers.deleteVenue);
@@ -20,7 +20,7 @@ export const VenueSettingsScreen = () => {
   const [name, setName] = useState('');
   const [loading, setLoading] = useState(false);
   const [errorMsg, setErrorMsg] = useState('');
-  
+
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
   const [deleteConfirmationName, setDeleteConfirmationName] = useState('');
 
@@ -33,10 +33,10 @@ export const VenueSettingsScreen = () => {
 
   // Return if not found or not owner
   if (!venue) {
-     return <div className="app-container empty-state"><h2>Venue not found</h2></div>;
+    return <div className="app-container empty-state"><h2>Venue not found</h2></div>;
   }
   if (!isOwner) {
-     return <div className="app-container empty-state"><h2>Access Denied</h2></div>;
+    return <div className="app-container empty-state"><h2>Access Denied</h2></div>;
   }
 
   const handleUpdate = async (e: React.FormEvent) => {
@@ -78,7 +78,7 @@ export const VenueSettingsScreen = () => {
     <div className="app-container">
       <div className="screen-header">
         <div className="flex-col" style={{ gap: '4px' }}>
-          <span 
+          <span
             style={{ fontSize: '0.9rem', color: 'var(--accent-color)', cursor: 'pointer', fontWeight: 500, display: 'flex', alignItems: 'center', gap: '4px' }}
             onClick={() => navigate(`/venues/${venue.link}`)}
           >
@@ -94,67 +94,78 @@ export const VenueSettingsScreen = () => {
         </div>
       )}
 
-      <form onSubmit={handleUpdate} className="flex-col" style={{ gap: '16px', marginTop: '24px' }}>
-        <div className="form-group">
-          <label htmlFor="venueName">Venue Name</label>
-          <input
-            id="venueName"
-            type="text"
-            value={name}
-            onChange={(e) => setName(e.target.value)}
-            placeholder="E.g. Engineering Team"
-            disabled={loading}
-          />
+      <form onSubmit={handleUpdate} className="glass-panel" style={{ padding: '24px', width: '100%', marginTop: '24px' }}>
+        <div className="flex-col" style={{ gap: '16px', textAlign: 'left' }}>
+          <label style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+            <span style={{ fontWeight: 500 }}>Venue Name</span>
+            <input
+              id="venueName"
+              type="text"
+              value={name}
+              onChange={(e) => setName(e.target.value)}
+              placeholder="E.g. Engineering Team"
+              disabled={loading}
+              style={{ width: '100%' }}
+            />
+          </label>
+
+          <div style={{ display: 'flex', gap: '12px', marginTop: '8px' }}>
+            <button type="button" className="secondary" onClick={() => navigate(-1)} disabled={loading} style={{ flex: 1 }}>
+              Cancel
+            </button>
+            <button type="submit" disabled={loading || !name.trim()} style={{ flex: 1 }}>
+              {loading ? 'Saving...' : 'Confirm'}
+            </button>
+          </div>
         </div>
-        
-        <button type="submit" disabled={loading || !name.trim()}>
-          {loading ? 'Saving...' : 'Confirm'}
-        </button>
       </form>
 
-      <div style={{ marginTop: '48px', paddingTop: '24px', borderTop: '1px solid var(--surface-border)' }}>
-         <h3 style={{ color: 'var(--error-color)' }}>Danger Zone</h3>
-         
-         {!showDeleteConfirm ? (
-           <button 
-             className="danger" 
-             style={{ marginTop: '16px', display: 'flex', alignItems: 'center', gap: '8px' }}
-             onClick={() => setShowDeleteConfirm(true)}
-           >
-             <Trash2 size={16} /> Delete Venue
-           </button>
-         ) : (
-           <div className="glass-panel" style={{ marginTop: '16px', padding: '16px', borderColor: 'var(--error-color)' }}>
-              <p style={{ marginBottom: '12px', fontSize: '0.9rem' }}>
-                To confirm deletion, type <strong>{venue.name}</strong> below:
-              </p>
-              <input
-                type="text"
-                value={deleteConfirmationName}
-                onChange={(e) => setDeleteConfirmationName(e.target.value)}
-                placeholder={venue.name}
-                style={{ width: '100%', marginBottom: '12px' }}
-              />
-              <div className="flex-row" style={{ gap: '8px' }}>
-                <button 
-                  className="danger" 
-                  onClick={handleDelete} 
-                  disabled={loading || deleteConfirmationName !== venue.name}
-                  style={{ flex: 1 }}
-                >
-                  Confirm Delete
-                </button>
-                <button 
-                  className="secondary" 
-                  onClick={() => { setShowDeleteConfirm(false); setDeleteConfirmationName(''); }}
-                  disabled={loading}
-                  style={{ flex: 1 }}
-                >
-                  Cancel
-                </button>
-              </div>
-           </div>
-         )}
+      <div style={{ marginTop: '48px', paddingTop: '24px', borderTop: '1px solid var(--surface-border)', width: '100%' }}>
+        <h3 style={{ color: 'var(--error-color)' }}>Danger Zone</h3>
+
+        {!showDeleteConfirm ? (
+          <button
+            className="danger"
+            style={{ marginTop: '16px', display: 'flex', alignItems: 'center', gap: '8px' }}
+            onClick={() => setShowDeleteConfirm(true)}
+          >
+            <Trash2 size={16} /> Delete Venue
+          </button>
+        ) : (
+          <div className="glass-panel" style={{ marginTop: '16px', padding: '16px', borderColor: 'var(--error-color)' }}>
+            <p style={{ marginBottom: '16px', color: 'var(--text-secondary)', fontSize: '0.9rem', lineHeight: 1.5 }}>
+              This action cannot be undone. This will permanently delete the <strong>{venue.name}</strong> venue, disconnecting all members and deleting all channels and messages within it.
+            </p>
+            <p style={{ marginBottom: '8px', fontSize: '0.9rem' }}>
+              Please type <strong>{venue.name}</strong> to confirm.
+            </p>
+            <input
+              type="text"
+              value={deleteConfirmationName}
+              onChange={(e) => setDeleteConfirmationName(e.target.value)}
+              placeholder={venue.name}
+              style={{ width: '100%', marginBottom: '12px' }}
+            />
+            <div className="flex-row" style={{ gap: '8px' }}>
+              <button
+                className="secondary"
+                onClick={() => { setShowDeleteConfirm(false); setDeleteConfirmationName(''); }}
+                disabled={loading}
+                style={{ flex: 1 }}
+              >
+                Cancel
+              </button>
+              <button
+                className="danger"
+                onClick={handleDelete}
+                disabled={loading || deleteConfirmationName !== venue.name}
+                style={{ flex: 1 }}
+              >
+                Confirm Delete
+              </button>
+            </div>
+          </div>
+        )}
       </div>
     </div>
   );

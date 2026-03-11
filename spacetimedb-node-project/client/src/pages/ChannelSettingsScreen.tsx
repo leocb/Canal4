@@ -11,7 +11,7 @@ export const ChannelSettingsScreen = () => {
   const { venueLink, channelId } = useParams<{ venueLink: string, channelId: string }>();
   const navigate = useNavigate();
   const { user, isLoggedIn, connected } = useAuth();
-  
+
   const [venues] = useTable(tables.Venue);
   const [channels] = useTable(tables.Channel);
   const [channelRoles] = useTable(tables.ChannelMemberRole);
@@ -53,7 +53,7 @@ export const ChannelSettingsScreen = () => {
       }
       return;
     }
-    
+
     if (channel && name === '') {
       setName(channel.name);
       setDescription(channel.description);
@@ -123,8 +123,8 @@ export const ChannelSettingsScreen = () => {
     <div className="app-container" style={{ display: 'flex', flexDirection: 'column', height: '100vh' }}>
       <div className="screen-header">
         <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-          <button 
-            className="icon-button" 
+          <button
+            className="icon-button"
             onClick={() => navigate(`/venues/${venue.link}/channels/${channel.channelId}`)}
             aria-label="Back to channel"
           >
@@ -132,16 +132,9 @@ export const ChannelSettingsScreen = () => {
           </button>
           <h2>{channel.name} Settings</h2>
         </div>
-        <button 
-          className="icon-button danger" 
-          onClick={() => setShowDeleteConfirm(!showDeleteConfirm)}
-          title="Delete Channel"
-        >
-          <Trash2 size={20} />
-        </button>
       </div>
 
-      <div className="content-area" style={{ flex: 1, padding: '24px 16px', maxWidth: '600px', margin: '0 auto', width: '100%'} }>
+      <div className="content-area" style={{ flex: 1, padding: '24px 0', width: '100%' }}>
         <form onSubmit={handleUpdate} className="glass-panel flex-col" style={{ padding: '24px' }}>
           {errorText && (
             <div style={{
@@ -159,8 +152,8 @@ export const ChannelSettingsScreen = () => {
 
           <div style={{ marginBottom: '16px' }}>
             <label style={{ display: 'block', marginBottom: '8px', fontWeight: 500, fontSize: '0.9rem' }}>Channel Name</label>
-            <input 
-              type="text" 
+            <input
+              type="text"
               value={name}
               onChange={(e) => setName(e.target.value)}
               required
@@ -172,8 +165,8 @@ export const ChannelSettingsScreen = () => {
 
           <div style={{ marginBottom: '16px' }}>
             <label style={{ display: 'block', marginBottom: '8px', fontWeight: 500, fontSize: '0.9rem' }}>Description</label>
-            <input 
-              type="text" 
+            <input
+              type="text"
               value={description}
               onChange={(e) => setDescription(e.target.value)}
               disabled={loading}
@@ -184,8 +177,8 @@ export const ChannelSettingsScreen = () => {
 
           <div style={{ marginBottom: '16px' }}>
             <label style={{ display: 'block', marginBottom: '8px', fontWeight: 500, fontSize: '0.9rem' }}>Minimum Role to View</label>
-            <select 
-              value={minRole} 
+            <select
+              value={minRole}
               onChange={(e) => setMinRole(e.target.value)}
               disabled={loading}
               style={{ width: '100%', padding: '12px 16px', borderRadius: '12px', background: 'rgba(255, 255, 255, 0.05)', border: '1px solid var(--surface-border)', color: 'var(--text-primary)', outline: 'none' }}
@@ -201,8 +194,8 @@ export const ChannelSettingsScreen = () => {
           <div style={{ marginBottom: '24px' }}>
             <label style={{ display: 'block', marginBottom: '8px', fontWeight: 500, fontSize: '0.9rem' }}>Members can only view messages of the last</label>
             <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-              <input 
-                type="number" 
+              <input
+                type="number"
                 min="1"
                 max="8760"
                 value={maxAgeHours}
@@ -215,58 +208,66 @@ export const ChannelSettingsScreen = () => {
             </div>
           </div>
 
-          <div className="flex-col" style={{ gap: '12px', marginTop: '8px' }}>
-            <button type="submit" disabled={loading || !name.trim()}>
+
+          <div style={{ display: 'flex', gap: '12px', marginTop: '8px' }}>
+            <button type="button" className="secondary" style={{ flex: 1 }} onClick={() => navigate(-1)} disabled={loading}>
+              Cancel
+            </button>
+            <button type="submit" disabled={loading || !name.trim()} style={{ flex: 1 }} >
               {loading ? 'Saving...' : 'Confirm'}
             </button>
           </div>
         </form>
-      </div>
 
-      {showDeleteConfirm && (
-        <div style={{
-          position: 'fixed', inset: 0, zIndex: 100,
-          background: 'rgba(0,0,0,0.5)',
-          backdropFilter: 'blur(4px)',
-          display: 'flex', alignItems: 'center', justifyContent: 'center',
-          padding: '24px'
-        }}>
-          <div className="glass-panel flex-col" style={{ padding: '24px', maxWidth: '400px', width: '100%' }}>
-            <h3 style={{ marginBottom: '16px', color: 'var(--error-color)' }}>Delete Channel</h3>
-            <p style={{ marginBottom: '16px', color: 'var(--text-secondary)', fontSize: '0.9rem', lineHeight: 1.5 }}>
-              This action cannot be undone. This will permanently delete the <strong>{channel.name}</strong> channel and remove all associated templates, messages, and settings.
-            </p>
-            <p style={{ marginBottom: '8px', fontSize: '0.9rem' }}>
-              Please type <strong>{channel.name}</strong> to confirm.
-            </p>
-            <input 
-              type="text" 
-              value={deleteConfirmName}
-              onChange={(e) => setDeleteConfirmName(e.target.value)}
-              placeholder={channel.name}
-              disabled={loading}
-            />
-            <div style={{ display: 'flex', gap: '12px', marginTop: '24px' }}>
-              <button 
-                className="secondary" 
-                style={{ flex: 1 }} 
-                onClick={() => { setShowDeleteConfirm(false); setDeleteConfirmName(''); setErrorText(''); }}
+        <div style={{ marginTop: '48px', paddingTop: '24px', borderTop: '1px solid var(--surface-border)', width: '100%' }}>
+          <h3 style={{ color: 'var(--error-color)' }}>Danger Zone</h3>
+
+          {!showDeleteConfirm ? (
+            <button
+              className="danger"
+              style={{ marginTop: '16px', display: 'flex', alignItems: 'center', gap: '8px' }}
+              onClick={() => setShowDeleteConfirm(true)}
+            >
+              <Trash2 size={16} /> Delete Channel
+            </button>
+          ) : (
+            <div className="glass-panel" style={{ marginTop: '16px', padding: '16px', borderColor: 'var(--error-color)' }}>
+              <p style={{ marginBottom: '16px', color: 'var(--text-secondary)', fontSize: '0.9rem', lineHeight: 1.5 }}>
+                This action cannot be undone. This will permanently delete the <strong>{channel.name}</strong> channel and remove all associated templates, messages, and settings.
+              </p>
+              <p style={{ marginBottom: '8px', fontSize: '0.9rem' }}>
+                Please type <strong>{channel.name}</strong> to confirm.
+              </p>
+              <input
+                type="text"
+                value={deleteConfirmName}
+                onChange={(e) => setDeleteConfirmName(e.target.value)}
+                placeholder={channel.name}
+                style={{ width: '100%', marginBottom: '12px' }}
                 disabled={loading}
-              >
-                Cancel
-              </button>
-              <button 
-                className="danger" 
-                style={{ flex: 1 }}
-                onClick={handleDelete}
-                disabled={loading || deleteConfirmName !== channel.name}
-              >
-                {loading ? 'Deleting...' : 'Delete'}
-              </button>
+              />
+              <div className="flex-row" style={{ gap: '8px' }}>
+                <button
+                  className="secondary"
+                  onClick={() => { setShowDeleteConfirm(false); setDeleteConfirmName(''); setErrorText(''); }}
+                  disabled={loading}
+                  style={{ flex: 1 }}
+                >
+                  Cancel
+                </button>
+                <button
+                  className="danger"
+                  onClick={handleDelete}
+                  disabled={loading || deleteConfirmName !== channel.name}
+                  style={{ flex: 1 }}
+                >
+                  {loading ? 'Deleting...' : 'Delete'}
+                </button>
+              </div>
             </div>
-          </div>
+          )}
         </div>
-      )}
+      </div>
     </div>
   );
 };

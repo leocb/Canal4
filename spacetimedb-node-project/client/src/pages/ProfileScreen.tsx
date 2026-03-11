@@ -84,7 +84,7 @@ export const ProfileScreen = () => {
         </div>
       </div>
 
-      <form onSubmit={handleSubmit} className="glass-panel" style={{ padding: '24px', maxWidth: '500px', width: '100%' }}>
+      <form onSubmit={handleSubmit} className="glass-panel" style={{ padding: '24px', width: '100%' }}>
         <div className="flex-col" style={{ gap: '16px', textAlign: 'left' }}>
           <label style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
             <span style={{ fontWeight: 500 }}>Name</span>
@@ -101,17 +101,17 @@ export const ProfileScreen = () => {
           </label>
 
           <div style={{ display: 'flex', gap: '12px', marginTop: '8px' }}>
-            <button type="submit" style={{ flex: 1 }} disabled={isSaving || !name.trim() || name.trim() === user?.name}>
-              {isSaving ? 'Saving...' : 'Save'}
-            </button>
             <button type="button" className="secondary" style={{ flex: 1 }} onClick={() => navigate(-1)} disabled={isSaving}>
               Cancel
+            </button>
+            <button type="submit" style={{ flex: 1 }} disabled={isSaving || !name.trim() || name.trim() === user?.name}>
+              {isSaving ? 'Saving...' : 'Save'}
             </button>
           </div>
         </div>
       </form>
 
-      <div style={{ marginTop: '48px', paddingTop: '24px', borderTop: '1px solid var(--surface-border)', width: '100%', maxWidth: '500px' }}>
+      <div style={{ marginTop: '48px', paddingTop: '24px', borderTop: '1px solid var(--surface-border)', width: '100%' }}>
         <h3 style={{ color: 'var(--error-color)' }}>Danger Zone</h3>
 
         {errorText && (
@@ -144,20 +144,20 @@ export const ProfileScreen = () => {
             />
             <div className="flex-row" style={{ gap: '8px' }}>
               <button
-                className="danger"
-                onClick={handleDeleteAccount}
-                disabled={isSaving || deleteConfirmationName !== user?.name}
-                style={{ flex: 1 }}
-              >
-                Confirm Delete
-              </button>
-              <button
                 className="secondary"
                 onClick={() => { setShowDeleteConfirm(false); setDeleteConfirmationName(''); }}
                 disabled={isSaving}
                 style={{ flex: 1 }}
               >
                 Cancel
+              </button>
+              <button
+                className="danger"
+                onClick={handleDeleteAccount}
+                disabled={isSaving || deleteConfirmationName !== user?.name}
+                style={{ flex: 1 }}
+              >
+                Confirm Delete
               </button>
             </div>
           </div>
