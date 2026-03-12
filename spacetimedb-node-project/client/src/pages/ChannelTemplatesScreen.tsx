@@ -59,7 +59,7 @@ export const ChannelTemplatesScreen = () => {
         <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
           <button 
             className="icon-button" 
-            onClick={() => navigate(`/venues/${venue.link}/channels/${channel.channelId}/settings`)}
+            onClick={() => navigate(`/venues/${venue.link}/channels/${channel.channelId}`)}
           >
             <ArrowLeft size={20} />
           </button>

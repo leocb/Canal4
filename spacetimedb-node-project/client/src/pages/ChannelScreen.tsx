@@ -185,7 +185,7 @@ export const ChannelScreen = () => {
                     <button className="dropdown-item" onClick={() => { setShowMenu(false); navigate(`/venues/${venue.link}/channels/${channel.channelId}/settings`); }}>
                       <Settings size={16} /> Channel Settings
                     </button>
-                    <button className="dropdown-item" onClick={() => { setShowMenu(false); alert('Templates configuration not yet implemented'); }}>
+                    <button className="dropdown-item" onClick={() => { setShowMenu(false); navigate(`/venues/${venue.link}/channels/${channel.channelId}/templates`); }}>
                       <LayoutTemplate size={16} /> Templates
                     </button>
                   </>
