@@ -160,7 +160,7 @@ export const ChannelScreen = () => {
 
   return (
     <>
-      <div className="app-container" style={{ display: 'flex', flexDirection: 'column', height: '100vh' }}>
+      <div className="app-container">
         {/* Header */}
         <div className="screen-header">
           <div className="flex-col" style={{ gap: '4px' }}>

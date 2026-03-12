@@ -49,7 +49,7 @@ export const DesktopMessengerSyncScreen = () => {
 
 
   return (
-    <div className="app-container" style={{ display: 'flex', flexDirection: 'column', height: '100vh', overflow: 'hidden' }}>
+    <div className="app-container">
       <div className="screen-header" style={{ flexShrink: 0 }}>
         <div className="flex-col" style={{ gap: '4px' }}>
           <span 

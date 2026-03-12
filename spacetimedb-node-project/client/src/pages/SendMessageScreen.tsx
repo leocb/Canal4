@@ -203,7 +203,7 @@ export const SendMessageScreen = () => {
 
   if (showSuccess) {
     return (
-      <div className="app-container" style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyItems: 'center', height: '100vh', justifyContent: 'center' }}>
+      <div className="app-container" style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyItems: 'center', justifyContent: 'center' }}>
         <CheckCircle size={80} color="var(--accent-color)" style={{ marginBottom: '24px' }} />
         <h1>Message Sent!</h1>
       </div>
@@ -211,7 +211,7 @@ export const SendMessageScreen = () => {
   }
 
   return (
-    <div className="app-container" style={{ display: 'flex', flexDirection: 'column', height: '100vh', overflow: 'hidden' }}>
+    <div className="app-container">
       <div className="screen-header">
         <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
           <button 

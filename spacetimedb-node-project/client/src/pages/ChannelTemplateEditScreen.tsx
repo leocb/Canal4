@@ -205,7 +205,7 @@ export const ChannelTemplateEditScreen = () => {
   };
 
   return (
-    <div className="app-container" style={{ display: 'flex', flexDirection: 'column', height: '100vh', overflow: 'hidden' }}>
+    <div className="app-container">
       <div className="screen-header">
         <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
           <button 
