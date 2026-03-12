@@ -12,5 +12,7 @@ import {
 
 export default {
   templateId: __t.u64(),
+  name: __t.string(),
+  description: __t.string(),
   fieldsJson: __t.string(),
 };

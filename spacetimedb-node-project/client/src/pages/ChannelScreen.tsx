@@ -20,7 +20,6 @@ export const ChannelScreen = () => {
   const [messengerDevices] = useTable(tables.MessengerDevice);
   const [deliveryStatuses] = useTable(tables.MessageDeliveryStatus);
 
-  const sendMessage = useReducer(reducers.sendMessage);
   const deleteMessage = useReducer(reducers.deleteMessage);
   const repeatMessage = useReducer(reducers.repeatMessage);
   const blockUser = useReducer(reducers.blockUser);
@@ -29,8 +28,6 @@ export const ChannelScreen = () => {
   const channelIdBigInt = BigInt(channelId || 0);
   const channel = channels.find((c: any) => c.channelId === channelIdBigInt && c.venueId === venue?.venueId);
 
-  const [body, setBody] = useState('');
-  const [sendError, setSendError] = useState('');
   const [contextMsg, setContextMsg] = useState<any | null>(null);
 
   // Menu state
@@ -138,17 +135,7 @@ export const ChannelScreen = () => {
     Shown: '✅',
   };
 
-  const handleSend = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!body.trim()) return;
-    setSendError('');
-    try {
-      await sendMessage({ channelId: channelIdBigInt, content: body.trim(), templateId: undefined });
-      setBody('');
-    } catch (err: unknown) {
-      setSendError(err instanceof Error ? err.message : String(err));
-    }
-  };
+
 
   const handleDelete = async (msg: any) => {
     setContextMsg(null);
@@ -216,33 +203,14 @@ export const ChannelScreen = () => {
         {/* Send message — moderators and above only */}
         {isModerator && (
           <div style={{ padding: '24px 24px 0' }}>
-            {sendError && (
-              <div style={{
-                color: 'var(--error-color)', fontSize: '0.85rem',
-                padding: '10px 12px', marginBottom: '8px',
-                background: 'rgba(239,68,68,0.1)', borderRadius: '8px',
-                border: '1px solid var(--error-color)',
-              }}>
-                ⚠️ {sendError}
-              </div>
-            )}
-            <form
-              onSubmit={handleSend}
-              className="glass-panel"
-              style={{ padding: '8px', display: 'flex', gap: '8px', alignItems: 'center', background: 'var(--surface-bg)' }}
-            >
-              <input
-                type="text"
-                placeholder="Compose new notification..."
-                value={body}
-                onChange={e => setBody(e.target.value)}
-                style={{ flex: 1, marginBottom: 0, padding: '12px 16px', background: 'transparent', border: 'none', boxShadow: 'none' }}
-                autoFocus
-              />
-              <button type="submit" disabled={!body.trim()} style={{ display: 'flex', alignItems: 'center', gap: '6px', padding: '10px 16px', borderRadius: '8px' }}>
-                <Send size={16} /> Send
+            <div className="glass-panel" style={{ padding: '4px', background: 'var(--surface-bg)' }}>
+              <button
+                type="button" 
+                onClick={() => navigate(`/venues/${venue.link}/channels/${channel.channelId}/send`)}
+                style={{ width: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px', padding: '12px 16px', borderRadius: '8px' }}>
+                <Send size={18} /> Send New Broadcast
               </button>
-            </form>
+            </div>
           </div>
         )}
 

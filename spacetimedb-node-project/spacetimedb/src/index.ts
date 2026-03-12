@@ -571,12 +571,12 @@ export const create_message_template = spacetimedb.reducer(
 );
 
 export const update_message_template = spacetimedb.reducer(
-  { templateId: t.u64(), fieldsJson: t.string() },
-  (ctx, { templateId, fieldsJson }) => {
+  { templateId: t.u64(), name: t.string(), description: t.string(), fieldsJson: t.string() },
+  (ctx, { templateId, name, description, fieldsJson }) => {
     const template = ctx.db.MessageTemplate.templateId.find(templateId);
     if (!template) throw new SenderError("Template not found");
     assertChannelManager(ctx, template.channelId);
-    ctx.db.MessageTemplate.templateId.update({ ...template, fieldsJson });
+    ctx.db.MessageTemplate.templateId.update({ ...template, name, description, fieldsJson });
   }
 );
 

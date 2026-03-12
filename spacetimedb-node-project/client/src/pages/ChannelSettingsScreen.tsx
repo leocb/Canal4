@@ -208,6 +208,18 @@ export const ChannelSettingsScreen = () => {
             </div>
           </div>
 
+          <div style={{ marginBottom: '24px' }}>
+            <button 
+              type="button" 
+              className="secondary" 
+              style={{ width: '100%', padding: '12px', border: '1px solid var(--accent-color)', color: 'var(--accent-color)' }}
+              onClick={() => navigate(`/venues/${venue.link}/channels/${channel.channelId}/templates`)}
+              disabled={loading}
+            >
+              Configure Templates
+            </button>
+          </div>
+
 
           <div style={{ display: 'flex', gap: '12px', marginTop: '8px' }}>
             <button type="button" className="secondary" style={{ flex: 1 }} onClick={() => navigate(-1)} disabled={loading}>

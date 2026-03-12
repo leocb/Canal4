@@ -16,6 +16,9 @@ import { VenueSettingsScreen } from "./pages/VenueSettingsScreen";
 import { VenuePermissionsScreen } from "./pages/VenuePermissionsScreen";
 import { VenueMemberScreen } from "./pages/VenueMemberScreen";
 import { ChannelSettingsScreen } from "./pages/ChannelSettingsScreen";
+import { ChannelTemplatesScreen } from "./pages/ChannelTemplatesScreen";
+import { ChannelTemplateEditScreen } from "./pages/ChannelTemplateEditScreen";
+import { SendMessageScreen } from "./pages/SendMessageScreen";
 import { ProfileScreen } from "./pages/ProfileScreen";
 
 function ProtectedRoute() {
@@ -75,7 +78,10 @@ function App() {
           <Route path="/venues/:venueLink/permissions/:memberIdStr" element={<VenueMemberScreen />} />
           <Route path="/venues/:venueLink/channels/new" element={<NewChannelScreen />} />
           <Route path="/venues/:venueLink/channels/:channelId" element={<ChannelScreen />} />
+          <Route path="/venues/:venueLink/channels/:channelId/send" element={<SendMessageScreen />} />
           <Route path="/venues/:venueLink/channels/:channelId/settings" element={<ChannelSettingsScreen />} />
+          <Route path="/venues/:venueLink/channels/:channelId/templates" element={<ChannelTemplatesScreen />} />
+          <Route path="/venues/:venueLink/channels/:channelId/templates/:templateId" element={<ChannelTemplateEditScreen />} />
           <Route path="/venues/:venueLink/desktop-displays" element={<DesktopMessengerSyncScreen />} />
           <Route path="/venues/:venueLink/desktop-displays/new" element={<AddNodeScreen />} />
           <Route path="/join/:venueLink/:token" element={<JoinVenueScreen />} />
