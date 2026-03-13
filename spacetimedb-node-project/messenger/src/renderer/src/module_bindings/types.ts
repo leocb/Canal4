@@ -25,7 +25,7 @@ export type Channel = __Infer<typeof Channel>;
 
 export const ChannelMemberRole = __t.object("ChannelMemberRole", {
   channelId: __t.u64(),
-  userIdentity: __t.identity(),
+  userId: __t.u64(),
   get role() {
     return ChannelRole;
   },
@@ -52,7 +52,7 @@ export type DeliveryStatus = __Infer<typeof DeliveryStatus>;
 export const Message = __t.object("Message", {
   messageId: __t.u64(),
   channelId: __t.u64(),
-  senderIdentity: __t.identity(),
+  senderId: __t.u64(),
   templateId: __t.option(__t.u64()),
   content: __t.string(),
   sentAt: __t.timestamp(),
@@ -97,7 +97,7 @@ export type MessengerPairingPin = __Infer<typeof MessengerPairingPin>;
 
 export const NotificationFilter = __t.object("NotificationFilter", {
   channelId: __t.u64(),
-  userIdentity: __t.identity(),
+  userId: __t.u64(),
   get filterType() {
     return NotificationFilterType;
   },
@@ -114,7 +114,7 @@ export const NotificationFilterType = __t.enum("NotificationFilterType", {
 export type NotificationFilterType = __Infer<typeof NotificationFilterType>;
 
 export const User = __t.object("User", {
-  identity: __t.identity(),
+  userId: __t.u64(),
   email: __t.option(__t.string()),
   googleId: __t.option(__t.string()),
   passkeyCredentialId: __t.option(__t.string()),
@@ -124,21 +124,38 @@ export const User = __t.object("User", {
 });
 export type User = __Infer<typeof User>;
 
+export const UserIdentity = __t.object("UserIdentity", {
+  identity: __t.identity(),
+  userId: __t.u64(),
+});
+export type UserIdentity = __Infer<typeof UserIdentity>;
+
 export const Venue = __t.object("Venue", {
   venueId: __t.u64(),
   name: __t.string(),
-  ownerIdentity: __t.identity(),
+  ownerId: __t.u64(),
   link: __t.string(),
   createdAt: __t.timestamp(),
 });
 export type Venue = __Infer<typeof Venue>;
 
+export const VenueInviteToken = __t.object("VenueInviteToken", {
+  token: __t.string(),
+  venueId: __t.u64(),
+  createdAt: __t.timestamp(),
+  expiresAt: __t.timestamp(),
+});
+export type VenueInviteToken = __Infer<typeof VenueInviteToken>;
+
 export const VenueMember = __t.object("VenueMember", {
   venueId: __t.u64(),
-  userIdentity: __t.identity(),
+  userId: __t.u64(),
   joinDate: __t.timestamp(),
   lastSeen: __t.timestamp(),
   isBlocked: __t.bool(),
+  get role() {
+    return ChannelRole;
+  },
 });
 export type VenueMember = __Infer<typeof VenueMember>;
 

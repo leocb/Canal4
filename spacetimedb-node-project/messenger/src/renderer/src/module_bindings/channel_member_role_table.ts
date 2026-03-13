@@ -16,7 +16,7 @@ import {
 
 export default __t.row({
   channelId: __t.u64().name("channel_id"),
-  userIdentity: __t.identity().name("user_identity"),
+  userId: __t.u64().name("user_id"),
   get role() {
     return ChannelRole;
   },

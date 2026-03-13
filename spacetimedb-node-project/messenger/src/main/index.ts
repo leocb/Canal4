@@ -1,4 +1,4 @@
-import { app, BrowserWindow, Tray, Menu, screen, ipcMain } from 'electron'
+import { app, BrowserWindow, Tray, Menu, screen, ipcMain, nativeImage } from 'electron'
 import { join } from 'path'
 import { electronApp, optimizer, is } from '@electron-toolkit/utils'
 import icon from '../../resources/icon.png?asset'
@@ -46,8 +46,13 @@ function createTickerWindow(): void {
   tickerWindow.loadURL(url)
 }
 
-function createSettingsWindow(): void {
+function createSettingsWindow(tab: 'logs' | 'settings' | 'pairing' = 'pairing'): void {
+  const url = is.dev && process.env['ELECTRON_RENDERER_URL'] 
+    ? `${process.env['ELECTRON_RENDERER_URL']}/#/settings/${tab}`
+    : `file://${join(__dirname, '../renderer/index.html')}#/settings/${tab}`;
+
   if (settingsWindow) {
+    settingsWindow.loadURL(url)
     settingsWindow.focus()
     return;
   }
@@ -73,18 +78,21 @@ function createSettingsWindow(): void {
     settingsWindow = null;
   })
 
-  const url = is.dev && process.env['ELECTRON_RENDERER_URL'] 
-    ? `${process.env['ELECTRON_RENDERER_URL']}/#/settings`
-    : `file://${join(__dirname, '../renderer/index.html')}#/settings`;
-
   settingsWindow.loadURL(url)
 }
 
 function createTray() {
-  // TODO: Add a proper tray icon png into resources
-  tray = new Tray(icon)
+  // On macOS, tray icons must be small template images (16x16 or 22x22)
+  let trayIcon = nativeImage.createFromPath(icon)
+  if (process.platform === 'darwin') {
+    trayIcon = trayIcon.resize({ width: 16, height: 16 })
+    trayIcon.setTemplateImage(true)
+  }
+  
+  tray = new Tray(trayIcon)
   const contextMenu = Menu.buildFromTemplate([
-    { label: 'Settings & Logs', click: createSettingsWindow },
+    { label: 'Log', click: () => createSettingsWindow('logs') },
+    { label: 'Settings', click: () => createSettingsWindow('settings') },
     { type: 'separator' },
     { label: 'Quit Courier', click: () => { app.quit() } }
   ])
@@ -94,6 +102,11 @@ function createTray() {
 
 app.whenReady().then(() => {
   electronApp.setAppUserModelId('com.courier.messenger')
+
+  // Hide from macOS Dock — this is a background tray-only app
+  if (process.platform === 'darwin') {
+    app.dock?.hide()
+  }
 
   app.on('browser-window-created', (_, window) => {
     optimizer.watchWindowShortcuts(window)
@@ -121,7 +134,7 @@ app.whenReady().then(() => {
 
   // App is fundamentally a background tray app, we only show Settings if opened directly on MacOS
   app.on('activate', function () {
-    if (!settingsWindow) createSettingsWindow()
+    if (!settingsWindow) createSettingsWindow('pairing')
   })
 })
 

@@ -2,41 +2,25 @@ import { Routes, Route, Navigate } from "react-router-dom";
 import { useSpacetimeDB } from "spacetimedb/react";
 import { SettingsScreen } from "./pages/SettingsScreen";
 import { TickerScreen } from "./pages/TickerScreen";
+import { ErrorBoundary } from "./ErrorBoundary";
 
 function App() {
-  const { isActive: connected, connectionError: error } = useSpacetimeDB();
+  useSpacetimeDB();
 
-  if (error) {
-    return (
-      <div className="app-container empty-state" style={{ height: '100vh', display: 'flex', justifyContent: 'center', alignItems: 'center' }}>
-        <h2 style={{color: "var(--error-color)"}}>Connection Error</h2>
-        <p style={{ marginTop: '12px' }}>{error.message}</p>
-      </div>
-    );
-  }
-
-  if (!connected) {
-    return (
-      <div className="app-container empty-state" style={{ height: '100vh', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center' }}>
-        <h2>Connecting Messenger...</h2>
-        <div style={{ marginTop: '16px', borderTop: '2px solid var(--accent-color)', width: '40px', borderRadius: '2px', animation: 'spin 1s linear infinite' }}></div>
-      </div>
-    );
-  }
+  // The ticker screen silently skips rendering until connected. (handled in TickerScreen)
 
   return (
-    <>
-      <Routes>
-        {/* The Default Route for the transparent Ticker Window */}
-        <Route path="/ticker" element={<TickerScreen />} />
-        
-        {/* The User Control Panel Route */}
-        <Route path="/settings" element={<SettingsScreen />} />
-        
-        {/* Fallback to Settings if opened normally */}
-        <Route path="*" element={<Navigate to="/settings" replace />} />
-      </Routes>
-    </>
+    <Routes>
+      {/* The transparent ticker overlay window */}
+      <Route path="/ticker" element={<ErrorBoundary><TickerScreen /></ErrorBoundary>} />
+
+      {/* The settings/log control panel */}
+      <Route path="/settings" element={<ErrorBoundary><SettingsScreen /></ErrorBoundary>} />
+      <Route path="/settings/:tab" element={<ErrorBoundary><SettingsScreen /></ErrorBoundary>} />
+
+      {/* Default — show settings when opened directly */}
+      <Route path="*" element={<Navigate to="/settings/pairing" replace />} />
+    </Routes>
   );
 }
 

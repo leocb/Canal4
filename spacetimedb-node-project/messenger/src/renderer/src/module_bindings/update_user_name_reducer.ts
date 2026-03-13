@@ -11,8 +11,6 @@ import {
 } from "spacetimedb";
 
 export default {
-  templateId: __t.u64(),
-  name: __t.string(),
-  description: __t.string(),
-  fieldsJson: __t.string(),
+  userId: __t.u64(),
+  newName: __t.string(),
 };

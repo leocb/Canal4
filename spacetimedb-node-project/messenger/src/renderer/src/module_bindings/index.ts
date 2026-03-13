@@ -36,11 +36,14 @@ import {
 // Import all reducer arg schemas
 import BlockUserReducer from "./block_user_reducer";
 import CreateChannelReducer from "./create_channel_reducer";
+import CreateInviteTokenReducer from "./create_invite_token_reducer";
 import CreateMessageTemplateReducer from "./create_message_template_reducer";
 import CreateMessengerPinReducer from "./create_messenger_pin_reducer";
 import CreateVenueReducer from "./create_venue_reducer";
+import DeleteChannelReducer from "./delete_channel_reducer";
 import DeleteMessageReducer from "./delete_message_reducer";
 import DeleteMessageTemplateReducer from "./delete_message_template_reducer";
+import DeleteUserAccountReducer from "./delete_user_account_reducer";
 import DeleteVenueReducer from "./delete_venue_reducer";
 import JoinVenueReducer from "./join_venue_reducer";
 import LeaveVenueReducer from "./leave_venue_reducer";
@@ -52,10 +55,13 @@ import RegisterPasskeyReducer from "./register_passkey_reducer";
 import RepeatMessageReducer from "./repeat_message_reducer";
 import SendMessageReducer from "./send_message_reducer";
 import SetChannelRoleReducer from "./set_channel_role_reducer";
+import SetVenueRoleReducer from "./set_venue_role_reducer";
 import UnblockUserReducer from "./unblock_user_reducer";
+import UpdateChannelReducer from "./update_channel_reducer";
 import UpdateMessageDeliveryStatusReducer from "./update_message_delivery_status_reducer";
 import UpdateMessageTemplateReducer from "./update_message_template_reducer";
 import UpdatePushTokenReducer from "./update_push_token_reducer";
+import UpdateUserNameReducer from "./update_user_name_reducer";
 import UpdateVenueReducer from "./update_venue_reducer";
 
 // Import all procedure arg schemas
@@ -70,7 +76,9 @@ import MessengerDeviceRow from "./messenger_device_table";
 import MessengerPairingPinRow from "./messenger_pairing_pin_table";
 import NotificationFilterRow from "./notification_filter_table";
 import UserRow from "./user_table";
+import UserIdentityRow from "./user_identity_table";
 import VenueRow from "./venue_table";
+import VenueInviteTokenRow from "./venue_invite_token_table";
 import VenueMemberRow from "./venue_member_table";
 
 /** Type-only namespace exports for generated type groups. */
@@ -97,8 +105,8 @@ const tablesSchema = __schema({
       { name: 'channel_member_role_channel_id', algorithm: 'btree', columns: [
         'channelId',
       ] },
-      { name: 'channel_member_role_user_identity', algorithm: 'btree', columns: [
-        'userIdentity',
+      { name: 'channel_member_role_user_id', algorithm: 'btree', columns: [
+        'userId',
       ] },
     ],
     constraints: [
@@ -179,8 +187,8 @@ const tablesSchema = __schema({
       { name: 'notification_filter_channel_id', algorithm: 'btree', columns: [
         'channelId',
       ] },
-      { name: 'notification_filter_user_identity', algorithm: 'btree', columns: [
-        'userIdentity',
+      { name: 'notification_filter_user_id', algorithm: 'btree', columns: [
+        'userId',
       ] },
     ],
     constraints: [
@@ -189,14 +197,28 @@ const tablesSchema = __schema({
   User: __table({
     name: 'user',
     indexes: [
-      { name: 'identity', algorithm: 'btree', columns: [
-        'identity',
+      { name: 'userId', algorithm: 'btree', columns: [
+        'userId',
       ] },
     ],
     constraints: [
-      { name: 'user_identity_key', constraint: 'unique', columns: ['identity'] },
+      { name: 'user_user_id_key', constraint: 'unique', columns: ['userId'] },
     ],
   }, UserRow),
+  UserIdentity: __table({
+    name: 'user_identity',
+    indexes: [
+      { name: 'identity', algorithm: 'btree', columns: [
+        'identity',
+      ] },
+      { name: 'user_identity_user_id', algorithm: 'btree', columns: [
+        'userId',
+      ] },
+    ],
+    constraints: [
+      { name: 'user_identity_identity_key', constraint: 'unique', columns: ['identity'] },
+    ],
+  }, UserIdentityRow),
   Venue: __table({
     name: 'venue',
     indexes: [
@@ -208,11 +230,25 @@ const tablesSchema = __schema({
       { name: 'venue_venue_id_key', constraint: 'unique', columns: ['venueId'] },
     ],
   }, VenueRow),
+  VenueInviteToken: __table({
+    name: 'venue_invite_token',
+    indexes: [
+      { name: 'token', algorithm: 'btree', columns: [
+        'token',
+      ] },
+      { name: 'venue_invite_token_venue_id', algorithm: 'btree', columns: [
+        'venueId',
+      ] },
+    ],
+    constraints: [
+      { name: 'venue_invite_token_token_key', constraint: 'unique', columns: ['token'] },
+    ],
+  }, VenueInviteTokenRow),
   VenueMember: __table({
     name: 'venue_member',
     indexes: [
-      { name: 'venue_member_user_identity', algorithm: 'btree', columns: [
-        'userIdentity',
+      { name: 'venue_member_user_id', algorithm: 'btree', columns: [
+        'userId',
       ] },
       { name: 'venue_member_venue_id', algorithm: 'btree', columns: [
         'venueId',
@@ -227,11 +263,14 @@ const tablesSchema = __schema({
 const reducersSchema = __reducers(
   __reducerSchema("block_user", BlockUserReducer),
   __reducerSchema("create_channel", CreateChannelReducer),
+  __reducerSchema("create_invite_token", CreateInviteTokenReducer),
   __reducerSchema("create_message_template", CreateMessageTemplateReducer),
   __reducerSchema("create_messenger_pin", CreateMessengerPinReducer),
   __reducerSchema("create_venue", CreateVenueReducer),
+  __reducerSchema("delete_channel", DeleteChannelReducer),
   __reducerSchema("delete_message", DeleteMessageReducer),
   __reducerSchema("delete_message_template", DeleteMessageTemplateReducer),
+  __reducerSchema("delete_user_account", DeleteUserAccountReducer),
   __reducerSchema("delete_venue", DeleteVenueReducer),
   __reducerSchema("join_venue", JoinVenueReducer),
   __reducerSchema("leave_venue", LeaveVenueReducer),
@@ -243,10 +282,13 @@ const reducersSchema = __reducers(
   __reducerSchema("repeat_message", RepeatMessageReducer),
   __reducerSchema("send_message", SendMessageReducer),
   __reducerSchema("set_channel_role", SetChannelRoleReducer),
+  __reducerSchema("set_venue_role", SetVenueRoleReducer),
   __reducerSchema("unblock_user", UnblockUserReducer),
+  __reducerSchema("update_channel", UpdateChannelReducer),
   __reducerSchema("update_message_delivery_status", UpdateMessageDeliveryStatusReducer),
   __reducerSchema("update_message_template", UpdateMessageTemplateReducer),
   __reducerSchema("update_push_token", UpdatePushTokenReducer),
+  __reducerSchema("update_user_name", UpdateUserNameReducer),
   __reducerSchema("update_venue", UpdateVenueReducer),
 );
 

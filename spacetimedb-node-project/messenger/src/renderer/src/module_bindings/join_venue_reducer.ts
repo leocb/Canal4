@@ -11,5 +11,5 @@ import {
 } from "spacetimedb";
 
 export default {
-  venueId: __t.u64(),
+  token: __t.string(),
 };

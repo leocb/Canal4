@@ -11,7 +11,7 @@ import {
 } from "spacetimedb";
 
 export default __t.row({
-  identity: __t.identity().primaryKey(),
+  userId: __t.u64().primaryKey().name("user_id"),
   email: __t.option(__t.string()),
   googleId: __t.option(__t.string()).name("google_id"),
   passkeyCredentialId: __t.option(__t.string()).name("passkey_credential_id"),
