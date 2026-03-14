@@ -26,7 +26,8 @@ function createTickerWindow(): void {
     type: 'toolbar', // Helps with alwaysOnTop on OS X
     webPreferences: {
       preload: join(__dirname, '../preload/index.js'),
-      sandbox: false
+      sandbox: false,
+      webSecurity: !is.dev,
     }
   })
 
@@ -39,15 +40,15 @@ function createTickerWindow(): void {
     tickerWindow?.showInactive()
   })
 
-  const url = is.dev && process.env['ELECTRON_RENDERER_URL'] 
+  const url = is.dev && process.env['ELECTRON_RENDERER_URL']
     ? `${process.env['ELECTRON_RENDERER_URL']}/#/ticker`
     : `file://${join(__dirname, '../renderer/index.html')}#/ticker`;
-    
+
   tickerWindow.loadURL(url)
 }
 
 function createSettingsWindow(tab: 'logs' | 'settings' | 'pairing' = 'pairing'): void {
-  const url = is.dev && process.env['ELECTRON_RENDERER_URL'] 
+  const url = is.dev && process.env['ELECTRON_RENDERER_URL']
     ? `${process.env['ELECTRON_RENDERER_URL']}/#/settings/${tab}`
     : `file://${join(__dirname, '../renderer/index.html')}#/settings/${tab}`;
 
@@ -58,7 +59,7 @@ function createSettingsWindow(tab: 'logs' | 'settings' | 'pairing' = 'pairing'):
   }
 
   settingsWindow = new BrowserWindow({
-    width: 600,
+    width: 800,
     height: 800,
     show: false,
     title: "Courier Node Settings",
@@ -66,14 +67,15 @@ function createSettingsWindow(tab: 'logs' | 'settings' | 'pairing' = 'pairing'):
     ...(process.platform === 'linux' ? { icon } : {}),
     webPreferences: {
       preload: join(__dirname, '../preload/index.js'),
-      sandbox: false
+      sandbox: false,
+      webSecurity: !is.dev,
     }
   })
 
   settingsWindow.on('ready-to-show', () => {
     settingsWindow?.show()
   })
-  
+
   settingsWindow.on('closed', () => {
     settingsWindow = null;
   })
@@ -88,7 +90,7 @@ function createTray() {
     trayIcon = trayIcon.resize({ width: 16, height: 16 })
     trayIcon.setTemplateImage(true)
   }
-  
+
   tray = new Tray(trayIcon)
   const contextMenu = Menu.buildFromTemplate([
     { label: 'Log', click: () => createSettingsWindow('logs') },
@@ -121,14 +123,14 @@ app.whenReady().then(() => {
     const fs = require('fs');
     const path = require('path');
     const crypto = require('crypto');
-    
+
     const storePath = path.join(app.getPath('userData'), 'machineId.json');
     if (fs.existsSync(storePath)) {
-        return JSON.parse(fs.readFileSync(storePath, 'utf-8')).id;
+      return JSON.parse(fs.readFileSync(storePath, 'utf-8')).id;
     } else {
-        const id = crypto.randomUUID();
-        fs.writeFileSync(storePath, JSON.stringify({ id }));
-        return id;
+      const id = crypto.randomUUID();
+      fs.writeFileSync(storePath, JSON.stringify({ id }));
+      return id;
     }
   })
 

@@ -3,10 +3,16 @@ import { SpacetimeDBProvider as Provider } from "spacetimedb/react";
 import { DbConnection } from "./module_bindings/index";
 
 export const SpacetimeDBProvider = ({ children }: { children: ReactNode }) => {
-  const token = localStorage.getItem("auth_token") || undefined;
-  
+  // Do NOT pass a stored token — if it was issued by a different server instance
+  // (e.g. production vs local), the websocket-token exchange will fail with
+  // "Failed to fetch". Start anonymous; a fresh token is saved by onConnect.
+  const token = undefined;
+
   const builder = useMemo(() => {
-    const stUri = localStorage.getItem("spacetime_uri") || "ws://127.0.0.1:3000";
+    // Normalize: 'localhost' can resolve to ::1 (IPv6) while SpacetimeDB
+    // listens on 127.0.0.1 (IPv4), causing "Failed to fetch".
+    const rawUri = localStorage.getItem("spacetime_uri") || "ws://127.0.0.1:3000";
+    const stUri = rawUri.replace('://localhost', '://127.0.0.1');
     const stDb = localStorage.getItem("spacetime_db") || "spacetimedb-node-project-gybhi";
 
     return DbConnection.builder()

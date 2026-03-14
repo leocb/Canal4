@@ -169,6 +169,7 @@ export const MessengerDevice = table(
   {
     messengerId: t.u64().primaryKey().autoInc(),
     uid: t.string(),
+    identity: t.identity(),
     venueId: t.u64(),
     name: t.string(),
     registeredAt: t.timestamp(),
@@ -181,6 +182,7 @@ export const MessengerPairingPin = table(
   {
     pin: t.string().primaryKey(),
     messengerUid: t.string(),
+    identity: t.identity(),
     expiresAt: t.timestamp(),
   }
 );

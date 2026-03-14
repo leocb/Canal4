@@ -704,13 +704,17 @@ export const repeat_message = spacetimedb.reducer(
 export const create_messenger_pin = spacetimedb.reducer(
   { messengerUid: t.string() },
   (ctx, { messengerUid }) => {
-    // Must be a logged-in user
-    getUserId(ctx); // Throws if not logged in
-
-    const pin = Math.floor(100000 + Math.random() * 900000).toString();
+    // We allow anonymous callers to generate a PIN.
+    // The PIN is linked to the caller's identity so only they can use it to pair later.
+    const pin = ctx.random.integerInRange(100000, 999999).toString();
     const expiresAt = ctx.timestamp.microsSinceUnixEpoch + (10n * 60n * 1000000n); // 10 mins
 
-    ctx.db.MessengerPairingPin.insert({ pin, messengerUid, expiresAt: new Timestamp(expiresAt) });
+    ctx.db.MessengerPairingPin.insert({
+      pin,
+      messengerUid,
+      identity: ctx.sender,
+      expiresAt: new Timestamp(expiresAt)
+    });
   }
 );
 
@@ -747,6 +751,7 @@ export const register_messenger_to_venue = spacetimedb.reducer(
     ctx.db.MessengerDevice.insert({
       messengerId: 0n,
       uid: pairing.messengerUid,
+      identity: pairing.identity,
       venueId,
       name,
       registeredAt: ctx.timestamp,
@@ -760,9 +765,12 @@ export const register_messenger_to_venue = spacetimedb.reducer(
 export const messenger_connect = spacetimedb.reducer(
   { messengerUid: t.string() },
   (ctx, { messengerUid }) => {
-    const devices = [...ctx.db.MessengerDevice.messenger_device_uid.filter(messengerUid)];
+    // Find devices with this UID and verify the identity matches the one stored at pairing time
+    const devices = [...ctx.db.MessengerDevice.messenger_device_uid.filter(messengerUid)]
+      .filter(d => d.identity.isEqual(ctx.sender));
+    
     if (devices.length === 0) {
-      throw new SenderError("Messenger device not registered");
+      throw new SenderError("Messenger device not registered or identity mismatch");
     }
 
     for (const device of devices) {
@@ -777,8 +785,10 @@ export const messenger_connect = spacetimedb.reducer(
 export const update_message_delivery_status = spacetimedb.reducer(
   { uid: t.string(), messageId: t.u64(), statusTag: t.string() },
   (ctx, { uid, messageId, statusTag }) => {
-    const device = [...ctx.db.MessengerDevice.messenger_device_uid.filter(uid)][0];
-    if (!device) throw new SenderError("Messenger device not found");
+    const device = [...ctx.db.MessengerDevice.messenger_device_uid.filter(uid)]
+      .find(d => d.identity.isEqual(ctx.sender));
+    
+    if (!device) throw new SenderError("Messenger device not found or identity mismatch");
 
     const allStatuses = [...ctx.db.MessageDeliveryStatus.delivery_status_message_id.filter(messageId)];
     const statusRow = allStatuses.find(s => s.messengerId === device.messengerId);

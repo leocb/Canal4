@@ -81,6 +81,7 @@ export type MessageTemplate = __Infer<typeof MessageTemplate>;
 export const MessengerDevice = __t.object("MessengerDevice", {
   messengerId: __t.u64(),
   uid: __t.string(),
+  identity: __t.identity(),
   venueId: __t.u64(),
   name: __t.string(),
   registeredAt: __t.timestamp(),
@@ -91,6 +92,7 @@ export type MessengerDevice = __Infer<typeof MessengerDevice>;
 export const MessengerPairingPin = __t.object("MessengerPairingPin", {
   pin: __t.string(),
   messengerUid: __t.string(),
+  identity: __t.identity(),
   expiresAt: __t.timestamp(),
 });
 export type MessengerPairingPin = __Infer<typeof MessengerPairingPin>;

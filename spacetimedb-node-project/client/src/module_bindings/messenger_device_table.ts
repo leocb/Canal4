@@ -13,6 +13,7 @@ import {
 export default __t.row({
   messengerId: __t.u64().primaryKey().name("messenger_id"),
   uid: __t.string(),
+  identity: __t.identity(),
   venueId: __t.u64().name("venue_id"),
   name: __t.string(),
   registeredAt: __t.timestamp().name("registered_at"),
