@@ -4,7 +4,7 @@ import { useTable, useReducer } from 'spacetimedb/react';
 import { tables, reducers } from '../module_bindings/index.ts';
 import { useReadyTable } from '../hooks/useReadyTable';
 import { useAuth } from '../hooks/useAuth';
-import { MoreVertical, Settings, Send, History, LayoutTemplate, Repeat, Trash2, UserX, Clock, Play, CheckCircle2, AlertCircle, WifiOff } from 'lucide-react';
+import { MoreVertical, Settings, Send, History, LayoutTemplate, Repeat, Trash2, UserX, Clock, Play, CheckCircle2, AlertCircle, WifiOff, Monitor } from 'lucide-react';
 
 export const ChannelScreen = () => {
   const { venueLink, channelId } = useParams<{ venueLink: string, channelId: string }>();
@@ -23,6 +23,7 @@ export const ChannelScreen = () => {
   const deleteMessage = useReducer(reducers.deleteMessage);
   const repeatMessage = useReducer(reducers.repeatMessage);
   const blockUser = useReducer(reducers.blockUser);
+  const deleteDevice = useReducer(reducers.deleteMessengerDevice);
 
   const venue = venues.find((v: any) => v.link === venueLink);
   const channelIdBigInt = BigInt(channelId || 0);
@@ -123,18 +124,41 @@ export const ChannelScreen = () => {
   const hasDevices = connectedDevices.length > 0;
 
   const getDeliveryStatus = (messageId: bigint, deviceId: bigint) => {
-    const s = Array.from(deliveryStatuses || []).find(
-      (ds: any) => BigInt(ds.messageId) === BigInt(messageId) && BigInt(ds.messengerId) === BigInt(deviceId)
-    );
-    return s?.status.tag;
+    const list = Array.from(deliveryStatuses || []);
+    const mid = BigInt(messageId);
+    const did = BigInt(deviceId);
+    
+    // Find matching status record
+    const s = list.find((ds: any) => {
+      try {
+        return BigInt(ds.messageId) === mid && BigInt(ds.messengerId) === did;
+      } catch {
+        return false;
+      }
+    });
+    
+    return s?.status?.tag;
   };
 
   const isNodeConnected = (device: any) => {
     if (!device.lastConnectedAt) return false;
-    const lastActive = Number(BigInt(device.lastConnectedAt.microsSinceUnixEpoch) / 1000n);
-    const now = Date.now();
-    // Use a more generous 60s threshold for dev stability
-    return (now - lastActive) < 60000; 
+    try {
+      const lastActive = Number(BigInt(device.lastConnectedAt.microsSinceUnixEpoch) / 1000n);
+      const now = Date.now();
+      // Heartbeat is 15s, so 45s is a safe threshold
+      return (now - lastActive) < 45000;
+    } catch {
+      return false;
+    }
+  };
+
+  const handleDeleteDevice = async (device: any) => {
+    if (!window.confirm(`Remove display node "${device.name}"?`)) return;
+    try {
+      await deleteDevice({ messengerId: device.messengerId });
+    } catch (err: any) {
+      console.error("Failed to delete device:", err);
+    }
   };
 
   const StatusIcon = ({ status, isConnected, deviceName }: { status: string | undefined, isConnected: boolean, deviceName: string }) => {
@@ -243,6 +267,56 @@ export const ChannelScreen = () => {
           </div>
         )}
 
+        {/* Display Nodes Status Shelf — moderators only */}
+        {isModerator && hasDevices && (
+          <div style={{ padding: '24px 24px 0' }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '12px', color: 'var(--text-secondary)', fontSize: '0.8rem', fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.05em' }}>
+              <Monitor size={14} /> Display Nodes Pairing
+            </div>
+            <div style={{ display: 'flex', gap: '12px', overflowX: 'auto', paddingBottom: '8px' }}>
+              {connectedDevices.map((d: any) => {
+                const connected = isNodeConnected(d);
+                return (
+                  <div 
+                    key={d.messengerId.toString()}
+                    className="glass-panel"
+                    style={{ 
+                      minWidth: '200px', 
+                      padding: '12px 16px', 
+                      display: 'flex', 
+                      alignItems: 'center', 
+                      justifyContent: 'space-between',
+                      background: 'rgba(255,255,255,0.02)',
+                      border: `1px solid ${connected ? 'rgba(16,185,129,0.2)' : 'rgba(255,255,255,0.05)'}`
+                    }}
+                  >
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+                      <div style={{ 
+                        width: '8px', height: '8px', borderRadius: '50%', 
+                        background: connected ? '#10B981' : '#64748b',
+                        boxShadow: connected ? '0 0 8px rgba(16,185,129,0.4)' : 'none'
+                      }} />
+                      <div>
+                        <div style={{ fontSize: '0.85rem', fontWeight: 600 }}>{d.name}</div>
+                        <div style={{ fontSize: '0.7rem', color: 'var(--text-secondary)' }}>
+                          {connected ? 'Connected' : 'Offline'}
+                        </div>
+                      </div>
+                    </div>
+                    <button 
+                      className="icon-button danger" 
+                      onClick={() => handleDeleteDevice(d)}
+                      style={{ padding: '4px', background: 'transparent', border: 'none' }}
+                    >
+                      <Trash2 size={14} />
+                    </button>
+                  </div>
+                );
+              })}
+            </div>
+          </div>
+        )}
+
         {/* Messages list — newest at top, notification panel style */}
         <div className="flex-col" style={{ flex: 1, overflowY: 'auto', padding: '24px', gap: '12px' }}>
           {channelMessages.length === 0 ? (
@@ -304,8 +378,8 @@ export const ChannelScreen = () => {
                       <span style={{ display: 'flex', gap: '8px', background: 'rgba(0,0,0,0.2)', padding: '4px 8px', borderRadius: '12px', alignItems: 'center' }}>
                         {connectedDevices.map((d: any) => (
                           <StatusIcon 
-                            key={d.messengerId} 
-                            status={getDeliveryStatus(msg.messageId, d.messengerId)} 
+                            key={d.messengerId.toString()} 
+                            status={getDeliveryStatus(msg.messageId, d.messengerId)}
                             isConnected={isNodeConnected(d)}
                             deviceName={d.name}
                           />

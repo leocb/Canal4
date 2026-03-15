@@ -3,7 +3,13 @@ import { electronAPI } from '@electron-toolkit/preload'
 
 // Custom APIs for renderer
 const api = {
-  getMachineId: () => ipcRenderer.invoke('get-machine-id')
+  getMachineId: () => ipcRenderer.invoke('get-machine-id'),
+  getToken: () => ipcRenderer.invoke('get-token'),
+  setToken: (token: string) => ipcRenderer.send('set-token', token),
+  resetIdentity: () => ipcRenderer.invoke('reset-identity'),
+  onTokenUpdated: (callback: (token: string) => void) => {
+    ipcRenderer.on('token-updated', (_event, token) => callback(token))
+  }
 }
 
 // Use `contextBridge` APIs to expose Electron APIs to

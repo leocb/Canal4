@@ -44,9 +44,14 @@ export const TickerScreen = () => {
         
         for (const idStr of effectivelyShownIds.current) {
             const id = BigInt(idStr);
-            const status = Array.from(statuses).find(s => BigInt(s.messageId) === id && myMessengerIds.some(mid => mid === BigInt(s.messengerId)));
+            const status = Array.from(statuses).find(s => {
+                const sid = BigInt(s.messageId);
+                const smid = BigInt(s.messengerId);
+                return sid === id && myMessengerIds.some(mid => mid === smid);
+            });
+            
             if (!status || status.status.tag === 'Shown') {
-                console.log("[Ticker] DB synced 'Shown' for:", idStr);
+                console.log("[Ticker] DB reflect 'Shown' for:", idStr);
                 effectivelyShownIds.current.delete(idStr);
             }
         }
@@ -92,7 +97,7 @@ export const TickerScreen = () => {
             const next = pendingQueue[0];
             const repeatCount = settings.repeatCount;
             
-            console.log("[Ticker] STARTING message:", next.msg!.content, "(ID:", next.msg!.messageId.toString(), ")");
+            console.log("[Ticker] STARTING message:", next.msg!.content, "ID:", next.msg!.messageId.toString());
             
             setActiveMessage({ 
                 id: next.msg!.messageId, 
@@ -108,7 +113,9 @@ export const TickerScreen = () => {
                 uid: machineUid, 
                 messageId: next.msg!.messageId, 
                 statusTag: 'InProgress'
-            }).catch(err => console.error("[Ticker] Failed to update status to InProgress:", err));
+            }).catch(err => {
+                console.error("[Ticker] updateStatus(InProgress) failed for ID:", next.msg!.messageId.toString(), "Error:", err);
+            });
         }
     }, [messages, statuses, devices, machineUid, connected, activeMessage, appStartTime, settings.repeatCount]);
 

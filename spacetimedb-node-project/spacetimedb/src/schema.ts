@@ -198,6 +198,7 @@ export const MessageDeliveryStatus = table(
     ] as const,
   },
   {
+    statusId: t.u64().primaryKey().autoInc(),
     messageId: t.u64(),
     messengerId: t.u64(),
     status: DeliveryStatus,

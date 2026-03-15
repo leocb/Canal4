@@ -43,6 +43,7 @@ import CreateVenueReducer from "./create_venue_reducer";
 import DeleteChannelReducer from "./delete_channel_reducer";
 import DeleteMessageReducer from "./delete_message_reducer";
 import DeleteMessageTemplateReducer from "./delete_message_template_reducer";
+import DeleteMessengerDeviceReducer from "./delete_messenger_device_reducer";
 import DeleteUserAccountReducer from "./delete_user_account_reducer";
 import DeleteVenueReducer from "./delete_venue_reducer";
 import JoinVenueReducer from "./join_venue_reducer";
@@ -135,8 +136,12 @@ const tablesSchema = __schema({
       { name: 'delivery_status_messenger_id', algorithm: 'btree', columns: [
         'messengerId',
       ] },
+      { name: 'statusId', algorithm: 'btree', columns: [
+        'statusId',
+      ] },
     ],
     constraints: [
+      { name: 'message_delivery_status_status_id_key', constraint: 'unique', columns: ['statusId'] },
     ],
   }, MessageDeliveryStatusRow),
   MessageTemplate: __table({
@@ -270,6 +275,7 @@ const reducersSchema = __reducers(
   __reducerSchema("delete_channel", DeleteChannelReducer),
   __reducerSchema("delete_message", DeleteMessageReducer),
   __reducerSchema("delete_message_template", DeleteMessageTemplateReducer),
+  __reducerSchema("delete_messenger_device", DeleteMessengerDeviceReducer),
   __reducerSchema("delete_user_account", DeleteUserAccountReducer),
   __reducerSchema("delete_venue", DeleteVenueReducer),
   __reducerSchema("join_venue", JoinVenueReducer),

@@ -185,17 +185,27 @@ export const SendMessageScreen = () => {
     const finalContent = generateOutput();
 
     try {
-      await sendMessage({
-        channelId: channelIdBigInt,
-        content: finalContent,
-        templateId: selectedTemplate.templateId
+      // Create a timeout promise
+      const timeoutPromise = new Promise((_, reject) => {
+        setTimeout(() => reject(new Error("Request timed out. The server didn't respond in time.")), 10000);
       });
+
+      // Race the sendMessage call against the timeout
+      await Promise.race([
+        sendMessage({
+          channelId: channelIdBigInt,
+          content: finalContent,
+          templateId: selectedTemplate.templateId
+        }),
+        timeoutPromise
+      ]);
       
       setShowSuccess(true);
       setTimeout(() => {
         navigate(`/venues/${venue.link}/channels/${channel.channelId}`);
       }, 2000);
     } catch (err: unknown) {
+      console.error("SendMessage error:", err);
       setServerError(err instanceof Error ? err.message : String(err));
       setLoading(false);
     }

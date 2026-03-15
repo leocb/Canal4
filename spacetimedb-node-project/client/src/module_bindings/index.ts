@@ -136,8 +136,12 @@ const tablesSchema = __schema({
       { name: 'delivery_status_messenger_id', algorithm: 'btree', columns: [
         'messengerId',
       ] },
+      { name: 'statusId', algorithm: 'btree', columns: [
+        'statusId',
+      ] },
     ],
     constraints: [
+      { name: 'message_delivery_status_status_id_key', constraint: 'unique', columns: ['statusId'] },
     ],
   }, MessageDeliveryStatusRow),
   MessageTemplate: __table({

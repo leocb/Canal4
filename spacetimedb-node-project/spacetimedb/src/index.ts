@@ -593,6 +593,7 @@ export const delete_message_template = spacetimedb.reducer(
 export const send_message = spacetimedb.reducer(
   { channelId: t.u64(), content: t.string(), templateId: t.u64().optional() },
   (ctx, { channelId, content, templateId }) => {
+    console.log(`[SendMessage] Channel: ${channelId}, Template: ${templateId}`);
     const userId = getUserId(ctx);
     const ch = ctx.db.Channel.channelId.find(channelId);
     if (!ch) throw new SenderError("Channel not found");
@@ -628,6 +629,7 @@ export const send_message = spacetimedb.reducer(
     const activeMessengers = [...ctx.db.MessengerDevice.messenger_device_venue_id.filter(ch.venueId)];
     for (const messenger of activeMessengers) {
       ctx.db.MessageDeliveryStatus.insert({
+        statusId: 0n,
         messageId: row.messageId,
         messengerId: messenger.messengerId,
         status: { tag: "Queued", value: "" },
@@ -700,6 +702,7 @@ export const repeat_message = spacetimedb.reducer(
     const activeMessengers = [...ctx.db.MessengerDevice.messenger_device_venue_id.filter(ch.venueId)];
     for (const messenger of activeMessengers) {
       ctx.db.MessageDeliveryStatus.insert({
+        statusId: 0n, // Added statusId
         messageId: row.messageId,
         messengerId: messenger.messengerId,
         status: { tag: "Queued", value: "" },
@@ -758,6 +761,14 @@ export const register_messenger_to_venue = spacetimedb.reducer(
       throw new SenderError("PIN has expired");
     }
 
+    // Clean up old registrations for this UID in THIS venue 
+    // (prevents ghost nodes on re-pairing after reset)
+    const oldDevices = [...ctx.db.MessengerDevice.messenger_device_uid.filter(pairing.messengerUid)]
+      .filter(d => d.venueId === venueId);
+    for (const old of oldDevices) {
+      ctx.db.MessengerDevice.messengerId.delete(old.messengerId);
+    }
+
     ctx.db.MessengerDevice.insert({
       messengerId: 0n,
       uid: pairing.messengerUid,
@@ -795,33 +806,54 @@ export const messenger_connect = spacetimedb.reducer(
 export const update_message_delivery_status = spacetimedb.reducer(
   { uid: t.string(), messageId: t.u64(), statusTag: t.string() },
   (ctx, { uid, messageId, statusTag }) => {
+    console.log(`[UpdateStatus] UID: ${uid}, Msg: ${messageId}, Status: ${statusTag}`);
+
     // 1. Find the message and its venue
     const msg = ctx.db.Message.messageId.find(messageId);
-    if (!msg) throw new SenderError("Message not found");
+    if (!msg) throw new SenderError(`Message ${messageId} not found`);
     
     const channel = ctx.db.Channel.channelId.find(msg.channelId);
-    if (!channel) throw new SenderError("Channel not found");
+    if (!channel) throw new SenderError(`Channel for message ${messageId} not found`);
 
     // 2. Find the SPECIFIC device pairing for this machine and this venue
-    const device = [...ctx.db.MessengerDevice.messenger_device_uid.filter(uid)]
-      .find(d => d.identity.isEqual(ctx.sender) && d.venueId === channel.venueId);
+    const devicesByUid = [...ctx.db.MessengerDevice.messenger_device_uid.filter(uid)];
+    const device = devicesByUid.find(d => d.identity.isEqual(ctx.sender) && d.venueId === channel.venueId);
     
-    if (!device) throw new SenderError("Messenger device not paired with this venue or identity mismatch");
-
-    // 3. Update the status row
-    const allStatuses = [...ctx.db.MessageDeliveryStatus.delivery_status_message_id.filter(messageId)];
-    const statusRow = allStatuses.find(s => s.messengerId === device.messengerId);
-
-    if (statusRow) {
-      ctx.db.MessageDeliveryStatus.delete({ ...statusRow });
+    if (!device) {
+      const senderHex = ctx.sender.toHexString().slice(0, 10);
+      console.error(`[UpdateStatus] Identity mismatch for UID ${uid}. Sender: ${senderHex}... Venue: ${channel.venueId}`);
+      if (devicesByUid.length > 0) {
+          console.error(`[UpdateStatus] Found ${devicesByUid.length} devices with this UID but none match sender/venue.`);
+          devicesByUid.forEach(d => console.log(` - Device ${d.messengerId} Identity: ${d.identity.toHexString().slice(0, 10)}... Venue: ${d.venueId}`));
+      }
+      throw new SenderError("Messenger device not paired with this venue or identity mismatch");
     }
 
-    ctx.db.MessageDeliveryStatus.insert({
-      messageId,
-      messengerId: device.messengerId,
-      status: { tag: statusTag as any, value: "" },
-      updatedAt: ctx.timestamp,
-    });
+    console.log(`[UpdateStatus] Found device: ${device.messengerId} (${device.name})`);
+
+    // 3. Update the status row
+    const statusRow = [...ctx.db.MessageDeliveryStatus.delivery_status_message_id.filter(messageId)]
+      .find(s => s.messengerId === device.messengerId);
+
+    if (statusRow) {
+      console.log(`[UpdateStatus] Updating status for ID ${statusRow.statusId} to ${statusTag}`);
+      ctx.db.MessageDeliveryStatus.statusId.update({
+          ...statusRow,
+          status: { tag: statusTag as any, value: "" },
+          updatedAt: ctx.timestamp,
+      });
+    } else {
+      console.log(`[UpdateStatus] No status row found, creating new one.`);
+      ctx.db.MessageDeliveryStatus.insert({
+        statusId: 0n,
+        messageId,
+        messengerId: device.messengerId,
+        status: { tag: statusTag as any, value: "" },
+        updatedAt: ctx.timestamp,
+      });
+    }
+    
+    console.log(`[UpdateStatus] Successfully set ${messageId}/${device.messengerId} to ${statusTag}`);
   }
 );
 

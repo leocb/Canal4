@@ -15,6 +15,7 @@ import {
 
 
 export default __t.row({
+  statusId: __t.u64().primaryKey().name("status_id"),
   messageId: __t.u64().name("message_id"),
   messengerId: __t.u64().name("messenger_id"),
   get status() {

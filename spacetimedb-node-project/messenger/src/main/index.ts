@@ -117,22 +117,57 @@ app.whenReady().then(() => {
   createTray()
   createTickerWindow()
 
-  // Handle IPC requests
-  ipcMain.handle('get-machine-id', async () => {
-    // We would normally establish an electron-store or similar persistent file. For rapid proto, we use electron's app.getPath
-    const fs = require('fs');
-    const path = require('path');
-    const crypto = require('crypto');
+  // Persistent storage for machine ID and Auth Token
+  const fs = require('fs');
+  const path = require('path');
+  const crypto = require('crypto');
+  const dataPath = path.join(app.getPath('userData'), 'messengerData.json');
 
-    const storePath = path.join(app.getPath('userData'), 'machineId.json');
-    if (fs.existsSync(storePath)) {
-      return JSON.parse(fs.readFileSync(storePath, 'utf-8')).id;
-    } else {
-      const id = crypto.randomUUID();
-      fs.writeFileSync(storePath, JSON.stringify({ id }));
-      return id;
+  let messengerData = { id: '', token: '' };
+  try {
+    if (fs.existsSync(dataPath)) {
+      messengerData = JSON.parse(fs.readFileSync(dataPath, 'utf-8'));
     }
-  })
+  } catch (e) { console.error("Could not load messengerData", e); }
+
+  if (!messengerData.id) {
+    messengerData.id = crypto.randomUUID();
+    fs.writeFileSync(dataPath, JSON.stringify(messengerData));
+  }
+
+  // Handle IPC requests
+  ipcMain.handle('get-machine-id', () => messengerData.id);
+  ipcMain.handle('get-token', () => messengerData.token);
+  
+  ipcMain.on('set-token', (event, token) => {
+    // We allow empty string/null to clear the token, only skip if strictly undefined or same as current
+    if (token === undefined || token === messengerData.token) return;
+    
+    console.log(`[Main] Updating token (length: ${token?.length || 0})`);
+    messengerData.token = token || '';
+    fs.writeFileSync(dataPath, JSON.stringify(messengerData));
+    
+    // Broadcast to other windows
+    const windows = BrowserWindow.getAllWindows();
+    for (const win of windows) {
+      if (win.webContents !== event.sender) {
+        win.webContents.send('token-updated', messengerData.token);
+      }
+    }
+  });
+
+  ipcMain.handle('reset-identity', () => {
+    if (fs.existsSync(dataPath)) fs.unlinkSync(dataPath);
+    messengerData = { id: crypto.randomUUID(), token: '' };
+    fs.writeFileSync(dataPath, JSON.stringify(messengerData));
+    
+    // Reload all windows to pick up new anonymous identity
+    const windows = BrowserWindow.getAllWindows();
+    for (const win of windows) {
+      win.webContents.reload();
+    }
+    return messengerData.id;
+  });
 
   // App is fundamentally a background tray app, we only show Settings if opened directly on MacOS
   app.on('activate', function () {

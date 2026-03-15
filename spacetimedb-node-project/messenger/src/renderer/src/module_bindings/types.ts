@@ -61,6 +61,7 @@ export const Message = __t.object("Message", {
 export type Message = __Infer<typeof Message>;
 
 export const MessageDeliveryStatus = __t.object("MessageDeliveryStatus", {
+  statusId: __t.u64(),
   messageId: __t.u64(),
   messengerId: __t.u64(),
   get status() {

@@ -1,14 +1,17 @@
 import { Routes, Route, Navigate } from "react-router-dom";
 import { useEffect, useState } from "react";
-import { useSpacetimeDB, useReducer } from "spacetimedb/react";
-import { reducers } from "./module_bindings/index";
+import { useSpacetimeDB, useReducer, useTable } from "spacetimedb/react";
+import { reducers, tables } from "./module_bindings/index";
 import { SettingsScreen } from "./pages/SettingsScreen";
 import { TickerScreen } from "./pages/TickerScreen";
 import { ErrorBoundary } from "./ErrorBoundary";
 
 function App() {
-  const { isActive: connected } = useSpacetimeDB();
+  const { isActive: connected, identity } = useSpacetimeDB();
   const messengerConnect = useReducer(reducers.messengerConnect);
+  const loginOrCreateUser = useReducer(reducers.loginOrCreateUser);
+  const [userIdentities] = useTable(tables.UserIdentity);
+
   const [machineUid, setMachineUid] = useState<string>('');
 
   useEffect(() => {
@@ -22,6 +25,35 @@ function App() {
       setMachineUid(id);
     }
   }, []);
+
+  const [hasAttemptedAutoRegister, setHasAttemptedAutoRegister] = useState(false);
+
+  // Automatic User Registration (if identity is not linked to a user)
+  useEffect(() => {
+    if (!connected || !identity || !machineUid || hasAttemptedAutoRegister) return;
+
+    // Check if we are already registered
+    const myUserIdentity = userIdentities.find(ui => ui.identity.isEqual(identity));
+
+    // We only attempt if we are connected and the data has had a chance to sync
+    // (We assume if we find NOTHING after connection, we might need registration, 
+    // but the backend reducer is idempotent anyway)
+    if (!myUserIdentity) {
+      console.log("[App] Identity not registered as User, auto-registering...");
+      setHasAttemptedAutoRegister(true);
+      loginOrCreateUser({
+        email: `messenger-${machineUid.slice(0, 12)}@courier.local`,
+        googleId: undefined,
+        name: `Display Node (${machineUid.slice(0, 6)})`
+      }).catch(err => {
+        console.error("[App] Auto-registration failed:", err);
+        setHasAttemptedAutoRegister(false); // Allow retry on failure
+      });
+    } else {
+      // We found ourselves, so no need to register
+      setHasAttemptedAutoRegister(true);
+    }
+  }, [connected, identity, machineUid, userIdentities, hasAttemptedAutoRegister]);
 
   // Heartbeat to keep lastConnectedAt fresh in the database
   useEffect(() => {

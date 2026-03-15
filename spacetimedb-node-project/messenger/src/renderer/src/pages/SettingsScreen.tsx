@@ -1,7 +1,9 @@
 import { useState, useEffect, useMemo } from 'react';
 import { useTable, useReducer, useSpacetimeDB } from 'spacetimedb/react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { tables, reducers } from '../module_bindings/index';
+import { tables, reducers } from '../module_bindings';
+import { useSpacetimeError } from '../SpacetimeDBProvider';
+
 
 type Tab = 'logs' | 'pairing' | 'settings';
 
@@ -81,6 +83,7 @@ const IconArrowUp = () => (
 // --- Component ---
 export const SettingsScreen = () => {
   const { isActive: connected, connectionError } = useSpacetimeDB();
+  const { lastError } = useSpacetimeError();
   const [messages] = useTable(tables.Message);
   const [venues] = useTable(tables.Venue);
   const [channels] = useTable(tables.Channel);
@@ -106,7 +109,6 @@ export const SettingsScreen = () => {
   );
 
   const requestPin = useReducer(reducers.createMessengerPin);
-  const messengerConnect = useReducer(reducers.messengerConnect);
 
   // PIN countdown timer state
   const [pinSecondsLeft, setPinSecondsLeft] = useState<number>(0);
@@ -162,19 +164,14 @@ export const SettingsScreen = () => {
   const getTemplateName = (id?: bigint | null) =>
     id ? (templates.find(t => t.templateId === id)?.name ?? `Template #${id}`) : 'Manual';
   const getUserName = (id: bigint) => users.find(u => u.userId === id)?.name ?? `User #${id}`;
-  const getStatus = (msgId: bigint, deviceId: bigint) =>
-    deliveryStatuses.find(s => s.messageId === msgId && s.messengerId === deviceId)?.status.tag ?? 'Unknown';
+  const getStatus = (messageId: any, deviceId: any) => {
+    const mid = BigInt(messageId);
+    const did = BigInt(deviceId);
+    const s = Array.from(deliveryStatuses || []).find(ds => BigInt(ds.messageId) === mid && BigInt(ds.messengerId) === did);
+    return s?.status?.tag;
+  };
 
-  // Signal "online" to SpacetimeDB once both connected and UID are ready
-  const [hasSignaledConnect, setHasSignaledConnect] = useState(false);
-  useEffect(() => {
-    if (connected && machineUid && !machineUid.startsWith('Loading') && !hasSignaledConnect) {
-      messengerConnect({ messengerUid: machineUid });
-      setHasSignaledConnect(true);
-    }
-    // Reset so it re-signals on reconnect
-    if (!connected) setHasSignaledConnect(false);
-  }, [connected, machineUid, hasSignaledConnect]);
+  // Heartbeat is handled in App.tsx
 
   // PIN expiry countdown — tick every second
   useEffect(() => {
@@ -248,7 +245,7 @@ export const SettingsScreen = () => {
           <div style={{ display: 'flex', alignItems: 'center', gap: '6px', background: 'rgba(255,255,255,0.05)', border: `1px solid ${connected ? 'rgba(16,185,129,0.3)' : 'rgba(239,68,68,0.3)'}`, borderRadius: '20px', padding: '3px 10px 3px 8px' }}>
             <div style={{ width: '6px', height: '6px', borderRadius: '50%', background: connected ? '#10B981' : '#EF4444', boxShadow: `0 0 5px ${connected ? '#10B981' : '#EF4444'}`, flexShrink: 0 }} />
             <span style={{ fontSize: '0.72rem', fontWeight: 600, color: connected ? '#10B981' : '#EF4444' }}>
-              {connected ? 'DB Connected' : 'DB Disconnected'}
+              {connected ? 'DB Connected' : 'DB Offline'}
             </span>
           </div>
 
@@ -438,7 +435,7 @@ export const SettingsScreen = () => {
                   color: connected ? '#10B981' : '#EF4444',
                   border: `1px solid ${connected ? 'rgba(16,185,129,0.3)' : 'rgba(239,68,68,0.3)'}`,
                 }}>
-                  {connected ? '● Connected' : '● Disconnected'}
+                  {connected ? '● Connected' : '● Offline'}
                 </span>
               </div>
 
@@ -580,20 +577,23 @@ export const SettingsScreen = () => {
                   onClick={handleSaveSpacetimeSettings}
                   style={{ padding: '6px 14px', background: '#3B82F6', color: '#fff', border: 'none', borderRadius: '8px', fontSize: '0.82rem', fontWeight: 600, cursor: 'pointer' }}
                 >
-                  Save &amp; Reload
+                  Save & Reload
                 </button>
               </div>
 
-              <label style={labelStyle}>Connection URI</label>
+              <label style={labelStyle}>Host URI</label>
               <input
                 type="text"
                 value={stUri}
                 onChange={e => setStUri(e.target.value)}
-                style={{ ...inputStyle, marginBottom: '14px' }}
+                style={inputStyle}
                 placeholder="ws://127.0.0.1:3000"
               />
+              <p style={{ fontSize: '0.65rem', color: '#64748B', marginTop: '6px' }}>
+                Restart the app to apply URI changes.
+              </p>
 
-              <label style={labelStyle}>Database Name</label>
+              <label style={{ ...labelStyle, marginTop: '16px' }}>Database Name</label>
               <input
                 type="text"
                 value={stDb}
@@ -783,6 +783,19 @@ export const SettingsScreen = () => {
               </div>
               <style>{`@keyframes marquee { 0% { transform: translateX(0) } 100% { transform: translateX(-150%) } }`}</style>
             </section>
+
+            {/* Display SpacetimeDB Error */}
+            {lastError && (
+              <section style={{ ...sectionStyle, borderColor: '#EF4444', background: 'rgba(239,68,68,0.1)' }}>
+                <h3 style={{ fontSize: '1rem', margin: '0 0 16px', color: '#EF4444' }}>SpacetimeDB Connection Error</h3>
+                <p style={{ fontSize: '0.85rem', color: '#FCA5A5', fontFamily: 'monospace', wordBreak: 'break-all' }}>
+                  {lastError.message}
+                </p>
+                <p style={{ fontSize: '0.75rem', color: '#FCA5A5', marginTop: '8px' }}>
+                  If you see a 403 error, your identity might be invalid. Resetting identity and data might help.
+                </p>
+              </section>
+            )}
           </div>
         )}
       </div>
@@ -829,3 +842,6 @@ const inputStyle: React.CSSProperties = {
   outline: 'none',
   boxSizing: 'border-box',
 };
+
+// --- ICONS ---
+
