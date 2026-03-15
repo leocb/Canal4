@@ -12,7 +12,7 @@ export const TickerScreen = () => {
     const updateStatus = useReducer(reducers.updateMessageDeliveryStatus);
     
     const [machineUid, setMachineUid] = useState<string>('');
-    const [activeMessage, setActiveMessage] = useState<{ id: bigint; text: string; repeat: number; totalRepeats: number } | null>(null);
+    const [activeMessage, setActiveMessage] = useState<{ id: bigint; messengerId: bigint; text: string; repeat: number; totalRepeats: number } | null>(null);
     const isAnimating = useRef(false);
     const settings = loadTickerSettings();
 
@@ -30,12 +30,14 @@ export const TickerScreen = () => {
     useEffect(() => {
         if (!machineUid || !connected || isAnimating.current) return;
 
-        const myDevice = devices.find(d => d.uid === machineUid);
-        if (!myDevice) return;
+        const myDevices = devices.filter(d => d.uid === machineUid);
+        if (myDevices.length === 0) return;
 
-        // Find messages for this device that are Enqueued (not shown)
+        const myMessengerIds = myDevices.map(d => d.messengerId);
+
+        // Find messages for ALL my pairings that are Queued or InProgress
         const pendingQueue = Array.from(statuses.values())
-            .filter(s => s.messengerId === myDevice.messengerId && s.status.tag === 'Enqueued')
+            .filter(s => myMessengerIds.includes(s.messengerId) && (s.status.tag === 'Queued' || s.status.tag === 'InProgress'))
             .map(status => ({
                statusRec: status,
                msg: messages.find(m => m.messageId === status.messageId)
@@ -46,7 +48,13 @@ export const TickerScreen = () => {
         if (pendingQueue.length > 0) {
             const next = pendingQueue[0];
             const repeatCount = settings.repeatCount;
-            setActiveMessage({ id: next.msg!.messageId, text: next.msg!.content, repeat: 1, totalRepeats: repeatCount });
+            setActiveMessage({ 
+                id: next.msg!.messageId, 
+                messengerId: next.statusRec.messengerId,
+                text: next.msg!.content, 
+                repeat: 1, 
+                totalRepeats: repeatCount 
+            });
             isAnimating.current = true;
             
             // Mark as InProgress
@@ -60,6 +68,14 @@ export const TickerScreen = () => {
 
     const handleAnimationIteration = () => {
         if (!activeMessage) return;
+
+        // Safety check: has the message been deleted?
+        const stillExists = messages.some(m => m.messageId === activeMessage.id);
+        if (!stillExists) {
+            setActiveMessage(null);
+            isAnimating.current = false;
+            return;
+        }
         
         const nextRepeat = activeMessage.repeat + 1;
         if (nextRepeat <= activeMessage.totalRepeats) {

@@ -4,7 +4,7 @@ import { useTable, useReducer } from 'spacetimedb/react';
 import { tables, reducers } from '../module_bindings/index.ts';
 import { useReadyTable } from '../hooks/useReadyTable';
 import { useAuth } from '../hooks/useAuth';
-import { MoreVertical, Settings, Send, History, LayoutTemplate, Repeat, Trash2, UserX } from 'lucide-react';
+import { MoreVertical, Settings, Send, History, LayoutTemplate, Repeat, Trash2, UserX, Clock, Play, CheckCircle2, AlertCircle, WifiOff } from 'lucide-react';
 
 export const ChannelScreen = () => {
   const { venueLink, channelId } = useParams<{ venueLink: string, channelId: string }>();
@@ -129,10 +129,34 @@ export const ChannelScreen = () => {
     return s?.status.tag;
   };
 
-  const STATUS_ICON: Record<string, string> = {
-    Enqueued: '🕐',
-    InProgress: '▶️',
-    Shown: '✅',
+  const isNodeConnected = (device: any) => {
+    if (!device.lastConnectedAt) return false;
+    const lastActive = Number(device.lastConnectedAt.microsSinceUnixEpoch / 1000n);
+    const now = Date.now();
+    return (now - lastActive) < 30000; // 30 second threshold
+  };
+
+  const StatusIcon = ({ status, isConnected, deviceName }: { status: string, isConnected: boolean, deviceName: string }) => {
+    if (!isConnected) {
+      return (
+        <span title={`${deviceName}: Disconnected`}>
+          <WifiOff size={14} style={{ color: 'var(--text-secondary)', opacity: 0.5 }} />
+        </span>
+      );
+    }
+
+    switch (status) {
+      case 'Queued':
+        return <span title={`${deviceName}: Queued`}><Clock size={14} style={{ color: '#94A3B8' }} /></span>;
+      case 'InProgress':
+        return <span title={`${deviceName}: In Progress`}><Play size={14} style={{ color: '#3B82F6' }} /></span>;
+      case 'Shown':
+        return <span title={`${deviceName}: Shown`}><CheckCircle2 size={14} style={{ color: '#10B981' }} /></span>;
+      case 'Unavailable':
+        return <span title={`${deviceName}: Unavailable`}><AlertCircle size={14} style={{ color: '#EF4444' }} /></span>;
+      default:
+        return <span title={`${deviceName}: Waiting…`}><Clock size={14} style={{ color: 'rgba(255,255,255,0.2)' }} /></span>;
+    }
   };
 
 
@@ -272,11 +296,14 @@ export const ChannelScreen = () => {
 
                     {/* Delivery status icons — moderators and above only */}
                     {isModerator && hasDevices && (
-                      <span style={{ display: 'flex', gap: '4px', background: 'rgba(0,0,0,0.1)', padding: '2px 6px', borderRadius: '12px' }}>
+                      <span style={{ display: 'flex', gap: '8px', background: 'rgba(0,0,0,0.2)', padding: '4px 8px', borderRadius: '12px', alignItems: 'center' }}>
                         {connectedDevices.map((d: any) => (
-                          <span key={d.messengerId} title={d.name} style={{ fontSize: '0.75rem' }}>
-                            {STATUS_ICON[getDeliveryStatus(msg.messageId, d.messengerId)] ?? '⏳'}
-                          </span>
+                          <StatusIcon 
+                            key={d.messengerId} 
+                            status={getDeliveryStatus(msg.messageId, d.messengerId)} 
+                            isConnected={isNodeConnected(d)}
+                            deviceName={d.name}
+                          />
                         ))}
                       </span>
                     )}

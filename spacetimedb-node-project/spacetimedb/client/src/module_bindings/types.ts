@@ -43,9 +43,10 @@ export type ChannelRole = __Infer<typeof ChannelRole>;
 
 // The tagged union or sum type for the algebraic type `DeliveryStatus`.
 export const DeliveryStatus = __t.enum("DeliveryStatus", {
-  Enqueued: __t.string(),
+  Queued: __t.string(),
   InProgress: __t.string(),
   Shown: __t.string(),
+  Unavailable: __t.string(),
 });
 export type DeliveryStatus = __Infer<typeof DeliveryStatus>;
 
@@ -81,6 +82,7 @@ export type MessageTemplate = __Infer<typeof MessageTemplate>;
 export const MessengerDevice = __t.object("MessengerDevice", {
   messengerId: __t.u64(),
   uid: __t.string(),
+  identity: __t.identity(),
   venueId: __t.u64(),
   name: __t.string(),
   registeredAt: __t.timestamp(),
@@ -91,6 +93,7 @@ export type MessengerDevice = __Infer<typeof MessengerDevice>;
 export const MessengerPairingPin = __t.object("MessengerPairingPin", {
   pin: __t.string(),
   messengerUid: __t.string(),
+  identity: __t.identity(),
   expiresAt: __t.timestamp(),
 });
 export type MessengerPairingPin = __Infer<typeof MessengerPairingPin>;

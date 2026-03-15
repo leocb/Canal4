@@ -1,7 +1,8 @@
 import { useParams, useNavigate } from 'react-router-dom';
-import { useTable } from 'spacetimedb/react';
-import { tables } from '../module_bindings/index.ts';
+import { useTable, useReducer } from 'spacetimedb/react';
+import { tables, reducers } from '../module_bindings/index.ts';
 import { useAuth } from '../hooks/useAuth';
+import { Trash2 } from 'lucide-react';
 
 export const DesktopMessengerSyncScreen = () => {
   const { venueLink } = useParams<{ venueLink: string }>();
@@ -36,6 +37,8 @@ export const DesktopMessengerSyncScreen = () => {
   const isAdmin = userRolesInVenue.some(r => r.role.tag === 'Admin' || r.role.tag === 'Owner');
   const canManageDisplays = isOwner || isAdmin;
 
+  const deleteDevice = useReducer(reducers.deleteMessengerDevice);
+
   if (!canManageDisplays) {
     return (
       <div className="app-container empty-state">
@@ -45,6 +48,22 @@ export const DesktopMessengerSyncScreen = () => {
       </div>
     );
   }
+
+  const isNodeConnected = (device: any) => {
+    if (!device.lastConnectedAt) return false;
+    const lastActive = Number(device.lastConnectedAt.microsSinceUnixEpoch / 1000n);
+    const now = Date.now();
+    return (now - lastActive) < 35000; // 35 second threshold (heartbeat is 15s)
+  };
+
+  const handleDelete = async (device: any) => {
+    if (!window.confirm(`Are you sure you want to remove the display node "${device.name}"? This cannot be undone.`)) return;
+    try {
+      await deleteDevice({ messengerId: device.messengerId });
+    } catch (err: any) {
+      alert("Error deleting device: " + err.message);
+    }
+  };
 
 
 
@@ -73,20 +92,53 @@ export const DesktopMessengerSyncScreen = () => {
               <p style={{ marginTop: '8px' }}>Pair a new desktop messenger below to see it here.</p>
             </div>
           ) : (
-            venueDevices.map(device => (
-              <div 
-                key={device.messengerId.toString()} 
-                className="glass-panel flex-row" 
-                style={{ padding: '20px 24px', justifyContent: 'space-between', marginBottom: '12px' }}
-              >
-                <div>
-                  <h3 style={{ fontSize: '1.1rem', margin: 0 }}>{device.name}</h3>
-                  <p style={{ fontSize: '0.85rem', color: 'var(--text-secondary)', margin: '4px 0 0 0' }}>
-                    Registered: {new Date(Number(device.registeredAt.microsSinceUnixEpoch / 1000n)).toLocaleString()}
-                  </p>
+            venueDevices.map(device => {
+              const connected = isNodeConnected(device);
+              return (
+                <div 
+                  key={device.messengerId.toString()} 
+                  className="glass-panel" 
+                  style={{ padding: '24px', marginBottom: '16px', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}
+                >
+                  <div className="flex-row" style={{ gap: '20px', alignItems: 'center' }}>
+                    {/* Status indicator */}
+                    <div style={{ 
+                      width: '10px', height: '10px', borderRadius: '50%', 
+                      background: connected ? '#10B981' : '#64748b',
+                      boxShadow: connected ? '0 0 10px rgba(16,185,129,0.5)' : 'none'
+                    }} />
+                    
+                    <div>
+                      <h3 style={{ fontSize: '1.1rem', margin: 0, fontWeight: 600 }}>{device.name}</h3>
+                      <div className="flex-row" style={{ gap: '12px', marginTop: '6px', alignItems: 'center' }}>
+                        <span style={{ 
+                          fontSize: '0.75rem', 
+                          color: connected ? '#10B981' : 'var(--text-secondary)',
+                          fontWeight: 600,
+                          textTransform: 'uppercase',
+                          letterSpacing: '0.02em'
+                        }}>
+                          {connected ? 'Connected' : 'Offline'}
+                        </span>
+                        <span style={{ fontSize: '0.75rem', color: 'rgba(255,255,255,0.1)' }}>|</span>
+                        <span style={{ fontSize: '0.8rem', color: 'var(--text-secondary)' }}>
+                          Last seen: {new Date(Number(device.lastConnectedAt.microsSinceUnixEpoch / 1000n)).toLocaleString()}
+                        </span>
+                      </div>
+                    </div>
+                  </div>
+
+                  <button 
+                    className="icon-button danger" 
+                    onClick={() => handleDelete(device)}
+                    title="Delete Display Node"
+                    style={{ background: 'rgba(239, 68, 68, 0.1)', border: '1px solid rgba(239, 68, 68, 0.2)' }}
+                  >
+                    <Trash2 size={18} color="#EF4444" />
+                  </button>
                 </div>
-              </div>
-            ))
+              );
+            })
           )}
         </div>
       </div>

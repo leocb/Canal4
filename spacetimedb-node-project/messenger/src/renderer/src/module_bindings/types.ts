@@ -43,9 +43,10 @@ export type ChannelRole = __Infer<typeof ChannelRole>;
 
 // The tagged union or sum type for the algebraic type `DeliveryStatus`.
 export const DeliveryStatus = __t.enum("DeliveryStatus", {
-  Enqueued: __t.string(),
+  Queued: __t.string(),
   InProgress: __t.string(),
   Shown: __t.string(),
+  Unavailable: __t.string(),
 });
 export type DeliveryStatus = __Infer<typeof DeliveryStatus>;
 

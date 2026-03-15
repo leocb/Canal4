@@ -6,7 +6,7 @@ export const SpacetimeDBProvider = ({ children }: { children: ReactNode }) => {
   // Do NOT pass a stored token — if it was issued by a different server instance
   // (e.g. production vs local), the websocket-token exchange will fail with
   // "Failed to fetch". Start anonymous; a fresh token is saved by onConnect.
-  const token = undefined;
+  const token = localStorage.getItem("auth_token") || undefined;
 
   const builder = useMemo(() => {
     // Normalize: 'localhost' can resolve to ::1 (IPv6) while SpacetimeDB
@@ -42,8 +42,14 @@ export const SpacetimeDBProvider = ({ children }: { children: ReactNode }) => {
           "SELECT * FROM MessageDeliveryStatus"
         ]);
       })
-      .onConnectError((_ctx, err: unknown) => {
+      .onConnectError((_ctx, err: any) => {
         console.error("SpacetimeDB Connection Error:", err);
+        // If we failed to fetch (likely a stale token vs fresh DB), clear token and retry
+        if (token && (err?.message?.includes('fetch') || String(err).includes('fetch'))) {
+          console.warn("Stale auth token detected, clearing and reloading...");
+          localStorage.removeItem("auth_token");
+          window.location.reload();
+        }
       })
       .onDisconnect((_ctx, _err) => {
         console.log("Disconnected from SpacetimeDB");

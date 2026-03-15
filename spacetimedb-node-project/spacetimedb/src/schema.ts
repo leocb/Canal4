@@ -15,9 +15,10 @@ export const NotificationFilterType = t.enum("NotificationFilterType", {
 });
 
 export const DeliveryStatus = t.enum("DeliveryStatus", {
-  enqueued: t.string(),
-  inProgress: t.string(),
-  shown: t.string(),
+  Queued: t.string(),
+  InProgress: t.string(),
+  Shown: t.string(),
+  Unavailable: t.string(),
 });
 
 // Tables

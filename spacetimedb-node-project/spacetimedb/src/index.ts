@@ -630,7 +630,7 @@ export const send_message = spacetimedb.reducer(
       ctx.db.MessageDeliveryStatus.insert({
         messageId: row.messageId,
         messengerId: messenger.messengerId,
-        status: { tag: "enqueued", value: "" },
+        status: { tag: "Queued", value: "" },
         updatedAt: ctx.timestamp,
       });
     }
@@ -688,7 +688,7 @@ export const repeat_message = spacetimedb.reducer(
       throw new SenderError("Only Moderators and above can repeat messages.");
     }
 
-    ctx.db.Message.insert({
+    const row = ctx.db.Message.insert({
       messageId: 0n,
       channelId: msg.channelId,
       senderId: userId,
@@ -696,6 +696,16 @@ export const repeat_message = spacetimedb.reducer(
       content: msg.content,
       sentAt: ctx.timestamp,
     });
+
+    const activeMessengers = [...ctx.db.MessengerDevice.messenger_device_venue_id.filter(ch.venueId)];
+    for (const messenger of activeMessengers) {
+      ctx.db.MessageDeliveryStatus.insert({
+        messageId: row.messageId,
+        messengerId: messenger.messengerId,
+        status: { tag: "Queued", value: "" },
+        updatedAt: ctx.timestamp,
+      });
+    }
   }
 );
 
@@ -785,11 +795,20 @@ export const messenger_connect = spacetimedb.reducer(
 export const update_message_delivery_status = spacetimedb.reducer(
   { uid: t.string(), messageId: t.u64(), statusTag: t.string() },
   (ctx, { uid, messageId, statusTag }) => {
-    const device = [...ctx.db.MessengerDevice.messenger_device_uid.filter(uid)]
-      .find(d => d.identity.isEqual(ctx.sender));
+    // 1. Find the message and its venue
+    const msg = ctx.db.Message.messageId.find(messageId);
+    if (!msg) throw new SenderError("Message not found");
     
-    if (!device) throw new SenderError("Messenger device not found or identity mismatch");
+    const channel = ctx.db.Channel.channelId.find(msg.channelId);
+    if (!channel) throw new SenderError("Channel not found");
 
+    // 2. Find the SPECIFIC device pairing for this machine and this venue
+    const device = [...ctx.db.MessengerDevice.messenger_device_uid.filter(uid)]
+      .find(d => d.identity.isEqual(ctx.sender) && d.venueId === channel.venueId);
+    
+    if (!device) throw new SenderError("Messenger device not paired with this venue or identity mismatch");
+
+    // 3. Update the status row
     const allStatuses = [...ctx.db.MessageDeliveryStatus.delivery_status_message_id.filter(messageId)];
     const statusRow = allStatuses.find(s => s.messengerId === device.messengerId);
 
@@ -803,6 +822,38 @@ export const update_message_delivery_status = spacetimedb.reducer(
       status: { tag: statusTag as any, value: "" },
       updatedAt: ctx.timestamp,
     });
+  }
+);
+
+export const delete_messenger_device = spacetimedb.reducer(
+  { messengerId: t.u64() },
+  (ctx, { messengerId }) => {
+    const userId = getUserId(ctx);
+    const device = ctx.db.MessengerDevice.messengerId.find(messengerId);
+    if (!device) throw new SenderError("Device not found");
+
+    // Must be venue owner or admin to delete nodes
+    const venue = ctx.db.Venue.venueId.find(device.venueId);
+    if (!venue) throw new SenderError("Venue not found");
+    const isVenueOwner = venue.ownerId === userId;
+    
+    if (!isVenueOwner) {
+       const channels = [...ctx.db.Channel.channel_venue_id.filter(device.venueId)];
+       const myRolesInVenue = channels.flatMap(ch =>
+        [...ctx.db.ChannelMemberRole.channel_member_role_channel_id.filter(ch.channelId)]
+          .filter(r => r.userId === userId)
+       );
+       const isAdmin = myRolesInVenue.some(r => r.role.tag === "owner" || r.role.tag === "admin");
+       if (!isAdmin) throw new SenderError("Only venue owners or channel admins can delete display nodes");
+    }
+
+    ctx.db.MessengerDevice.messengerId.delete(messengerId);
+    
+    // Cleanup delivery statuses
+    const statuses = [...ctx.db.MessageDeliveryStatus.delivery_status_messenger_id.filter(messengerId)];
+    for (const s of statuses) {
+      ctx.db.MessageDeliveryStatus.delete({ ...s });
+    }
   }
 );
 

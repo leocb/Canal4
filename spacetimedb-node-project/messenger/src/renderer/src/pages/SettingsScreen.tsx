@@ -486,6 +486,17 @@ export const SettingsScreen = () => {
                     Fix: Replace localhost → 127.0.0.1 &amp; Reload
                   </button>
                 )}
+                {localStorage.getItem('auth_token') && (
+                  <button
+                    onClick={() => {
+                      localStorage.removeItem('auth_token');
+                      window.location.reload();
+                    }}
+                    style={{ marginTop: '10px', marginLeft: '8px', padding: '6px 12px', background: '#64748B', color: '#fff', border: 'none', borderRadius: '6px', fontSize: '0.75rem', fontWeight: 600, cursor: 'pointer' }}
+                  >
+                    Reset Auth Token
+                  </button>
+                )}
               </div>
             )}
 
