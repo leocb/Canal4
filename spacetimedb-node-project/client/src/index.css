@@ -281,3 +281,24 @@ button.icon-button:hover {
   background: var(--surface-border);
   margin: 6px 0;
 }
+
+/* Connection Pulse Animation */
+@keyframes pulse-ring {
+  0% {
+    transform: scale(0.8);
+    opacity: 0.8;
+  }
+  100% {
+    transform: scale(2.5);
+    opacity: 0;
+  }
+}
+
+.pulse-ring {
+  position: absolute;
+  inset: 0;
+  border-radius: 50%;
+  background: var(--success-color);
+  pointer-events: none;
+  animation: pulse-ring 1.5s cubic-bezier(0.21, 0.53, 0.56, 0.8) forwards;
+}

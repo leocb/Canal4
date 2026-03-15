@@ -889,4 +889,32 @@ export const delete_messenger_device = spacetimedb.reducer(
   }
 );
 
+export const update_messenger_name = spacetimedb.reducer(
+  { messengerId: t.u64(), newName: t.string() },
+  (ctx, { messengerId, newName }) => {
+    const userId = getUserId(ctx);
+    const device = ctx.db.MessengerDevice.messengerId.find(messengerId);
+    if (!device) throw new SenderError("Device not found");
+
+    const venue = ctx.db.Venue.venueId.find(device.venueId);
+    if (!venue) throw new SenderError("Venue not found");
+    const isVenueOwner = venue.ownerId === userId;
+    
+    if (!isVenueOwner) {
+       const channels = [...ctx.db.Channel.channel_venue_id.filter(device.venueId)];
+       const myRolesInVenue = channels.flatMap(ch =>
+        [...ctx.db.ChannelMemberRole.channel_member_role_channel_id.filter(ch.channelId)]
+          .filter(r => r.userId === userId)
+       );
+       const isAdmin = myRolesInVenue.some(r => r.role.tag === "owner" || r.role.tag === "admin");
+       if (!isAdmin) throw new SenderError("Only venue owners or channel admins can rename display nodes");
+    }
+
+    ctx.db.MessengerDevice.messengerId.update({
+      ...device,
+      name: newName.trim(),
+    });
+  }
+);
+
 export default spacetimedb;

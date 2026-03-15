@@ -23,11 +23,7 @@ export const ChannelScreen = () => {
   const deleteMessage = useReducer(reducers.deleteMessage);
   const repeatMessage = useReducer(reducers.repeatMessage);
   const blockUser = useReducer(reducers.blockUser);
-  const deleteDevice = useReducer(reducers.deleteMessengerDevice);
 
-  const venue = venues.find((v: any) => v.link === venueLink);
-  const channelIdBigInt = BigInt(channelId || 0);
-  const channel = channels.find((c: any) => c.channelId === channelIdBigInt && c.venueId === venue?.venueId);
 
   const [contextMsg, setContextMsg] = useState<any | null>(null);
 
@@ -42,6 +38,18 @@ export const ChannelScreen = () => {
     document.addEventListener('mousedown', handler);
     return () => document.removeEventListener('mousedown', handler);
   }, []);
+
+  const venue = venues.find((v: any) => v.link === venueLink);
+  const channelIdBigInt = BigInt(channelId || 0);
+  const channel = channels.find((c: any) => c.channelId === channelIdBigInt && c.venueId === venue?.venueId);
+
+  // Force re-render periodically to update relative status times
+  const [, setTick] = useState(0);
+  useEffect(() => {
+    const interval = setInterval(() => setTick(t => t + 1), 5000);
+    return () => clearInterval(interval);
+  }, []);
+
 
   // Role helpers (need this before messages filtering)
   const myVenueMembership = venueMembers.find(m => m.venueId === venue?.venueId && m.userId === user?.userId);
@@ -140,25 +148,40 @@ export const ChannelScreen = () => {
     return s?.status?.tag;
   };
 
+  // Force re-render periodically to update relative status times
+
   const isNodeConnected = (device: any) => {
     if (!device.lastConnectedAt) return false;
     try {
       const lastActive = Number(BigInt(device.lastConnectedAt.microsSinceUnixEpoch) / 1000n);
       const now = Date.now();
-      // Heartbeat is 15s, so 45s is a safe threshold
-      return (now - lastActive) < 45000;
+      // Heartbeat is 5s, threshold is 17s
+      return (now - lastActive) < 17000;
     } catch {
       return false;
     }
   };
 
-  const handleDeleteDevice = async (device: any) => {
-    if (!window.confirm(`Remove display node "${device.name}"?`)) return;
-    try {
-      await deleteDevice({ messengerId: device.messengerId });
-    } catch (err: any) {
-      console.error("Failed to delete device:", err);
-    }
+
+
+  const NodeIndicator = ({ device }: { device: any }) => {
+    const connected = isNodeConnected(device);
+    const lastTime = device.lastConnectedAt?.microsSinceUnixEpoch?.toString();
+    
+    // We use the lastConnectedAt value as a key to trigger the pulse-ring animation whenever it updates
+    return (
+      <div style={{ position: 'relative', width: '8px', height: '8px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+        {connected && (
+          <div key={lastTime} className="pulse-ring" />
+        )}
+        <div style={{ 
+          width: '8px', height: '8px', borderRadius: '50%', 
+          background: connected ? '#10B981' : '#64748b',
+          boxShadow: connected ? '0 0 8px rgba(16,185,129,0.4)' : 'none',
+          zIndex: 1
+        }} />
+      </div>
+    );
   };
 
   const StatusIcon = ({ status, isConnected, deviceName }: { status: string | undefined, isConnected: boolean, deviceName: string }) => {
@@ -277,7 +300,7 @@ export const ChannelScreen = () => {
               {connectedDevices.map((d: any) => {
                 const connected = isNodeConnected(d);
                 return (
-                  <div 
+                   <div 
                     key={d.messengerId.toString()}
                     className="glass-panel"
                     style={{ 
@@ -291,11 +314,7 @@ export const ChannelScreen = () => {
                     }}
                   >
                     <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-                      <div style={{ 
-                        width: '8px', height: '8px', borderRadius: '50%', 
-                        background: connected ? '#10B981' : '#64748b',
-                        boxShadow: connected ? '0 0 8px rgba(16,185,129,0.4)' : 'none'
-                      }} />
+                      <NodeIndicator device={d} />
                       <div>
                         <div style={{ fontSize: '0.85rem', fontWeight: 600 }}>{d.name}</div>
                         <div style={{ fontSize: '0.7rem', color: 'var(--text-secondary)' }}>
@@ -303,13 +322,6 @@ export const ChannelScreen = () => {
                         </div>
                       </div>
                     </div>
-                    <button 
-                      className="icon-button danger" 
-                      onClick={() => handleDeleteDevice(d)}
-                      style={{ padding: '4px', background: 'transparent', border: 'none' }}
-                    >
-                      <Trash2 size={14} />
-                    </button>
                   </div>
                 );
               })}

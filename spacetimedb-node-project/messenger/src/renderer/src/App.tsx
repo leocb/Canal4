@@ -65,7 +65,7 @@ function App() {
         .catch(err => console.error("[App] Heartbeat failed:", err));
     };
 
-    const interval = setInterval(runHeartbeat, 15000); // 15s heartbeat
+    const interval = setInterval(runHeartbeat, 5000); // 5s heartbeat
     runHeartbeat();
 
     return () => clearInterval(interval);

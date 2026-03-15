@@ -61,6 +61,7 @@ import UnblockUserReducer from "./unblock_user_reducer";
 import UpdateChannelReducer from "./update_channel_reducer";
 import UpdateMessageDeliveryStatusReducer from "./update_message_delivery_status_reducer";
 import UpdateMessageTemplateReducer from "./update_message_template_reducer";
+import UpdateMessengerNameReducer from "./update_messenger_name_reducer";
 import UpdatePushTokenReducer from "./update_push_token_reducer";
 import UpdateUserNameReducer from "./update_user_name_reducer";
 import UpdateVenueReducer from "./update_venue_reducer";
@@ -293,6 +294,7 @@ const reducersSchema = __reducers(
   __reducerSchema("update_channel", UpdateChannelReducer),
   __reducerSchema("update_message_delivery_status", UpdateMessageDeliveryStatusReducer),
   __reducerSchema("update_message_template", UpdateMessageTemplateReducer),
+  __reducerSchema("update_messenger_name", UpdateMessengerNameReducer),
   __reducerSchema("update_push_token", UpdatePushTokenReducer),
   __reducerSchema("update_user_name", UpdateUserNameReducer),
   __reducerSchema("update_venue", UpdateVenueReducer),

@@ -1,8 +1,9 @@
+import { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { useTable, useReducer } from 'spacetimedb/react';
 import { tables, reducers } from '../module_bindings/index.ts';
 import { useAuth } from '../hooks/useAuth';
-import { Trash2 } from 'lucide-react';
+import { Trash2, Edit2 } from 'lucide-react';
 
 export const DesktopMessengerSyncScreen = () => {
   const { venueLink } = useParams<{ venueLink: string }>();
@@ -13,6 +14,17 @@ export const DesktopMessengerSyncScreen = () => {
   const [channels] = useTable(tables.Channel);
   const [channelRoles] = useTable(tables.ChannelMemberRole);
   const [messengerDevices] = useTable(tables.MessengerDevice);
+  
+  const deleteDevice = useReducer(reducers.deleteMessengerDevice);
+  const updateDeviceName = useReducer(reducers.updateMessengerName);
+
+  // Force re-render periodically to update relative status times
+  const [, setTick] = useState(0);
+  useEffect(() => {
+    const interval = setInterval(() => setTick(t => t + 1), 5000);
+    return () => clearInterval(interval);
+  }, []);
+
   const venue = venues.find(v => v.link === venueLink);
   const venueIdBigInt = venue ? venue.venueId : 0n;
   
@@ -37,8 +49,6 @@ export const DesktopMessengerSyncScreen = () => {
   const isAdmin = userRolesInVenue.some(r => r.role.tag === 'Admin' || r.role.tag === 'Owner');
   const canManageDisplays = isOwner || isAdmin;
 
-  const deleteDevice = useReducer(reducers.deleteMessengerDevice);
-
   if (!canManageDisplays) {
     return (
       <div className="app-container empty-state">
@@ -53,7 +63,8 @@ export const DesktopMessengerSyncScreen = () => {
     if (!device.lastConnectedAt) return false;
     const lastActive = Number(device.lastConnectedAt.microsSinceUnixEpoch / 1000n);
     const now = Date.now();
-    return (now - lastActive) < 35000; // 35 second threshold (heartbeat is 15s)
+    // Heartbeat is 5s, threshold is 17s
+    return (now - lastActive) < 17000;
   };
 
   const handleDelete = async (device: any) => {
@@ -65,7 +76,35 @@ export const DesktopMessengerSyncScreen = () => {
     }
   };
 
+  const handleEditName = async (device: any) => {
+    const newName = prompt("Enter new name for this display node:", device.name);
+    if (newName && newName.trim() && newName !== device.name) {
+      try {
+        await updateDeviceName({ messengerId: device.messengerId, newName: newName.trim() });
+      } catch (err: any) {
+        alert("Error updating name: " + err.message);
+      }
+    }
+  };
 
+  const NodeIndicator = ({ device }: { device: any }) => {
+    const connected = isNodeConnected(device);
+    const lastTime = device.lastConnectedAt?.microsSinceUnixEpoch?.toString();
+    
+    return (
+      <div style={{ position: 'relative', width: '10px', height: '10px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+        {connected && (
+          <div key={lastTime} className="pulse-ring" />
+        )}
+        <div style={{ 
+          width: '10px', height: '10px', borderRadius: '50%', 
+          background: connected ? '#10B981' : '#64748b',
+          boxShadow: connected ? '0 0 10px rgba(16,185,129,0.5)' : 'none',
+          zIndex: 1
+        }} />
+      </div>
+    );
+  };
 
   return (
     <div className="app-container">
@@ -101,15 +140,12 @@ export const DesktopMessengerSyncScreen = () => {
                   style={{ padding: '24px', marginBottom: '16px', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}
                 >
                   <div className="flex-row" style={{ gap: '20px', alignItems: 'center' }}>
-                    {/* Status indicator */}
-                    <div style={{ 
-                      width: '10px', height: '10px', borderRadius: '50%', 
-                      background: connected ? '#10B981' : '#64748b',
-                      boxShadow: connected ? '0 0 10px rgba(16,185,129,0.5)' : 'none'
-                    }} />
+                    <NodeIndicator device={device} />
                     
-                    <div>
-                      <h3 style={{ fontSize: '1.1rem', margin: 0, fontWeight: 600 }}>{device.name}</h3>
+                    <div className="flex-col" style={{ gap: '4px' }}>
+                      <h3 style={{ fontSize: '1.1rem', margin: 0, fontWeight: 600 }}>
+                        {device.name}
+                      </h3>
                       <div className="flex-row" style={{ gap: '12px', marginTop: '6px', alignItems: 'center' }}>
                         <span style={{ 
                           fontSize: '0.75rem', 
@@ -128,14 +164,41 @@ export const DesktopMessengerSyncScreen = () => {
                     </div>
                   </div>
 
-                  <button 
-                    className="icon-button danger" 
-                    onClick={() => handleDelete(device)}
-                    title="Delete Display Node"
-                    style={{ background: 'rgba(239, 68, 68, 0.1)', border: '1px solid rgba(239, 68, 68, 0.2)' }}
-                  >
-                    <Trash2 size={18} color="#EF4444" />
-                  </button>
+                  <div className="flex-row" style={{ gap: '8px' }}>
+                    <button 
+                      className="icon-button" 
+                      onClick={() => handleEditName(device)}
+                      title="Rename display node"
+                      style={{ 
+                        padding: '8px', 
+                        background: 'rgba(255,255,255,0.05)', 
+                        border: '1px solid rgba(255,255,255,0.1)',
+                        borderRadius: '4px',
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'center'
+                      }}
+                    >
+                      <Edit2 size={18} color="var(--text-secondary)" />
+                    </button>
+
+                    <button 
+                      className="icon-button danger" 
+                      onClick={() => handleDelete(device)}
+                      title="Delete Display Node"
+                      style={{ 
+                        padding: '8px',
+                        background: 'rgba(239, 68, 68, 0.1)', 
+                        border: '1px solid rgba(239, 68, 68, 0.2)',
+                        borderRadius: '4px',
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'center'
+                      }}
+                    >
+                      <Trash2 size={18} color="#EF4444" />
+                    </button>
+                  </div>
                 </div>
               );
             })
