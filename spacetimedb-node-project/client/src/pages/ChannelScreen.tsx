@@ -135,7 +135,7 @@ export const ChannelScreen = () => {
     const list = Array.from(deliveryStatuses || []);
     const mid = BigInt(messageId);
     const did = BigInt(deviceId);
-    
+
     // Find matching status record
     const s = list.find((ds: any) => {
       try {
@@ -144,7 +144,7 @@ export const ChannelScreen = () => {
         return false;
       }
     });
-    
+
     return s?.status?.tag;
   };
 
@@ -167,15 +167,15 @@ export const ChannelScreen = () => {
   const NodeIndicator = ({ device }: { device: any }) => {
     const connected = isNodeConnected(device);
     const lastTime = device.lastConnectedAt?.microsSinceUnixEpoch?.toString();
-    
+
     // We use the lastConnectedAt value as a key to trigger the pulse-ring animation whenever it updates
     return (
       <div style={{ position: 'relative', width: '8px', height: '8px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
         {connected && (
           <div key={lastTime} className="pulse-ring" />
         )}
-        <div style={{ 
-          width: '8px', height: '8px', borderRadius: '50%', 
+        <div style={{
+          width: '8px', height: '8px', borderRadius: '50%',
           background: connected ? '#10B981' : '#64748b',
           boxShadow: connected ? '0 0 8px rgba(16,185,129,0.4)' : 'none',
           zIndex: 1
@@ -220,6 +220,15 @@ export const ChannelScreen = () => {
 
   const handleRepeat = async (msg: any) => {
     setContextMsg(null);
+    const hasActiveDevices = (messengerDevices as any[])
+      .filter(d => d.venueId === venue?.venueId)
+      .some(isNodeConnected);
+
+    if (!hasActiveDevices) {
+      if (!window.confirm("No display node is currently connected to this venue. Repeat anyway?")) {
+        return;
+      }
+    }
     try { await repeatMessage({ messageId: msg.messageId }); } catch { /* backend will reject if no permission */ }
   };
 
@@ -281,7 +290,7 @@ export const ChannelScreen = () => {
           <div style={{ padding: '24px 24px 0' }}>
             <div className="glass-panel" style={{ padding: '4px', background: 'var(--surface-bg)' }}>
               <button
-                type="button" 
+                type="button"
                 onClick={() => navigate(`/venues/${venue.link}/channels/${channel.channelId}/send`)}
                 style={{ width: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px', padding: '12px 16px', borderRadius: '8px' }}>
                 <Send size={18} /> Send New Broadcast
@@ -300,14 +309,14 @@ export const ChannelScreen = () => {
               {connectedDevices.map((d: any) => {
                 const connected = isNodeConnected(d);
                 return (
-                   <div 
+                  <div
                     key={d.messengerId.toString()}
                     className="glass-panel"
-                    style={{ 
-                      minWidth: '200px', 
-                      padding: '12px 16px', 
-                      display: 'flex', 
-                      alignItems: 'center', 
+                    style={{
+                      minWidth: '200px',
+                      padding: '12px 16px',
+                      display: 'flex',
+                      alignItems: 'center',
                       justifyContent: 'space-between',
                       background: 'rgba(255,255,255,0.02)',
                       border: `1px solid ${connected ? 'rgba(16,185,129,0.2)' : 'rgba(255,255,255,0.05)'}`
@@ -389,8 +398,8 @@ export const ChannelScreen = () => {
                     {isModerator && hasDevices && (
                       <span style={{ display: 'flex', gap: '8px', background: 'rgba(0,0,0,0.2)', padding: '4px 8px', borderRadius: '12px', alignItems: 'center' }}>
                         {connectedDevices.map((d: any) => (
-                          <StatusIcon 
-                            key={d.messengerId.toString()} 
+                          <StatusIcon
+                            key={d.messengerId.toString()}
                             status={getDeliveryStatus(msg.messageId, d.messengerId)}
                             isConnected={isNodeConnected(d)}
                             deviceName={d.name}

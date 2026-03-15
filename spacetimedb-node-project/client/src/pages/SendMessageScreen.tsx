@@ -52,7 +52,21 @@ export const SendMessageScreen = () => {
   const isModerator = isAdmin || roleTag === 'moderator';
 
   const channelTemplates = templates.filter(t => t.channelId === channelIdBigInt);
-  const hasDevices = messengerDevices.filter((d: any) => d.venueId === venue?.venueId).length > 0;
+  const isNodeConnected = (device: any) => {
+    if (!device.lastConnectedAt) return false;
+    try {
+      const lastActive = Number(BigInt(device.lastConnectedAt.microsSinceUnixEpoch) / 1000n);
+      const now = Date.now();
+      // Heartbeat is 5s, threshold is 17s
+      return (now - lastActive) < 17000;
+    } catch {
+      return false;
+    }
+  };
+
+  const hasActiveDevices = messengerDevices
+    .filter((d: any) => d.venueId === venue?.venueId)
+    .some(isNodeConnected);
 
   const [selectedTemplateId, setSelectedTemplateId] = useState<bigint | null>(null);
   const [fieldValues, setFieldValues] = useState<Record<string, string>>({});
@@ -60,7 +74,7 @@ export const SendMessageScreen = () => {
   const [loading, setLoading] = useState(false);
   const [serverError, setServerError] = useState('');
   const [showSuccess, setShowSuccess] = useState(false);
-  
+
   // Skip select step if only 1 template
   useEffect(() => {
     if (channelTemplates.length === 1 && !selectedTemplateId) {
@@ -94,8 +108,8 @@ export const SendMessageScreen = () => {
   }
 
   const selectedTemplate = channelTemplates.find(t => t.templateId === selectedTemplateId);
-  const parsedFields: TemplateField[] = selectedTemplate 
-    ? (JSON.parse(selectedTemplate.fieldsJson || '[]') as TemplateField[]) 
+  const parsedFields: TemplateField[] = selectedTemplate
+    ? (JSON.parse(selectedTemplate.fieldsJson || '[]') as TemplateField[])
     : [];
 
   const handleFieldChange = (fieldId: string, value: string) => {
@@ -109,7 +123,7 @@ export const SendMessageScreen = () => {
   const validateFields = (): boolean => {
     const newErrors: Record<string, string> = {};
     let isValid = true;
-    
+
     parsedFields.forEach(field => {
       const val = fieldValues[field.id] || '';
       if (!val && !field.isOptional) {
@@ -146,7 +160,7 @@ export const SendMessageScreen = () => {
     parsedFields.forEach((f, idx) => {
       let val = fieldValues[f.id] || '';
       if (!val && f.isOptional) return; // Skip completely if optional and empty
-      
+
       let pre = f.prefix;
       let suf = f.suffix;
 
@@ -157,7 +171,7 @@ export const SendMessageScreen = () => {
             pre = f.secondaryPrefix;
             suf = f.secondarySuffix;
           }
-        } catch(e) {}
+        } catch (e) { }
       }
 
       result += `${pre || ''}${val}${suf || ''}`;
@@ -173,8 +187,8 @@ export const SendMessageScreen = () => {
 
     if (!validateFields()) return;
 
-    if (!hasDevices) {
-      if (!window.confirm("No displays are currently connected to this venue. Send anyway?")) {
+    if (!hasActiveDevices) {
+      if (!window.confirm("No display node is currently connected to this venue. Send anyway?")) {
         return;
       }
     }
@@ -199,7 +213,7 @@ export const SendMessageScreen = () => {
         }),
         timeoutPromise
       ]);
-      
+
       setShowSuccess(true);
       setTimeout(() => {
         navigate(`/venues/${venue.link}/channels/${channel.channelId}`);
@@ -224,8 +238,8 @@ export const SendMessageScreen = () => {
     <div className="app-container">
       <div className="screen-header">
         <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-          <button 
-            className="icon-button" 
+          <button
+            className="icon-button"
             onClick={() => {
               if (selectedTemplateId && channelTemplates.length > 1) {
                 setSelectedTemplateId(null);
@@ -248,8 +262,8 @@ export const SendMessageScreen = () => {
             <h3 style={{ marginBottom: '8px' }}>Select Template</h3>
             <div className="list-container" style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
               {channelTemplates.map(template => (
-                <div 
-                  key={template.templateId.toString()} 
+                <div
+                  key={template.templateId.toString()}
                   className="glass-panel"
                   style={{ padding: '16px', cursor: 'pointer' }}
                   onClick={() => setSelectedTemplateId(template.templateId)}
@@ -264,7 +278,7 @@ export const SendMessageScreen = () => {
           </div>
         ) : (
           <form onSubmit={handleSend} className="flex-col" style={{ gap: '24px', maxWidth: '600px', margin: '0 auto', paddingBottom: '60px' }}>
-            
+
             <div className="glass-panel" style={{ padding: '24px' }}>
               <h3 style={{ marginBottom: '8px', color: 'var(--accent-color)' }}>{selectedTemplate?.name}</h3>
               {selectedTemplate?.description && (
@@ -286,9 +300,9 @@ export const SendMessageScreen = () => {
                 {parsedFields.map((field) => (
                   <div key={field.id}>
                     <label style={{ display: 'block', marginBottom: '8px', fontWeight: 500, fontSize: '0.9rem' }}>
-                      {field.name} {field.isOptional ? <span style={{color: 'var(--text-secondary)'}}>(Optional)</span> : <span style={{color: 'var(--error-color)'}}>*</span>}
+                      {field.name} {field.isOptional ? <span style={{ color: 'var(--text-secondary)' }}>(Optional)</span> : <span style={{ color: 'var(--error-color)' }}>*</span>}
                     </label>
-                    <input 
+                    <input
                       type={field.isNumericOnly ? "number" : "text"}
                       value={fieldValues[field.id] || ''}
                       onChange={(e) => handleFieldChange(field.id, e.target.value)}
@@ -304,10 +318,10 @@ export const SendMessageScreen = () => {
             </div>
 
             <div className="glass-panel" style={{ padding: '24px', marginTop: '8px' }}>
-               <h3 style={{ marginBottom: '12px', fontSize: '1rem', color: 'var(--text-secondary)' }}>Live Preview</h3>
-               <div style={{ padding: '16px', background: '#111', borderRadius: '8px', border: '1px solid var(--surface-border)', fontSize: '1.1rem', wordBreak: 'break-word', minHeight: '60px' }}>
-                 {generateOutput() || <span style={{ color: 'var(--text-secondary)', fontStyle: 'italic' }}>Message will appear here...</span>}
-               </div>
+              <h3 style={{ marginBottom: '12px', fontSize: '1rem', color: 'var(--text-secondary)' }}>Live Preview</h3>
+              <div style={{ padding: '16px', background: '#111', borderRadius: '8px', border: '1px solid var(--surface-border)', fontSize: '1.1rem', wordBreak: 'break-word', minHeight: '60px' }}>
+                {generateOutput() || <span style={{ color: 'var(--text-secondary)', fontStyle: 'italic' }}>Message will appear here...</span>}
+              </div>
             </div>
 
             <div className="glass-panel" style={{ display: 'flex', gap: '12px', marginTop: '16px', position: 'sticky', bottom: '-16px', padding: '16px', zIndex: 10, margin: '0 -16px -16px -16px', borderLeft: 'none', borderRight: 'none', borderBottom: 'none', borderRadius: '0' }}>
