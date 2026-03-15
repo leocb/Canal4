@@ -194,12 +194,12 @@ export const ChannelScreen = () => {
     }
 
     if (!status) {
-      return <span title={`${deviceName}: Initializing…`}><Clock size={14} style={{ color: 'rgba(255,255,255,0.1)' }} /></span>;
+      return <span title={`Unknown`}><Clock size={14} style={{ color: 'rgba(255,255,255,0.1)' }} /></span>;
     }
 
     switch (status) {
       case 'Queued':
-        return <span title={`${deviceName}: Queued`}><Clock size={14} style={{ color: '#94A3B8' }} /></span>;
+        return <span title={`${deviceName}: Waiting`}><Clock size={14} style={{ color: '#94A3B8' }} /></span>;
       case 'InProgress':
         return <span title={`${deviceName}: In Progress`}><Play size={14} style={{ color: '#3B82F6' }} /></span>;
       case 'Shown':
@@ -303,7 +303,7 @@ export const ChannelScreen = () => {
         {isModerator && hasDevices && (
           <div style={{ padding: '24px 24px 0' }}>
             <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '12px', color: 'var(--text-secondary)', fontSize: '0.8rem', fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.05em' }}>
-              <Monitor size={14} /> Display Nodes Pairing
+              <Monitor size={14} /> Display Nodes
             </div>
             <div style={{ display: 'flex', gap: '12px', overflowX: 'auto', paddingBottom: '8px' }}>
               {connectedDevices.map((d: any) => {
