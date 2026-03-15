@@ -27,12 +27,14 @@ function App() {
   useEffect(() => {
     if (!connected || !machineUid) return;
 
-    const interval = setInterval(() => {
-      messengerConnect({ messengerUid: machineUid });
-    }, 15000); // 15s heartbeat
+    const runHeartbeat = () => {
+      console.log("[App] Sending heartbeat for UID:", machineUid);
+      messengerConnect({ messengerUid: machineUid })
+        .catch(err => console.error("[App] Heartbeat failed:", err));
+    };
 
-    // Initial connect
-    messengerConnect({ messengerUid: machineUid });
+    const interval = setInterval(runHeartbeat, 15000); // 15s heartbeat
+    runHeartbeat();
 
     return () => clearInterval(interval);
   }, [connected, machineUid]);

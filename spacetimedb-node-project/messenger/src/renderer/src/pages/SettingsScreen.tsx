@@ -548,8 +548,8 @@ export const SettingsScreen = () => {
                           <div style={{ marginTop: '8px', display: 'flex', gap: '8px', flexWrap: 'wrap' }}>
                             {myDevices.map(d => {
                               const status = getStatus(msg.messageId, d.messengerId);
-                              const statusColor = status === 'Shown' ? '#10B981' : status === 'InProgress' ? '#F59E0B' : status === 'Enqueued' ? '#64748b' : '#334155';
-                              const statusLabel = status === 'Shown' ? 'Shown' : status === 'InProgress' ? 'In Progress' : status === 'Enqueued' ? 'Enqueued' : 'Unknown';
+                              const statusColor = status === 'Shown' ? '#10B981' : status === 'InProgress' ? '#3B82F6' : status === 'Queued' ? '#64748b' : '#334155';
+                              const statusLabel = status === 'Shown' ? 'Shown' : status === 'InProgress' ? 'In Progress' : status === 'Queued' ? 'Queued' : 'Unknown';
                               return (
                                 <span key={d.messengerId.toString()} style={{ fontSize: '0.7rem', color: statusColor, display: 'flex', alignItems: 'center', gap: '4px' }}>
                                   <span style={{ width: '6px', height: '6px', borderRadius: '50%', background: statusColor, display: 'inline-block' }} />

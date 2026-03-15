@@ -122,27 +122,32 @@ export const ChannelScreen = () => {
   const connectedDevices = (messengerDevices as any[]).filter(d => d.venueId === venue.venueId);
   const hasDevices = connectedDevices.length > 0;
 
-  const getDeliveryStatus = (messageId: any, deviceId: any) => {
-    const s = (deliveryStatuses as any[]).find(
-      ds => ds.messageId === messageId && ds.messengerId === deviceId
+  const getDeliveryStatus = (messageId: bigint, deviceId: bigint) => {
+    const s = Array.from(deliveryStatuses || []).find(
+      (ds: any) => BigInt(ds.messageId) === BigInt(messageId) && BigInt(ds.messengerId) === BigInt(deviceId)
     );
     return s?.status.tag;
   };
 
   const isNodeConnected = (device: any) => {
     if (!device.lastConnectedAt) return false;
-    const lastActive = Number(device.lastConnectedAt.microsSinceUnixEpoch / 1000n);
+    const lastActive = Number(BigInt(device.lastConnectedAt.microsSinceUnixEpoch) / 1000n);
     const now = Date.now();
-    return (now - lastActive) < 30000; // 30 second threshold
+    // Use a more generous 60s threshold for dev stability
+    return (now - lastActive) < 60000; 
   };
 
-  const StatusIcon = ({ status, isConnected, deviceName }: { status: string, isConnected: boolean, deviceName: string }) => {
+  const StatusIcon = ({ status, isConnected, deviceName }: { status: string | undefined, isConnected: boolean, deviceName: string }) => {
     if (!isConnected) {
       return (
-        <span title={`${deviceName}: Disconnected`}>
+        <span title={`${deviceName}: Offline`}>
           <WifiOff size={14} style={{ color: 'var(--text-secondary)', opacity: 0.5 }} />
         </span>
       );
+    }
+
+    if (!status) {
+      return <span title={`${deviceName}: Initializing…`}><Clock size={14} style={{ color: 'rgba(255,255,255,0.1)' }} /></span>;
     }
 
     switch (status) {
@@ -155,7 +160,7 @@ export const ChannelScreen = () => {
       case 'Unavailable':
         return <span title={`${deviceName}: Unavailable`}><AlertCircle size={14} style={{ color: '#EF4444' }} /></span>;
       default:
-        return <span title={`${deviceName}: Waiting…`}><Clock size={14} style={{ color: 'rgba(255,255,255,0.2)' }} /></span>;
+        return <span title={`${deviceName}: ${status}`}><Clock size={14} style={{ color: 'rgba(255,255,255,0.2)' }} /></span>;
     }
   };
 

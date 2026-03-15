@@ -16,8 +16,8 @@ export const TickerScreen = () => {
     const isAnimating = useRef(false);
     const settings = loadTickerSettings();
 
-    // Fix 1: Record start time to ignore history
-    const [startTime] = useState<bigint>(() => BigInt(Date.now() * 1000));
+    // Fix 1: Record start time with a generous buffer (5s behind) to avoid clock sync issues
+    const [appStartTime] = useState<number>(() => Date.now());
     
     // Guard against race conditions where a message is finished but hasn't updated to 'Shown' in DB yet
     const effectivelyShownIds = useRef<Set<string>>(new Set());
@@ -26,7 +26,10 @@ export const TickerScreen = () => {
         // @ts-ignore
         if (window.api?.getMachineId) {
             // @ts-ignore
-            window.api.getMachineId().then((uid: string) => setMachineUid(uid));
+            window.api.getMachineId().then((uid: string) => {
+                console.log("[Ticker] Machine ID loaded:", uid);
+                setMachineUid(uid);
+            });
         } else {
             const id = localStorage.getItem('fallback_uid') || 'fallback_' + Math.random().toString(36).slice(2, 9);
             if (!localStorage.getItem('fallback_uid')) localStorage.setItem('fallback_uid', id);
@@ -37,12 +40,13 @@ export const TickerScreen = () => {
     // Cleanup finished IDs once DB reflects 'Shown' status
     useEffect(() => {
         const myDevices = devices.filter(d => d.uid === machineUid);
-        const myMessengerIds = myDevices.map(d => d.messengerId);
+        const myMessengerIds = myDevices.map(d => BigInt(d.messengerId));
         
         for (const idStr of effectivelyShownIds.current) {
             const id = BigInt(idStr);
-            const status = Array.from(statuses.values()).find(s => s.messageId === id && myMessengerIds.includes(s.messengerId));
+            const status = Array.from(statuses).find(s => BigInt(s.messageId) === id && myMessengerIds.some(mid => mid === BigInt(s.messengerId)));
             if (!status || status.status.tag === 'Shown') {
+                console.log("[Ticker] DB synced 'Shown' for:", idStr);
                 effectivelyShownIds.current.delete(idStr);
             }
         }
@@ -55,29 +59,32 @@ export const TickerScreen = () => {
         const myDevices = devices.filter(d => d.uid === machineUid);
         if (myDevices.length === 0) return;
 
-        const myMessengerIds = myDevices.map(d => d.messengerId);
+        const myMessengerIds = myDevices.map(d => BigInt(d.messengerId));
 
         // Build the pending queue for this machine
-        const pendingQueue = Array.from(statuses.values())
+        const pendingQueue = Array.from(statuses)
             .filter(s => {
-                const isMine = myMessengerIds.includes(s.messengerId);
+                const isMine = myMessengerIds.includes(BigInt(s.messengerId));
                 const isPending = s.status.tag === 'Queued' || s.status.tag === 'InProgress';
                 const notRecentlyShown = !effectivelyShownIds.current.has(s.messageId.toString());
                 return isMine && isPending && notRecentlyShown;
             })
             .map(status => ({
                statusRec: status,
-               msg: messages.find(m => m.messageId === status.messageId)
+               msg: messages.find(m => BigInt(m.messageId) === BigInt(status.messageId))
             }))
-            // Filter out old messages (history) and ensure we have a valid message record
-            .filter(({ msg }) => msg !== undefined && msg.sentAt.microsSinceUnixEpoch >= startTime)
+            .filter(({ msg }) => {
+                if (!msg) return false;
+                const msgTimeMs = Number(BigInt(msg.sentAt.microsSinceUnixEpoch) / 1000n);
+                // ONLY messages sent AFTER this app instance started (with 1s buffer)
+                return msgTimeMs >= (appStartTime - 1000);
+            })
             // Sort by message time (oldest first)
             .sort((a, b) => {
-                const timeDiff = Number(a.msg!.sentAt.microsSinceUnixEpoch - b.msg!.sentAt.microsSinceUnixEpoch);
-                if (timeDiff !== 0) return timeDiff;
-                // If timed same, prioritize InProgress to resume after restart
-                if (a.statusRec.status.tag === 'InProgress' && b.statusRec.status.tag === 'Queued') return -1;
-                if (b.statusRec.status.tag === 'InProgress' && a.statusRec.status.tag === 'Queued') return 1;
+                const tA = BigInt(a.msg!.sentAt.microsSinceUnixEpoch);
+                const tB = BigInt(b.msg!.sentAt.microsSinceUnixEpoch);
+                if (tA < tB) return -1;
+                if (tA > tB) return 1;
                 return 0;
             });
 
@@ -85,11 +92,13 @@ export const TickerScreen = () => {
             const next = pendingQueue[0];
             const repeatCount = settings.repeatCount;
             
+            console.log("[Ticker] STARTING message:", next.msg!.content, "(ID:", next.msg!.messageId.toString(), ")");
+            
             setActiveMessage({ 
                 id: next.msg!.messageId, 
                 messengerId: next.statusRec.messengerId,
                 text: next.msg!.content, 
-                repeat: 1, 
+                repeat: 0, 
                 totalRepeats: repeatCount 
             });
             isAnimating.current = true;
@@ -99,29 +108,30 @@ export const TickerScreen = () => {
                 uid: machineUid, 
                 messageId: next.msg!.messageId, 
                 statusTag: 'InProgress'
-            });
+            }).catch(err => console.error("[Ticker] Failed to update status to InProgress:", err));
         }
-    }, [messages, statuses, devices, machineUid, connected, activeMessage, startTime, settings.repeatCount]);
+    }, [messages, statuses, devices, machineUid, connected, activeMessage, appStartTime, settings.repeatCount]);
 
     const handleAnimationIteration = () => {
         if (!activeMessage || !machineUid) return;
 
-        // Safety check: has the message or pairing been removed?
-        const msgExists = messages.some(m => m.messageId === activeMessage.id);
-        const deviceExists = devices.some(d => d.messengerId === activeMessage.messengerId);
+        const msgExists = messages.some(m => BigInt(m.messageId) === BigInt(activeMessage.id));
+        const deviceExists = devices.some(d => BigInt(d.messengerId) === BigInt(activeMessage.messengerId));
         
         if (!msgExists || !deviceExists) {
+            console.log("[Ticker] Message or device disappeared, stopping.");
             setActiveMessage(null);
             isAnimating.current = false;
             return;
         }
         
         const nextRepeat = activeMessage.repeat + 1;
-        if (nextRepeat <= activeMessage.totalRepeats) {
-            // Repeat once more
+        console.log("[Ticker] Iteration end:", nextRepeat, "/", activeMessage.totalRepeats);
+        
+        if (nextRepeat < activeMessage.totalRepeats) {
             setActiveMessage(prev => prev ? { ...prev, repeat: nextRepeat } : null);
         } else {
-            // Mark as finished locally immediately and then updating server
+            console.log("[Ticker] FINISHED message:", activeMessage.id.toString());
             const finalIdStr = activeMessage.id.toString();
             effectivelyShownIds.current.add(finalIdStr);
             
@@ -129,14 +139,14 @@ export const TickerScreen = () => {
                 uid: machineUid, 
                 messageId: activeMessage.id, 
                 statusTag: 'Shown'
-            });
+            }).catch(err => console.error("[Ticker] Failed to update status to Shown:", err));
             
             setActiveMessage(null);
             isAnimating.current = false;
         }
     };
 
-    if (!activeMessage) return null;
+    if (!activeMessage || !connected) return null;
 
     return (
         <div style={{
@@ -145,8 +155,8 @@ export const TickerScreen = () => {
             display: 'flex',
             alignItems: 'center',
             background: settings.bgColor,
-            borderTop: settings.position === 'bottom' ? '2px solid rgba(59,130,246,0.6)' : 'none',
-            borderBottom: settings.position === 'top' ? '2px solid rgba(59,130,246,0.6)' : 'none',
+            borderTop: (settings.position === 'bottom') ? '2px solid rgba(59,130,246,0.6)' : 'none',
+            borderBottom: (settings.position === 'top') ? '2px solid rgba(59,130,246,0.6)' : 'none',
             overflow: 'hidden',
             fontFamily: settings.fontFamily,
             color: settings.fgColor,
