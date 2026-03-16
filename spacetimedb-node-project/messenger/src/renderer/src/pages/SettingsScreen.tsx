@@ -340,30 +340,6 @@ export const SettingsScreen = () => {
             )}
             <style>{`@keyframes fadeIn { from { opacity: 0; transform: translateY(-6px); } to { opacity: 1; transform: translateY(0); } }`}</style>
 
-            {/* Status Card */}
-            <div style={{ background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.08)', borderRadius: '16px', padding: '20px' }}>
-              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px' }}>
-                <h3 style={{ fontSize: '1rem', margin: 0 }}>Connection Status</h3>
-                <span style={{
-                  fontSize: '0.8rem', padding: '3px 10px', borderRadius: '12px', fontWeight: 600,
-                  background: connected ? 'rgba(16,185,129,0.15)' : 'rgba(239,68,68,0.15)',
-                  color: connected ? '#10B981' : '#EF4444',
-                  border: `1px solid ${connected ? 'rgba(16,185,129,0.3)' : 'rgba(239,68,68,0.3)'}`,
-                }}>
-                  {connected ? '● Connected' : '● Disconnected'}
-                </span>
-              </div>
-              <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
-                <div style={{ fontSize: '0.8rem', color: '#64748b' }}>
-                  <span style={{ color: '#94A3B8' }}>URI: </span>
-                  <span style={{ fontFamily: 'monospace' }}>{localStorage.getItem('spacetime_uri') || 'ws://127.0.0.1:3000'}</span>
-                </div>
-                <div style={{ fontSize: '0.8rem', color: '#64748b', wordBreak: 'break-all' }}>
-                  <span style={{ color: '#94A3B8' }}>Device ID: </span>
-                  <span style={{ fontFamily: 'monospace' }}>{machineUid}</span>
-                </div>
-              </div>
-            </div>
 
             {/* Connected Venues */}
             {myDevices.length > 0 && (
@@ -378,15 +354,15 @@ export const SettingsScreen = () => {
                       </div>
                       <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
                         <span style={{ fontSize: '0.75rem', color: '#10B981', fontWeight: 600 }}>Active</span>
-                        <button 
+                        <button
                           onClick={() => {
                             if (window.confirm(`Unpair from "${getVenueName(device.venueId)}"? This device will stop receiving messages from this venue.`)) {
                               unpair({ messengerId: device.messengerId });
                             }
                           }}
-                          style={{ 
-                            background: 'rgba(239,68,68,0.1)', color: '#EF4444', 
-                            border: '1px solid rgba(239,68,68,0.2)', borderRadius: '6px', 
+                          style={{
+                            background: 'rgba(239,68,68,0.1)', color: '#EF4444',
+                            border: '1px solid rgba(239,68,68,0.2)', borderRadius: '6px',
                             padding: '4px 8px', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '4px',
                             fontSize: '0.75rem', fontWeight: 600
                           }}
@@ -591,25 +567,29 @@ export const SettingsScreen = () => {
                         </div>
                         {myDevices.length > 0 && (
                           <div style={{ marginTop: '8px', display: 'flex', gap: '8px', flexWrap: 'wrap' }}>
-                            {myDevices.map(d => {
-                              const status = getStatus(msg.messageId, d.messengerId);
-                              const statusColor = 
-                                status === 'Shown' ? '#10B981' : 
-                                status === 'InProgress' ? '#3B82F6' : 
-                                status === 'Queued' ? '#94A3B8' : 
-                                status === 'Unavailable' ? '#EF4444' : '#334155';
-                              const statusLabel = 
-                                status === 'Shown' ? 'Shown' : 
-                                status === 'InProgress' ? 'In Progress' : 
-                                status === 'Queued' ? 'Queued' : 
-                                status === 'Unavailable' ? 'Unavailable' : 'Unknown';
-                              return (
-                                <span key={d.messengerId.toString()} style={{ fontSize: '0.7rem', color: statusColor, display: 'flex', alignItems: 'center', gap: '4px' }}>
-                                  <span style={{ width: '6px', height: '6px', borderRadius: '50%', background: statusColor, display: 'inline-block' }} />
-                                  {d.name}: {statusLabel}
-                                </span>
-                              );
-                            })}
+                            {myDevices
+                              .filter(d => venue && d.venueId === venue.venueId)
+                              .map(d => {
+                                const status = getStatus(msg.messageId, d.messengerId);
+                                if (!status) return null;
+
+                                const statusColor =
+                                  status === 'Shown' ? '#10B981' :
+                                    status === 'InProgress' ? '#3B82F6' :
+                                      status === 'Queued' ? '#94A3B8' :
+                                        status === 'Unavailable' ? '#EF4444' : '#334155';
+                                const statusLabel =
+                                  status === 'Shown' ? 'Shown' :
+                                    status === 'InProgress' ? 'In Progress' :
+                                      status === 'Queued' ? 'Queued' :
+                                        status === 'Unavailable' ? 'Unavailable' : status;
+                                return (
+                                  <span key={d.messengerId.toString()} style={{ fontSize: '0.7rem', color: statusColor, display: 'flex', alignItems: 'center', gap: '4px' }}>
+                                    <span style={{ width: '6px', height: '6px', borderRadius: '50%', background: statusColor, display: 'inline-block' }} />
+                                    {d.name}: {statusLabel}
+                                  </span>
+                                );
+                              })}
                           </div>
                         )}
                       </div>
@@ -657,6 +637,11 @@ export const SettingsScreen = () => {
                 style={inputStyle}
                 placeholder="spacetimedb-node-project-gybhi"
               />
+
+              <div style={{ marginTop: '20px', padding: '12px 16px', background: 'rgba(255,255,255,0.03)', borderRadius: '10px', border: '1px solid rgba(255,255,255,0.06)', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                <span style={{ fontSize: '0.75rem', fontWeight: 600, color: '#94A3B8' }}>Device ID</span>
+                <span style={{ fontSize: '0.75rem', fontFamily: 'monospace', color: '#64748b' }}>{machineUid}</span>
+              </div>
             </section>
 
             {/* Display & Position */}
@@ -835,9 +820,9 @@ export const SettingsScreen = () => {
                 <h3 style={{ fontSize: '1rem', margin: 0 }}>Preview</h3>
                 <button
                   onClick={handleShowSample}
-                  style={{ 
-                    padding: '6px 12px', background: 'rgba(59,130,246,0.15)', color: '#3B82F6', 
-                    border: '1px solid rgba(59,130,246,0.3)', borderRadius: '8px', 
+                  style={{
+                    padding: '6px 12px', background: 'rgba(59,130,246,0.15)', color: '#3B82F6',
+                    border: '1px solid rgba(59,130,246,0.3)', borderRadius: '8px',
                     fontSize: '0.75rem', fontWeight: 600, cursor: 'pointer',
                     display: 'flex', alignItems: 'center', gap: '6px'
                   }}

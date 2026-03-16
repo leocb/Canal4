@@ -2,7 +2,6 @@
 
 1. Add Email login pin (valid for 10 minutes) using a SMTP provider, configured through the .env file (host,port,user,password,from)
 2. Logins are valid for 30 days. After 30 days, the user needs to login again using the email pin method. Everytime the user open the app and login again, the expiration is extended for another 30 days.
-
 4. make the message ticker hidden while no message is being displayed and then auto appear when a new message is received
 5. make the ticker screen position (top/bottom) setting work
 6. fix the ticker having margins around it (it's not filling the whole desktop width and it has a margin at the bottom too?)
