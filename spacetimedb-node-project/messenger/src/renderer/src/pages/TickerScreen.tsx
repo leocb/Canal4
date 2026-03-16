@@ -25,6 +25,8 @@ export const TickerScreen = () => {
     const [activeMessage, setActiveMessage] = useState<{ id: bigint; messengerId: bigint; text: string; repeat: number; totalRepeats: number; isTest?: boolean } | null>(null);
     const isAnimating = useRef(false);
     const [settings, setSettings] = useState(loadTickerSettings());
+    const marqueeRef = useRef<HTMLDivElement>(null);
+    const [animationDuration, setAnimationDuration] = useState<number>(10); // fallback
 
     // Fix 1: Record start time with a generous buffer (5s behind) to avoid clock sync issues
     const [appStartTime] = useState<number>(() => Date.now());
@@ -85,13 +87,23 @@ export const TickerScreen = () => {
         }
     }, [!!activeMessage, connected]);
 
-    // Window Position Control
     useEffect(() => {
         if (window.api?.updateTickerPosition) {
             console.log("[Ticker] Updating window position to:", settings.position);
             window.api.updateTickerPosition(settings.position);
         }
     }, [settings.position]);
+
+    // Recalculate animation duration whenever message or settings change
+    useEffect(() => {
+        if (activeMessage && marqueeRef.current) {
+            const width = marqueeRef.current.scrollWidth;
+            // The travel distance is 'width' because of padding-left: 100% and translate(-100%)
+            const duration = width / settings.scrollSpeed;
+            console.log("[Ticker] Calculated animation duration:", duration, "s for width:", width);
+            setAnimationDuration(duration);
+        }
+    }, [activeMessage, settings.scrollSpeed, settings.fontSize, settings.fontFamily]);
 
     // Cleanup finished IDs once DB reflects 'Shown' status
     useEffect(() => {
@@ -240,10 +252,12 @@ export const TickerScreen = () => {
             whiteSpace: 'nowrap'
         }}>
            <div
+               ref={marqueeRef}
                className="marquee"
                onAnimationIteration={handleAnimationIteration}
                style={{ 
-                   textShadow: `1px 1px 4px rgba(0,0,0,${0.8 * getAlphaFromColor(settings.fgColor)})` 
+                   textShadow: `1px 1px 4px rgba(0,0,0,${0.8 * getAlphaFromColor(settings.fgColor)})`,
+                   animationDuration: `${animationDuration}s`
                }}
            >
                {activeMessage.text}
@@ -253,7 +267,7 @@ export const TickerScreen = () => {
              .marquee {
                display: inline-block;
                padding-left: 100%;
-               animation: marquee ${settings.scrollSpeed}s linear infinite;
+               animation: marquee linear infinite;
              }
              
              @keyframes marquee {

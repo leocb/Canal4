@@ -1,4 +1,4 @@
-import { useState, useEffect, useMemo } from 'react';
+import { useState, useEffect, useMemo, useRef } from 'react';
 import { useTable, useReducer, useSpacetimeDB } from 'spacetimedb/react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { tables, reducers } from '../module_bindings';
@@ -15,7 +15,7 @@ export interface TickerSettings {
   fontWeight: '400' | '600' | '700';
   bgColor: string;
   fgColor: string;
-  scrollSpeed: number; // seconds for one full pass
+  scrollSpeed: number; // pixels per second
   repeatCount: number;
 }
 
@@ -26,7 +26,7 @@ const DEFAULT_TICKER_SETTINGS: TickerSettings = {
   fontWeight: '600',
   bgColor: 'rgba(0,0,0,0.4)',
   fgColor: '#ffffff',
-  scrollSpeed: 15,
+  scrollSpeed: 150,
   repeatCount: 1,
 };
 
@@ -145,6 +145,9 @@ export const SettingsScreen = () => {
   const [selectedDisplay, setSelectedDisplay] = useState<number>(
     parseInt(localStorage.getItem('ticker_display') || '0', 10)
   );
+
+  const previewRef = useRef<HTMLDivElement>(null);
+  const [previewDuration, setPreviewDuration] = useState(10);
 
   const requestPin = useReducer(reducers.createMessengerPin);
   const unpair = useReducer(reducers.unpairMessenger);
@@ -270,6 +273,14 @@ export const SettingsScreen = () => {
     setTickerSettingsState(updated);
     saveTickerSettings(updated);
   };
+
+  useEffect(() => {
+    if (previewRef.current) {
+      const width = previewRef.current.scrollWidth;
+      const duration = width / tickerSettings.scrollSpeed;
+      setPreviewDuration(duration);
+    }
+  }, [tickerSettings.scrollSpeed, tickerSettings.fontSize, tickerSettings.fontFamily]);
 
   const FONT_OPTIONS = [
     { value: 'monospace', label: 'Monospace' },
@@ -856,15 +867,15 @@ export const SettingsScreen = () => {
             <section style={sectionStyle}>
               <h3 style={{ fontSize: '1rem', margin: '0 0 16px' }}>Playback</h3>
 
-              <label style={labelStyle}>Scroll Speed ({tickerSettings.scrollSpeed}s per pass)</label>
+              <label style={labelStyle}>Scroll Speed ({tickerSettings.scrollSpeed}px/s)</label>
               <input
-                type="range" min={5} max={60} step={1}
+                type="range" min={10} max={300} step={5}
                 value={tickerSettings.scrollSpeed}
                 onChange={e => updateTickerSetting('scrollSpeed', parseInt(e.target.value))}
                 style={{ width: '100%', accentColor: '#3B82F6', marginBottom: '4px' }}
               />
               <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.72rem', color: '#475569' }}>
-                <span>Fast (5s)</span><span>Slow (60s)</span>
+                <span>Slow (10px/s)</span><span>Fast (300px/s)</span>
               </div>
 
               <div style={{ marginTop: '16px', display: 'flex', alignItems: 'center', gap: '12px' }}>
@@ -902,11 +913,21 @@ export const SettingsScreen = () => {
                 </button>
               </div>
               <div style={{ borderRadius: '8px', overflow: 'hidden', height: '64px', display: 'flex', alignItems: 'center', background: tickerSettings.bgColor, border: '1px solid rgba(255,255,255,0.08)' }}>
-                <div style={{ paddingLeft: '100%', animation: `marquee ${tickerSettings.scrollSpeed}s linear infinite`, fontFamily: tickerSettings.fontFamily, fontSize: `${Math.min(tickerSettings.fontSize, 32)}px`, fontWeight: tickerSettings.fontWeight, color: tickerSettings.fgColor, whiteSpace: 'nowrap' }}>
+                <div 
+                  ref={previewRef}
+                  style={{ 
+                    paddingLeft: '100%', 
+                    animation: `marquee ${previewDuration}s linear infinite`, 
+                    fontFamily: tickerSettings.fontFamily, 
+                    fontSize: `${Math.min(tickerSettings.fontSize, 32)}px`, 
+                    fontWeight: tickerSettings.fontWeight, 
+                    color: tickerSettings.fgColor, 
+                    whiteSpace: 'nowrap' 
+                  }}>
                   Sample: Welcome to Courier Notifications!
                 </div>
               </div>
-              <style>{`@keyframes marquee { 0% { transform: translateX(0) } 100% { transform: translateX(-150%) } }`}</style>
+              <style>{`@keyframes marquee { 0% { transform: translateX(0) } 100% { transform: translateX(-100%) } }`}</style>
             </section>
 
             {/* Display SpacetimeDB Error */}
