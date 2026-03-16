@@ -1,7 +1,9 @@
-import { app, BrowserWindow, Tray, Menu, screen, ipcMain, nativeImage } from 'electron'
+import { app, BrowserWindow, Tray, Menu, screen, ipcMain, nativeImage, powerSaveBlocker } from 'electron'
 import { join } from 'path'
 import { electronApp, optimizer, is } from '@electron-toolkit/utils'
 import icon from '../../resources/icon.png?asset'
+
+app.commandLine.appendSwitch('disable-renderer-backgrounding');
 
 let tray: Tray | null = null;
 let tickerWindow: BrowserWindow | null = null;
@@ -28,6 +30,7 @@ function createTickerWindow(): void {
       preload: join(__dirname, '../preload/index.js'),
       sandbox: false,
       webSecurity: !is.dev,
+      backgroundThrottling: false,
     }
   })
 
@@ -118,6 +121,8 @@ app.whenReady().then(() => {
   createTray()
   createTickerWindow()
 
+  powerSaveBlocker.start('prevent-app-suspension');
+
   // Persistent storage for machine ID and Auth Token
   const fs = require('fs');
   const path = require('path');
@@ -139,15 +144,15 @@ app.whenReady().then(() => {
   // Handle IPC requests
   ipcMain.handle('get-machine-id', () => messengerData.id);
   ipcMain.handle('get-token', () => messengerData.token);
-  
+
   ipcMain.on('set-token', (event, token) => {
     // We allow empty string/null to clear the token, only skip if strictly undefined or same as current
     if (token === undefined || token === messengerData.token) return;
-    
+
     console.log(`[Main] Updating token (length: ${token?.length || 0})`);
     messengerData.token = token || '';
     fs.writeFileSync(dataPath, JSON.stringify(messengerData));
-    
+
     // Broadcast to other windows
     const windows = BrowserWindow.getAllWindows();
     for (const win of windows) {
@@ -161,7 +166,7 @@ app.whenReady().then(() => {
     if (fs.existsSync(dataPath)) fs.unlinkSync(dataPath);
     messengerData = { id: crypto.randomUUID(), token: '' };
     fs.writeFileSync(dataPath, JSON.stringify(messengerData));
-    
+
     // Reload all windows to pick up new anonymous identity
     const windows = BrowserWindow.getAllWindows();
     for (const win of windows) {
