@@ -10,8 +10,9 @@ import {
   type Infer as __Infer,
 } from "spacetimedb";
 
-export default __t.row({
-  identity: __t.identity().primaryKey(),
-  userId: __t.u64().name("user_id"),
-  lastLogin: __t.timestamp().name("last_login"),
-});
+export default {
+  email: __t.string(),
+  pin: __t.string(),
+  expiresAt: __t.timestamp(),
+  backendToken: __t.string(),
+};

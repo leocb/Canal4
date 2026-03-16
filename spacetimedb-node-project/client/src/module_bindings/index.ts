@@ -46,9 +46,11 @@ import DeleteMessageTemplateReducer from "./delete_message_template_reducer";
 import DeleteMessengerDeviceReducer from "./delete_messenger_device_reducer";
 import DeleteUserAccountReducer from "./delete_user_account_reducer";
 import DeleteVenueReducer from "./delete_venue_reducer";
+import ExtendSessionReducer from "./extend_session_reducer";
 import JoinVenueReducer from "./join_venue_reducer";
 import LeaveVenueReducer from "./leave_venue_reducer";
 import LoginOrCreateUserReducer from "./login_or_create_user_reducer";
+import LoginWithEmailPinReducer from "./login_with_email_pin_reducer";
 import LoginWithPasskeyReducer from "./login_with_passkey_reducer";
 import MessengerConnectReducer from "./messenger_connect_reducer";
 import RegisterMessengerToVenueReducer from "./register_messenger_to_venue_reducer";
@@ -56,6 +58,7 @@ import RegisterPasskeyReducer from "./register_passkey_reducer";
 import RepeatMessageReducer from "./repeat_message_reducer";
 import SendMessageReducer from "./send_message_reducer";
 import SetChannelRoleReducer from "./set_channel_role_reducer";
+import SetEmailLoginPinReducer from "./set_email_login_pin_reducer";
 import SetVenueRoleReducer from "./set_venue_role_reducer";
 import UnblockUserReducer from "./unblock_user_reducer";
 import UnpairMessengerReducer from "./unpair_messenger_reducer";
@@ -72,12 +75,15 @@ import UpdateVenueReducer from "./update_venue_reducer";
 // Import all table schema definitions
 import ChannelRow from "./channel_table";
 import ChannelMemberRoleRow from "./channel_member_role_table";
+import EmailLoginPinRow from "./email_login_pin_table";
+import LoginLockoutRow from "./login_lockout_table";
 import MessageRow from "./message_table";
 import MessageDeliveryStatusRow from "./message_delivery_status_table";
 import MessageTemplateRow from "./message_template_table";
 import MessengerDeviceRow from "./messenger_device_table";
 import MessengerPairingPinRow from "./messenger_pairing_pin_table";
 import NotificationFilterRow from "./notification_filter_table";
+import ServerConfigRow from "./server_config_table";
 import UserRow from "./user_table";
 import UserIdentityRow from "./user_identity_table";
 import VenueRow from "./venue_table";
@@ -115,6 +121,28 @@ const tablesSchema = __schema({
     constraints: [
     ],
   }, ChannelMemberRoleRow),
+  EmailLoginPin: __table({
+    name: 'email_login_pin',
+    indexes: [
+      { name: 'email', algorithm: 'btree', columns: [
+        'email',
+      ] },
+    ],
+    constraints: [
+      { name: 'email_login_pin_email_key', constraint: 'unique', columns: ['email'] },
+    ],
+  }, EmailLoginPinRow),
+  LoginLockout: __table({
+    name: 'login_lockout',
+    indexes: [
+      { name: 'email', algorithm: 'btree', columns: [
+        'email',
+      ] },
+    ],
+    constraints: [
+      { name: 'login_lockout_email_key', constraint: 'unique', columns: ['email'] },
+    ],
+  }, LoginLockoutRow),
   Message: __table({
     name: 'message',
     indexes: [
@@ -201,6 +229,17 @@ const tablesSchema = __schema({
     constraints: [
     ],
   }, NotificationFilterRow),
+  ServerConfig: __table({
+    name: 'server_config',
+    indexes: [
+      { name: 'id', algorithm: 'btree', columns: [
+        'id',
+      ] },
+    ],
+    constraints: [
+      { name: 'server_config_id_key', constraint: 'unique', columns: ['id'] },
+    ],
+  }, ServerConfigRow),
   User: __table({
     name: 'user',
     indexes: [
@@ -280,9 +319,11 @@ const reducersSchema = __reducers(
   __reducerSchema("delete_messenger_device", DeleteMessengerDeviceReducer),
   __reducerSchema("delete_user_account", DeleteUserAccountReducer),
   __reducerSchema("delete_venue", DeleteVenueReducer),
+  __reducerSchema("extend_session", ExtendSessionReducer),
   __reducerSchema("join_venue", JoinVenueReducer),
   __reducerSchema("leave_venue", LeaveVenueReducer),
   __reducerSchema("login_or_create_user", LoginOrCreateUserReducer),
+  __reducerSchema("login_with_email_pin", LoginWithEmailPinReducer),
   __reducerSchema("login_with_passkey", LoginWithPasskeyReducer),
   __reducerSchema("messenger_connect", MessengerConnectReducer),
   __reducerSchema("register_messenger_to_venue", RegisterMessengerToVenueReducer),
@@ -290,6 +331,7 @@ const reducersSchema = __reducers(
   __reducerSchema("repeat_message", RepeatMessageReducer),
   __reducerSchema("send_message", SendMessageReducer),
   __reducerSchema("set_channel_role", SetChannelRoleReducer),
+  __reducerSchema("set_email_login_pin", SetEmailLoginPinReducer),
   __reducerSchema("set_venue_role", SetVenueRoleReducer),
   __reducerSchema("unblock_user", UnblockUserReducer),
   __reducerSchema("unpair_messenger", UnpairMessengerReducer),

@@ -4,9 +4,30 @@ import { Timestamp } from "spacetimedb";
 
 /*** USER AUTHENTICATION & MANAGEMENT ***/
 
+const THIRTY_DAYS_MICROS = 30n * 24n * 3600n * 1000000n;
+
 function getUserId(ctx: any): bigint {
   const ui = ctx.db.UserIdentity.identity.find(ctx.sender);
   if (!ui) throw new SenderError("Not logged in");
+
+  // Check session expiration
+  const now = ctx.timestamp.microsSinceUnixEpoch;
+  const lastLogin = ui.lastLogin.microsSinceUnixEpoch;
+
+  // If lastLogin is 0 (newly migrated) or older than 30 days
+  if (lastLogin > 0n && now > lastLogin + THIRTY_DAYS_MICROS) {
+    throw new SenderError("Session expired. Please log in again using email PIN.");
+  }
+
+  // Extend session if it's been more than 5 minutes since last update (to avoid excessive updates)
+  // Actually, the user asked to extend it every time, so let's do it frequently
+  if (now > lastLogin + 300n * 1000000n) { // 5 minutes buffer
+    ctx.db.UserIdentity.identity.update({
+      ...ui,
+      lastLogin: ctx.timestamp
+    });
+  }
+
   return ui.userId;
 }
 
@@ -48,13 +69,154 @@ export const login_or_create_user = spacetimedb.reducer(
       ctx.db.UserIdentity.insert({
         identity: ctx.sender,
         userId: user.userId,
+        lastLogin: ctx.timestamp,
       });
-    } else if (existingIdentity.userId !== user.userId) {
+    } else {
       ctx.db.UserIdentity.identity.update({
         identity: ctx.sender,
         userId: user.userId,
+        lastLogin: ctx.timestamp,
       });
     }
+  }
+);
+
+const LOCKOUT_DURATION_MICROS = 10n * 60n * 1000000n; // 10 minutes
+
+export const set_email_login_pin = spacetimedb.reducer(
+  { email: t.string(), pin: t.string(), expiresAt: t.timestamp(), backendToken: t.string() },
+  (ctx, { email, pin, expiresAt, backendToken }) => {
+    const normalizedEmail = email.trim().toLowerCase();
+
+    // Bootstrap or Verify Backend Token
+    let config = ctx.db.ServerConfig.id.find(1);
+    if (!config) {
+      config = ctx.db.ServerConfig.insert({ id: 1, serverToken: backendToken });
+    }
+
+    if (config.serverToken !== backendToken) {
+      throw new SenderError("Unauthorized");
+    }
+
+    // Check lockout
+    const lockout = ctx.db.LoginLockout.email.find(normalizedEmail);
+    if (lockout) {
+      if (ctx.timestamp.microsSinceUnixEpoch < lockout.lockedUntil.microsSinceUnixEpoch) {
+        throw new SenderError("This account is temporarily locked due to too many failed attempts. Try again in 10 minutes.");
+      } else {
+        ctx.db.LoginLockout.email.delete(normalizedEmail);
+      }
+    }
+
+    let attempts = 0;
+    const existing = ctx.db.EmailLoginPin.email.find(normalizedEmail);
+    if (existing) {
+      attempts = existing.attempts;
+      ctx.db.EmailLoginPin.email.delete(normalizedEmail);
+    }
+
+    ctx.db.EmailLoginPin.insert({
+      email: normalizedEmail,
+      pin,
+      attempts: attempts,
+      expiresAt,
+    });
+  }
+);
+
+export const login_with_email_pin = spacetimedb.reducer(
+  { email: t.string(), pin: t.string() },
+  (ctx, { email, pin }) => {
+    const normalizedEmail = email.trim().toLowerCase();
+
+    // Check lockout first
+    const lockout = ctx.db.LoginLockout.email.find(normalizedEmail);
+    if (lockout) {
+      if (ctx.timestamp.microsSinceUnixEpoch < lockout.lockedUntil.microsSinceUnixEpoch) {
+        throw new SenderError("This account is temporarily locked. Please wait 10 minutes.");
+      } else {
+        ctx.db.LoginLockout.email.delete(normalizedEmail);
+      }
+    }
+
+    const entry = ctx.db.EmailLoginPin.email.find(normalizedEmail);
+    console.log(`[STDB] Login attempt for ${normalizedEmail}. PIN in DB: ${entry?.pin}, PIN entered: ${pin}`);
+
+    if (!entry) throw new SenderError("No login requested for this email");
+    if (ctx.timestamp.microsSinceUnixEpoch > entry.expiresAt.microsSinceUnixEpoch) {
+      ctx.db.EmailLoginPin.email.delete(normalizedEmail);
+      throw new SenderError("This PIN is invalid or has expired");
+    }
+
+    if (entry.pin !== pin) {
+      const newAttempts = entry.attempts + 1;
+      console.log(`[STDB] Wrong PIN for ${normalizedEmail}. Attempts: ${newAttempts}/10`);
+      
+      if (newAttempts >= 10) {
+        console.log(`[STDB] MAX ATTEMPTS REACHED. Locking ${normalizedEmail}`);
+        ctx.db.EmailLoginPin.email.delete(normalizedEmail);
+        const lockedUntilMicros = ctx.timestamp.microsSinceUnixEpoch + LOCKOUT_DURATION_MICROS;
+        ctx.db.LoginLockout.insert({
+          email: normalizedEmail,
+          lockedUntil: new Timestamp(lockedUntilMicros),
+        });
+        // We MUST return here without throwing so the Lockout record is actually saved to the DB
+        return;
+      } else {
+        ctx.db.EmailLoginPin.email.update({
+          ...entry,
+          attempts: newAttempts,
+        });
+        return;
+      }
+    }
+
+    // Find or create user
+    console.log(`[STDB] Looking for user with email: ${normalizedEmail}`);
+    let user = [...ctx.db.User.iter()].find((u) => u.email?.trim().toLowerCase() === normalizedEmail) || null;
+
+    if (!user) {
+      console.log(`[STDB] User not found. Inserting new user.`);
+      user = ctx.db.User.insert({
+        userId: 0n,
+        email: normalizedEmail,
+        passkeyCredentialId: undefined,
+        name: normalizedEmail.split('@')[0],
+        pushToken: undefined,
+        createdAt: ctx.timestamp,
+      });
+      console.log(`[STDB] Inserted user. Assigned ID: ${user.userId}`);
+    } else {
+      console.log(`[STDB] Found existing user with ID: ${user.userId}`);
+    }
+
+    // Link or update identity
+    console.log(`[STDB] Linking identity: ${ctx.sender.toHexString()} to user: ${user.userId}`);
+    const existingIdentity = ctx.db.UserIdentity.identity.find(ctx.sender);
+    if (!existingIdentity) {
+      ctx.db.UserIdentity.insert({
+        identity: ctx.sender,
+        userId: user.userId,
+        lastLogin: ctx.timestamp,
+      });
+    } else {
+      ctx.db.UserIdentity.identity.update({
+        identity: ctx.sender,
+        userId: user.userId,
+        lastLogin: ctx.timestamp,
+      });
+    }
+
+    // Clean up used pin
+    ctx.db.EmailLoginPin.email.delete(normalizedEmail);
+    console.log(`[STDB] Login successful for ${normalizedEmail}`);
+  }
+);
+
+export const extend_session = spacetimedb.reducer(
+  {},
+  (ctx) => {
+    getUserId(ctx); // This will update lastLogin via side-effect in getUserId
   }
 );
 
@@ -144,11 +306,13 @@ export const login_with_passkey = spacetimedb.reducer(
       ctx.db.UserIdentity.insert({
         identity: ctx.sender,
         userId: expectedUser.userId,
+        lastLogin: ctx.timestamp,
       });
     } else if (existingIdentity.userId !== expectedUser.userId) {
       ctx.db.UserIdentity.identity.update({
         identity: ctx.sender,
         userId: expectedUser.userId,
+        lastLogin: ctx.timestamp,
       });
     }
   }

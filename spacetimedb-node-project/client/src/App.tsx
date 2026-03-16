@@ -1,7 +1,10 @@
 import { Routes, Route, Navigate, useLocation, Outlet } from "react-router-dom";
+import { useEffect } from "react";
 import { useSpacetimeDB } from "spacetimedb/react";
 import NavBar from "./components/NavBar";
 import { useAuth } from "./hooks/useAuth";
+import { useReducer } from "spacetimedb/react";
+import { reducers } from "./module_bindings/index.ts";
 
 import { LoginScreen } from "./pages/LoginScreen";
 import { VenuesListScreen } from "./pages/VenuesListScreen";
@@ -43,6 +46,16 @@ function ProtectedRoute() {
 
 function App() {
   const { isActive: connected, connectionError: error } = useSpacetimeDB();
+  const { isLoggedIn } = useAuth();
+  const extendSession = useReducer(reducers.extendSession);
+
+  // Extend session on mount/re-connect if logged in
+  useEffect(() => {
+    if (connected && isLoggedIn) {
+      console.log("Refreshing session...");
+      extendSession();
+    }
+  }, [connected, isLoggedIn]);
 
   if (error) {
     return (
