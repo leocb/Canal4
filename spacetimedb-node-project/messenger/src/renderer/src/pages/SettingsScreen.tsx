@@ -467,78 +467,6 @@ export const SettingsScreen = () => {
         {activeTab === 'logs' && (
           <div style={{ display: 'flex', flexDirection: 'column', gap: '20px', maxWidth: '600px', margin: '0 auto' }}>
 
-            {/* Status row */}
-            <div style={{ display: 'flex', gap: '16px' }}>
-              <div style={{ flex: 1, background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.08)', borderRadius: '14px', padding: '14px 16px' }}>
-                <div style={{ fontSize: '0.72rem', fontWeight: 600, color: '#64748B', textTransform: 'uppercase', letterSpacing: '0.06em', marginBottom: '8px' }}>Database</div>
-                <span style={{
-                  fontSize: '0.8rem', padding: '3px 10px', borderRadius: '12px', fontWeight: 600,
-                  background: connected ? 'rgba(16,185,129,0.15)' : 'rgba(239,68,68,0.15)',
-                  color: connected ? '#10B981' : '#EF4444',
-                  border: `1px solid ${connected ? 'rgba(16,185,129,0.3)' : 'rgba(239,68,68,0.3)'}`,
-                }}>
-                  {connected ? '● Connected' : '● Offline'}
-                </span>
-              </div>
-
-              <div style={{ flex: 2, background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.08)', borderRadius: '14px', padding: '14px 16px' }}>
-                <div style={{ fontSize: '0.72rem', fontWeight: 600, color: '#64748B', textTransform: 'uppercase', letterSpacing: '0.06em', marginBottom: '8px' }}>Paired Venues</div>
-                {myDevices.length > 0 ? (
-                  <div style={{ display: 'flex', flexWrap: 'wrap', gap: '6px' }}>
-                    {myDevices.map(device => (
-                      <span key={device.messengerId.toString()} style={{ fontSize: '0.8rem', background: 'rgba(129,140,248,0.1)', border: '1px solid rgba(129,140,248,0.25)', color: '#818CF8', padding: '2px 10px', borderRadius: '10px', fontWeight: 500 }}>
-                        {getVenueName(device.venueId)}
-                      </span>
-                    ))}
-                  </div>
-                ) : (
-                  <span style={{ fontSize: '0.8rem', color: '#64748b' }}>None</span>
-                )}
-              </div>
-            </div>
-
-            {/* Connection error debug panel */}
-            {connectionError && (
-              <div style={{ background: 'rgba(239,68,68,0.08)', border: '1px solid rgba(239,68,68,0.3)', borderRadius: '12px', padding: '14px 16px' }}>
-                <div style={{ fontSize: '0.72rem', fontWeight: 700, color: '#EF4444', textTransform: 'uppercase', letterSpacing: '0.06em', marginBottom: '8px' }}>Connection Error</div>
-                <div style={{ fontFamily: 'monospace', fontSize: '0.8rem', color: '#FCA5A5', wordBreak: 'break-all', lineHeight: 1.5 }}>
-                  {connectionError.message}
-                </div>
-                {connectionError.stack && (
-                  <details style={{ marginTop: '8px' }}>
-                    <summary style={{ fontSize: '0.72rem', color: '#EF4444', cursor: 'pointer', userSelect: 'none' }}>Stack trace</summary>
-                    <pre style={{ fontSize: '0.7rem', color: '#7F1D1D', marginTop: '6px', whiteSpace: 'pre-wrap', wordBreak: 'break-all' }}>{connectionError.stack}</pre>
-                  </details>
-                )}
-                <div style={{ marginTop: '10px', fontSize: '0.75rem', color: '#94A3B8' }}>
-                  URI: <code style={{ fontFamily: 'monospace', color: '#F8FAFC' }}>{(localStorage.getItem('spacetime_uri') || 'ws://127.0.0.1:3000').replace('://localhost', '://127.0.0.1')}</code>
-                  {' · '}DB: <code style={{ fontFamily: 'monospace', color: '#F8FAFC' }}>{localStorage.getItem('spacetime_db') || 'spacetimedb-node-project-gybhi'}</code>
-                </div>
-                {(localStorage.getItem('spacetime_uri') || '').includes('localhost') && (
-                  <button
-                    onClick={() => {
-                      localStorage.setItem('spacetime_uri', (localStorage.getItem('spacetime_uri') || '').replace('://localhost', '://127.0.0.1'));
-                      window.location.reload();
-                    }}
-                    style={{ marginTop: '10px', padding: '6px 12px', background: '#EF4444', color: '#fff', border: 'none', borderRadius: '6px', fontSize: '0.75rem', fontWeight: 600, cursor: 'pointer' }}
-                  >
-                    Fix: Replace localhost → 127.0.0.1 &amp; Reload
-                  </button>
-                )}
-                {localStorage.getItem('auth_token') && (
-                  <button
-                    onClick={() => {
-                      localStorage.removeItem('auth_token');
-                      window.location.reload();
-                    }}
-                    style={{ marginTop: '10px', marginLeft: '8px', padding: '6px 12px', background: '#64748B', color: '#fff', border: 'none', borderRadius: '6px', fontSize: '0.75rem', fontWeight: 600, cursor: 'pointer' }}
-                  >
-                    Reset Auth Token
-                  </button>
-                )}
-              </div>
-            )}
-
             {/* Message list */}
             <h3 style={{ fontSize: '0.85rem', fontWeight: 600, color: '#475569', textTransform: 'uppercase', letterSpacing: '0.06em', margin: 0, borderBottom: '1px solid rgba(255,255,255,0.06)', paddingBottom: '10px' }}>Recent Messages</h3>
 
@@ -660,6 +588,62 @@ export const SettingsScreen = () => {
                 <span style={{ fontSize: '0.75rem', fontWeight: 600, color: '#94A3B8' }}>Device ID</span>
                 <span style={{ fontSize: '0.75rem', fontFamily: 'monospace', color: '#64748b' }}>{machineUid}</span>
               </div>
+
+              {/* Connection debug panel (moved from logs) */}
+              {connectionError && (
+                <div style={{ marginTop: '12px', background: 'rgba(239,68,68,0.08)', border: '1px solid rgba(239,68,68,0.3)', borderRadius: '12px', padding: '14px 16px' }}>
+                  <div style={{ fontSize: '0.72rem', fontWeight: 700, color: '#EF4444', textTransform: 'uppercase', letterSpacing: '0.06em', marginBottom: '8px' }}>Connection Error</div>
+                  <div style={{ fontFamily: 'monospace', fontSize: '0.8rem', color: '#FCA5A5', wordBreak: 'break-all', lineHeight: 1.5 }}>
+                    {connectionError.message}
+                  </div>
+                  {connectionError.stack && (
+                    <details style={{ marginTop: '8px' }}>
+                      <summary style={{ fontSize: '0.72rem', color: '#EF4444', cursor: 'pointer', userSelect: 'none' }}>Stack trace</summary>
+                      <pre style={{ fontSize: '0.7rem', color: '#7F1D1D', marginTop: '6px', whiteSpace: 'pre-wrap', wordBreak: 'break-all' }}>{connectionError.stack}</pre>
+                    </details>
+                  )}
+                  <div style={{ marginTop: '10px', fontSize: '0.75rem', color: '#94A3B8' }}>
+                    URI: <code style={{ fontFamily: 'monospace', color: '#F8FAFC' }}>{(localStorage.getItem('spacetime_uri') || 'ws://127.0.0.1:3000').replace('://localhost', '://127.0.0.1')}</code>
+                    {' · '}DB: <code style={{ fontFamily: 'monospace', color: '#F8FAFC' }}>{localStorage.getItem('spacetime_db') || 'spacetimedb-node-project-gybhi'}</code>
+                  </div>
+                  {(localStorage.getItem('spacetime_uri') || '').includes('localhost') && (
+                    <button
+                      onClick={() => {
+                        localStorage.setItem('spacetime_uri', (localStorage.getItem('spacetime_uri') || '').replace('://localhost', '://127.0.0.1'));
+                        window.location.reload();
+                      }}
+                      style={{ marginTop: '10px', padding: '6px 12px', background: '#EF4444', color: '#fff', border: 'none', borderRadius: '6px', fontSize: '0.75rem', fontWeight: 600, cursor: 'pointer' }}
+                    >
+                      Fix: Replace localhost → 127.0.0.1 &amp; Reload
+                    </button>
+                  )}
+                </div>
+              )}
+
+              {/* Reset button (moved from logs) */}
+              {connectionError && localStorage.getItem('auth_token') && (
+                <button
+                  onClick={() => {
+                    if (window.confirm("Reset authentication token and reload?")) {
+                      localStorage.removeItem('auth_token');
+                      window.location.reload();
+                    }
+                  }}
+                  style={{ marginTop: '12px', width: '100%', padding: '10px', background: 'rgba(255,255,255,0.05)', color: '#94A3B8', border: '1px solid rgba(255,255,255,0.1)', borderRadius: '10px', fontSize: '0.85rem', fontWeight: 600, cursor: 'pointer', transition: 'all 0.2s' }}
+                  onMouseEnter={(e) => {
+                    e.currentTarget.style.background = 'rgba(239, 68, 68, 0.1)';
+                    e.currentTarget.style.color = '#EF4444';
+                    e.currentTarget.style.borderColor = 'rgba(239, 68, 68, 0.2)';
+                  }}
+                  onMouseLeave={(e) => {
+                    e.currentTarget.style.background = 'rgba(255,255,255,0.05)';
+                    e.currentTarget.style.color = '#94A3B8';
+                    e.currentTarget.style.borderColor = 'rgba(255,255,255,0.1)';
+                  }}
+                >
+                  Reset Auth Token
+                </button>
+              )}
             </section>
 
             {/* Display & Position */}
