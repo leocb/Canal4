@@ -4,7 +4,7 @@ import { useTable, useReducer } from 'spacetimedb/react';
 import { tables, reducers } from '../module_bindings/index.ts';
 import { useReadyTable } from '../hooks/useReadyTable';
 import { useAuth } from '../hooks/useAuth';
-import { MoreVertical, Settings, Send, History, LayoutTemplate, Repeat, Trash2, UserX, Clock, Play, CheckCircle2, AlertCircle, WifiOff, Monitor, XCircle } from 'lucide-react';
+import { MoreVertical, Settings, Send, History, LayoutTemplate, Repeat, Trash2, UserX, Clock, Play, CheckCircle2, AlertCircle, WifiOff, Monitor, XCircle, ArrowLeft } from 'lucide-react';
 
 export const ChannelScreen = () => {
   const { venueLink, channelId } = useParams<{ venueLink: string, channelId: string }>();
@@ -103,7 +103,9 @@ export const ChannelScreen = () => {
     return (
       <div className="app-container empty-state">
         <h2>Channel not found</h2>
-        <button onClick={() => navigate(-1)} style={{ marginTop: '16px' }}>Go back</button>
+        <button onClick={() => navigate(-1)} style={{ marginTop: '16px', display: 'flex', alignItems: 'center', gap: '8px' }}>
+          <ArrowLeft size={16} /> Go back
+        </button>
       </div>
     );
   }
@@ -112,7 +114,9 @@ export const ChannelScreen = () => {
       <div className="app-container empty-state">
         <h2>Access Denied</h2>
         <p style={{ marginTop: '8px', color: 'var(--text-secondary)' }}>You are not a member of this venue.</p>
-        <button onClick={() => navigate('/venues')} style={{ marginTop: '16px' }}>Go back</button>
+        <button onClick={() => navigate('/venues')} style={{ marginTop: '16px', display: 'flex', alignItems: 'center', gap: '8px' }}>
+          <ArrowLeft size={16} /> Go back
+        </button>
       </div>
     );
   }
@@ -121,7 +125,9 @@ export const ChannelScreen = () => {
       <div className="app-container empty-state">
         <h2>Access Denied</h2>
         <p style={{ marginTop: '8px', color: 'var(--text-secondary)' }}>You have been blocked in this venue.</p>
-        <button onClick={() => navigate('/venues')} style={{ marginTop: '16px' }}>Go back</button>
+        <button onClick={() => navigate('/venues')} style={{ marginTop: '16px', display: 'flex', alignItems: 'center', gap: '8px' }}>
+          <ArrowLeft size={16} /> Go back
+        </button>
       </div>
     );
   }
@@ -275,10 +281,10 @@ export const ChannelScreen = () => {
         <div className="screen-header">
           <div className="flex-col" style={{ gap: '4px' }}>
             <span
-              style={{ fontSize: '0.9rem', color: 'var(--accent-color)', cursor: 'pointer', fontWeight: 500 }}
+              style={{ fontSize: '0.9rem', color: 'var(--accent-color)', cursor: 'pointer', fontWeight: 500, display: 'inline-flex', alignItems: 'center', gap: '4px' }}
               onClick={() => navigate(`/venues/${venue.link}`)}
             >
-              ← {venue.name}
+              <ArrowLeft size={16} style={{ transform: 'translateY(1px)' }} /> {venue.name}
             </span>
             <h2>{channel.name}</h2>
           </div>
@@ -314,11 +320,12 @@ export const ChannelScreen = () => {
         {isModerator && (
           <div style={{ padding: '24px 24px 0' }}>
             <div className="glass-panel" style={{ padding: '4px', background: 'var(--surface-bg)' }}>
-              <button
+
+                <button
                 type="button"
                 onClick={() => navigate(`/venues/${venue.link}/channels/${channel.channelId}/send`)}
                 style={{ width: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px', padding: '12px 16px', borderRadius: '8px' }}>
-                <Send size={18} /> Send New Broadcast
+                <Send size={18} style={{ transform: 'translateY(1px)' }} /> Send New Broadcast
               </button>
             </div>
           </div>

@@ -68,23 +68,29 @@ app.post('/api/request-pin', async (req, res) => {
       return res.status(500).json({ error: `Failed to store PIN: ${error}` });
     }
 
-    // 2. Send email
-    await transporter.sendMail({
-      from: process.env.SMTP_FROM || '"Courier" <noreply@example.com>',
-      to: email,
-      subject: 'Login PIN for Courier',
-      text: `Your login PIN is: ${pin}. It is valid for 10 minutes.`,
-      html: `<div style="font-family: sans-serif; padding: 20px; border: 1px solid #eee; border-radius: 10px;">
-        <h2 style="color: #333;">Courier Notifications</h2>
-        <p>Your login PIN is:</p>
-        <div style="font-size: 24px; font-weight: bold; letter-spacing: 4px; padding: 15px; background: #f4f4f4; border-radius: 5px; text-align: center;">
-          ${pin}
-        </div>
-        <p style="color: #666; font-size: 14px; margin-top: 20px;">
-          This PIN is valid for 10 minutes. If you did not request this, please ignore this email.
-        </p>
-      </div>`,
-    });
+    // 2. Send email (Dev mode: Log to console, Prod mode: Send via SMTP)
+    const isDev = !process.env.NODE_ENV || process.env.NODE_ENV === 'development';
+
+    if (isDev) {
+      console.log(`Email: ${email} - PIN: ${pin}`);
+    } else {
+      await transporter.sendMail({
+        from: process.env.SMTP_FROM || '"Canal4 Login PIN" <noreply@example.com>',
+        to: email,
+        subject: 'Login PIN for Canal4',
+        text: `Your login PIN is: ${pin}. It is valid for 10 minutes.`,
+        html: `<div style="font-family: sans-serif; padding: 20px; border: 1px solid #eee; border-radius: 10px;">
+          <h2 style="color: #333;">Canal4</h2>
+          <p>Your login PIN is:</p>
+          <div style="font-size: 24px; font-weight: bold; letter-spacing: 4px; padding: 15px; background: #f4f4f4; border-radius: 5px; text-align: center;">
+            ${pin}
+          </div>
+          <p style="color: #666; font-size: 14px; margin-top: 20px;">
+            This PIN is valid for 10 minutes. If you did not request this, please ignore this email.
+          </p>
+        </div>`,
+      });
+    }
 
     res.json({ success: true });
   } catch (error) {
@@ -101,6 +107,13 @@ app.get(/.*/, (req, res) => {
   res.sendFile(path.join(__dirname, 'dist', 'index.html'));
 });
 
-app.listen(PORT, () => {
+app.listen(PORT, '0.0.0.0', () => {
   console.log(`Server is running on port ${PORT}`);
+}).on('error', (err) => {
+  if (err.code === 'EADDRINUSE') {
+    console.error(`Error: Port ${PORT} is already in use.`);
+    process.exit(1);
+  } else {
+    console.error('Server error:', err);
+  }
 });

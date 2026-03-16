@@ -2,7 +2,7 @@ import { useState, useRef, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { useTable, useReducer } from 'spacetimedb/react';
 import { tables, reducers } from '../module_bindings/index.ts';
-import { MoreVertical, Plus, Monitor, Settings, Shield, UserPlus, Bell, LogOut, Copy, Check, X, Share } from 'lucide-react';
+import { MoreVertical, Plus, Monitor, Settings, Shield, UserPlus, Bell, LogOut, Copy, Check, X, Share, AlertTriangle, ArrowLeft } from 'lucide-react';
 import { useReadyTable } from '../hooks/useReadyTable';
 import { useAuth } from '../hooks/useAuth';
 import QRCode from "react-qr-code";
@@ -185,10 +185,10 @@ export const VenueChannelsScreen = () => {
         <div className="screen-header">
           <div className="flex-col" style={{ gap: '4px' }}>
             <span
-              style={{ fontSize: '0.9rem', color: 'var(--accent-color)', cursor: 'pointer', fontWeight: 500 }}
+              style={{ fontSize: '0.9rem', color: 'var(--accent-color)', cursor: 'pointer', fontWeight: 500, display: 'inline-flex', alignItems: 'center', gap: '4px' }}
               onClick={() => navigate('/venues')}
             >
-              ← Back to Venues
+              <ArrowLeft size={16} /> Back to Venues
             </span>
             <h2>{venue.name}</h2>
           </div>
@@ -401,8 +401,11 @@ export const VenueChannelsScreen = () => {
                 background: 'rgba(255,80,80,0.1)',
                 borderRadius: '8px',
                 border: '1px solid var(--error-color)',
+                display: 'flex',
+                alignItems: 'center',
+                gap: '8px'
               }}>
-                ⚠️ {leaveErrorText}
+                <AlertTriangle size={18} style={{ flexShrink: 0 }} /> {leaveErrorText}
               </div>
             )}
 

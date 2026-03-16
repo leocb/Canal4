@@ -4,6 +4,7 @@ import { useTable, useReducer } from 'spacetimedb/react';
 import { tables, reducers } from '../module_bindings/index.ts';
 import { useAuth } from '../hooks/useAuth';
 import { useReadyTable } from '../hooks/useReadyTable';
+import { Search, CheckCircle, Building2, AlertTriangle } from 'lucide-react';
 
 export const JoinVenueScreen = () => {
   const { venueLink, token } = useParams<{ venueLink: string, token: string }>();
@@ -53,7 +54,9 @@ export const JoinVenueScreen = () => {
     return (
       <div className="app-container" style={{ alignItems: 'center', justifyContent: 'center' }}>
         <div className="glass-panel" style={{ padding: '48px', textAlign: 'center', maxWidth: '400px', width: '100%' }}>
-          <div style={{ fontSize: '3rem', marginBottom: '16px' }}>🔍</div>
+          <div style={{ color: 'var(--text-secondary)', marginBottom: '16px' }}>
+            <Search size={48} />
+          </div>
           <h2 style={{ marginBottom: '12px' }}>Invite Not Found</h2>
           <p style={{ color: 'var(--text-secondary)', marginBottom: '24px' }}>
             This invite link is invalid or the venue no longer exists.
@@ -70,7 +73,9 @@ export const JoinVenueScreen = () => {
     return (
       <div className="app-container" style={{ alignItems: 'center', justifyContent: 'center' }}>
         <div className="glass-panel" style={{ padding: '48px', textAlign: 'center', maxWidth: '400px', width: '100%' }}>
-          <div style={{ fontSize: '3rem', marginBottom: '16px' }}>✅</div>
+          <div style={{ color: 'var(--success-color)', marginBottom: '16px' }}>
+            <CheckCircle size={48} />
+          </div>
           <h2 style={{ marginBottom: '12px' }}>Already a Member</h2>
           <p style={{ color: 'var(--text-secondary)', marginBottom: '24px' }}>
             You are already a member of <strong>{venue.name}</strong>.
@@ -100,7 +105,9 @@ export const JoinVenueScreen = () => {
   return (
     <div className="app-container" style={{ alignItems: 'center', justifyContent: 'center' }}>
       <div className="glass-panel" style={{ padding: '48px', textAlign: 'center', maxWidth: '400px', width: '100%' }}>
-        <div style={{ fontSize: '3rem', marginBottom: '16px' }}>🏢</div>
+        <div style={{ color: 'var(--accent-color)', marginBottom: '16px' }}>
+          <Building2 size={48} />
+        </div>
         <p style={{ color: 'var(--text-secondary)', marginBottom: '8px', fontSize: '0.9rem' }}>
           You've been invited to
         </p>
@@ -118,8 +125,12 @@ export const JoinVenueScreen = () => {
             background: 'rgba(255,80,80,0.1)',
             borderRadius: '8px',
             border: '1px solid var(--error-color)',
+            display: 'flex',
+            alignItems: 'center',
+            gap: '8px',
+            textAlign: 'left'
           }}>
-            ⚠️ {errorText}
+            <AlertTriangle size={18} style={{ flexShrink: 0 }} /> {errorText}
           </div>
         )}
 

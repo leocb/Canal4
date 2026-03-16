@@ -3,7 +3,7 @@ import { useNavigate, useParams } from 'react-router-dom';
 import { useAuth } from '../hooks/useAuth';
 import { useTable, useReducer } from 'spacetimedb/react';
 import { reducers, tables } from '../module_bindings/index.ts';
-import { ArrowLeft, Send, CheckCircle } from 'lucide-react';
+import { ArrowLeft, Send, CheckCircle, AlertTriangle } from 'lucide-react';
 
 interface TemplateField {
   id: string; // Internal id for reordering
@@ -250,7 +250,7 @@ export const SendMessageScreen = () => {
               }
             }}
           >
-            <ArrowLeft size={20} />
+            <ArrowLeft size={20} style={{ transform: 'translateY(1px)' }} />
           </button>
           <h2>Send Message</h2>
         </div>
@@ -291,8 +291,9 @@ export const SendMessageScreen = () => {
                   padding: '10px 14px', marginBottom: '16px',
                   background: 'rgba(255,80,80,0.1)', borderRadius: '8px',
                   border: '1px solid var(--error-color)',
+                  display: 'flex', alignItems: 'center', gap: '8px'
                 }}>
-                  ⚠️ {serverError}
+                  <AlertTriangle size={18} style={{ flexShrink: 0, transform: 'translateY(1px)' }} /> {serverError}
                 </div>
               )}
 

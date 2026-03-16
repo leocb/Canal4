@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { AlertTriangle, ArrowLeft } from 'lucide-react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { useTable, useReducer } from 'spacetimedb/react';
 import { tables, reducers } from '../module_bindings/index.ts';
@@ -65,7 +66,9 @@ export const AddNodeScreen = () => {
   return (
     <div className="app-container" style={{ alignItems: 'center', justifyContent: 'center' }}>
       <div className="screen-header" style={{ width: '100%', maxWidth: '400px' }}>
-        <button className="secondary" onClick={() => navigate(-1)}>← Back</button>
+        <button className="secondary" onClick={() => navigate(-1)} style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+          <ArrowLeft size={16} /> Back
+        </button>
       </div>
 
       <form onSubmit={handlePairing} className="glass-panel" style={{ padding: '40px', textAlign: 'center', width: '100%', maxWidth: '400px', marginTop: '16px' }}>
@@ -81,8 +84,12 @@ export const AddNodeScreen = () => {
             background: 'rgba(255,80,80,0.1)',
             borderRadius: '8px',
             border: '1px solid var(--error-color)',
+            display: 'flex',
+            alignItems: 'center',
+            gap: '8px',
+            textAlign: 'left'
           }}>
-            ⚠️ {errorText}
+            <AlertTriangle size={18} style={{ flexShrink: 0 }} /> {errorText}
           </div>
         )}
 

@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { AlertTriangle } from 'lucide-react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { reducers, tables } from '../module_bindings/index.ts';
 import { useReducer, useTable } from 'spacetimedb/react';
@@ -147,18 +148,21 @@ export const LoginScreen = () => {
         <h2 style={{ marginBottom: '24px', fontSize: '1.8rem' }}>Courier Notifications</h2>
 
         {errorText && view !== 'email' && (
-          <div style={{
-            color: 'var(--error-color)',
-            marginBottom: '16px',
-            fontSize: '0.9rem',
-            padding: '10px 14px',
-            background: 'rgba(255,80,80,0.1)',
-            borderRadius: '8px',
-            border: '1px solid var(--error-color)',
-            textAlign: 'left',
-          }}>
-            ⚠️ {errorText}
-          </div>
+            <div style={{
+              color: 'var(--error-color)',
+              marginBottom: '16px',
+              fontSize: '0.9rem',
+              padding: '12px',
+              background: 'rgba(255,80,80,0.1)',
+              borderRadius: '8px',
+              border: '1px solid var(--error-color)',
+              display: 'flex',
+              alignItems: 'center',
+              gap: '8px',
+              textAlign: 'left'
+            }}>
+              <AlertTriangle size={18} style={{ flexShrink: 0 }} /> {errorText}
+            </div>
         )}
 
 
@@ -195,6 +199,7 @@ export const LoginScreen = () => {
             <p style={{ fontSize: '0.9rem', color: 'var(--text-secondary)', marginBottom: '16px' }}>
               We've sent a 6-digit code to <strong>{email}</strong>
             </p>
+
 
             <input
               type="text"

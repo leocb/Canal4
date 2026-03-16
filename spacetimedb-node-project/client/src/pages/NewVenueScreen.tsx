@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { useTable, useReducer } from 'spacetimedb/react';
 import { tables, reducers } from '../module_bindings/index.ts';
 import { useAuth } from '../hooks/useAuth';
+import { AlertTriangle, ArrowLeft } from 'lucide-react';
 
 const ADJECTIVES = ['fast', 'happy', 'clever', 'brave', 'calm', 'eager', 'gentle', 'proud', 'witty', 'bold', 'kind', 'neat', 'wise', 'zesty', 'wild', 'super', 'lucky', 'swift', 'merry', 'light'];
 const NOUNS = ['bunny', 'tiger', 'eagle', 'dolphin', 'fox', 'bear', 'lion', 'wolf', 'hawk', 'owl', 'seal', 'deer', 'swan', 'dove', 'frog', 'duck', 'goose', 'pup', 'cub', 'kit'];
@@ -61,7 +62,9 @@ export const NewVenueScreen = () => {
   return (
     <div className="app-container" style={{ alignItems: 'center', justifyContent: 'flex-start' }}>
       <div className="screen-header" style={{ width: '100%', maxWidth: '400px' }}>
-        <button className="secondary" onClick={() => navigate(-1)}>← Back</button>
+        <button className="secondary" onClick={() => navigate(-1)} style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+          <ArrowLeft size={16} style={{ transform: 'translateY(1px)' }} /> Back
+        </button>
       </div>
 
       <form onSubmit={handleCreateVenue} className="glass-panel" style={{ padding: '40px', textAlign: 'center', width: '100%', maxWidth: '400px' }}>
@@ -76,8 +79,12 @@ export const NewVenueScreen = () => {
             background: 'rgba(255,80,80,0.1)',
             borderRadius: '8px',
             border: '1px solid var(--error-color)',
+            display: 'flex',
+            alignItems: 'center',
+            gap: '8px',
+            textAlign: 'left'
           }}>
-            ⚠️ {errorText}
+            <AlertTriangle size={18} style={{ flexShrink: 0 }} /> {errorText}
           </div>
         )}
 

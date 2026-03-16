@@ -3,6 +3,7 @@ import { useParams, useNavigate } from 'react-router-dom';
 import { useTable, useReducer } from 'spacetimedb/react';
 import { tables, reducers } from '../module_bindings/index.ts';
 import { useAuth } from '../hooks/useAuth';
+import { AlertTriangle, ArrowLeft } from 'lucide-react';
 
 export const NewChannelScreen = () => {
   const { venueLink } = useParams<{ venueLink: string }>();
@@ -58,7 +59,9 @@ export const NewChannelScreen = () => {
   return (
     <div className="app-container" style={{ alignItems: 'center', justifyContent: 'flex-start' }}>
       <div className="screen-header" style={{ width: '100%', maxWidth: '400px' }}>
-        <button className="secondary" onClick={() => navigate(-1)}>← Back</button>
+        <button className="secondary" onClick={() => navigate(-1)} style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+          <ArrowLeft size={16} style={{ transform: 'translateY(1px)' }} /> Back
+        </button>
       </div>
 
       <form onSubmit={handleCreateChannel} className="glass-panel" style={{ padding: '40px', textAlign: 'center', width: '100%', maxWidth: '400px' }}>
@@ -73,8 +76,12 @@ export const NewChannelScreen = () => {
             background: 'rgba(255,80,80,0.1)',
             borderRadius: '8px',
             border: '1px solid var(--error-color)',
+            display: 'flex',
+            alignItems: 'center',
+            gap: '8px',
+            textAlign: 'left'
           }}>
-            ⚠️ {errorText}
+            <AlertTriangle size={18} style={{ flexShrink: 0 }} /> {errorText}
           </div>
         )}
 

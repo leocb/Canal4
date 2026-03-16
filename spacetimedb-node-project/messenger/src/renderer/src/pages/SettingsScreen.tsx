@@ -1,4 +1,5 @@
 import { useState, useEffect, useMemo, useRef } from 'react';
+import { X, ArrowRight } from 'lucide-react';
 import { useTable, useReducer, useSpacetimeDB } from 'spacetimedb/react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { tables, reducers } from '../module_bindings';
@@ -383,7 +384,7 @@ export const SettingsScreen = () => {
                   <polyline points="22 4 12 14.01 9 11.01" />
                 </svg>
                 <span style={{ fontSize: '0.88rem', color: '#10B981', fontWeight: 500 }}>{newPairingToast}</span>
-                <button onClick={() => setNewPairingToast(null)} style={{ marginLeft: 'auto', background: 'none', border: 'none', color: '#10B981', cursor: 'pointer', fontSize: '1rem', padding: 0 }}>✕</button>
+                <X size={18} onClick={() => setNewPairingToast(null)} style={{ marginLeft: 'auto', background: 'none', border: 'none', color: '#10B981', cursor: 'pointer', padding: 0, transform: 'translateY(1px)' }} />
               </div>
             )}
             <style>{`@keyframes fadeIn { from { opacity: 0; transform: translateY(-6px); } to { opacity: 1; transform: translateY(0); } }`}</style>
@@ -443,7 +444,9 @@ export const SettingsScreen = () => {
               <h3 style={{ fontSize: '1rem', marginBottom: '8px', margin: '0 0 8px' }}>Register with a New Venue</h3>
               <p style={{ fontSize: '0.85rem', color: '#94A3B8', marginBottom: '20px', lineHeight: 1.5, margin: '0 0 20px' }}>
                 Generate a 6-digit PIN, then enter it in the Web Dashboard under{' '}
-                <strong style={{ color: '#F8FAFC' }}>Venue → Desktop Displays → Add Node</strong>.
+                <strong style={{ color: '#F8FAFC', display: 'flex', alignItems: 'center', gap: '4px' }}>
+                  Venue <ArrowRight size={12} style={{ transform: 'translateY(1px)' }} /> Desktop Displays <ArrowRight size={12} style={{ transform: 'translateY(1px)' }} /> Add Node
+                </strong>.
               </p>
 
               {activePin ? (

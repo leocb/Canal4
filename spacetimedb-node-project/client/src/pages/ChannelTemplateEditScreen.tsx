@@ -3,7 +3,7 @@ import { useNavigate, useParams } from 'react-router-dom';
 import { useAuth } from '../hooks/useAuth';
 import { useTable, useReducer } from 'spacetimedb/react';
 import { reducers, tables } from '../module_bindings/index.ts';
-import { ArrowLeft, Plus, Trash2, ArrowUp, ArrowDown, Settings2, Code, FileText, Check } from 'lucide-react';
+import { ArrowLeft, Plus, Trash2, ArrowUp, ArrowDown, Settings2, Code, FileText, Check, AlertTriangle } from 'lucide-react';
 
 interface TemplateField {
   id: string; // Internal id for reordering
@@ -212,7 +212,7 @@ export const ChannelTemplateEditScreen = () => {
             className="icon-button" 
             onClick={() => navigate(`/venues/${venue.link}/channels/${channel.channelId}/templates`)}
           >
-            <ArrowLeft size={20} />
+            <ArrowLeft size={20} style={{ transform: 'translateY(1px)' }} />
           </button>
           <h2>{isNew ? 'New Template' : 'Edit Template'}</h2>
         </div>
@@ -238,8 +238,11 @@ export const ChannelTemplateEditScreen = () => {
               background: 'rgba(255,80,80,0.1)',
               borderRadius: '8px',
               border: '1px solid var(--error-color)',
+              display: 'flex',
+              alignItems: 'center',
+              gap: '8px'
             }}>
-              ⚠️ {errorText}
+              <AlertTriangle size={18} style={{ flexShrink: 0 }} /> {errorText}
             </div>
           )}
 

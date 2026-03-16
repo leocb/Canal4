@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
-import { Trash2, ArrowLeft } from 'lucide-react';
+import { Trash2, ArrowLeft, AlertTriangle } from 'lucide-react';
 import { useAuth } from '../hooks/useAuth';
 import { useTable, useReducer } from 'spacetimedb/react';
 import { reducers, tables } from '../module_bindings/index.ts';
@@ -70,7 +70,9 @@ export const ChannelSettingsScreen = () => {
       <div className="app-container empty-state">
         <h2>Access Denied</h2>
         <p style={{ marginTop: '8px', color: 'var(--text-secondary)' }}>Only channel owners can access these settings.</p>
-        <button onClick={() => navigate(`/venues/${venue.link}/channels/${channel.channelId}`)} style={{ marginTop: '16px' }}>Go back</button>
+        <button onClick={() => navigate(-1)} style={{ marginTop: '16px', display: 'flex', alignItems: 'center', gap: '8px' }}>
+          <ArrowLeft size={16} /> Go back
+        </button>
       </div>
     );
   }
@@ -127,8 +129,9 @@ export const ChannelSettingsScreen = () => {
             className="icon-button"
             onClick={() => navigate(`/venues/${venue.link}/channels/${channel.channelId}`)}
             aria-label="Back to channel"
+            style={{ display: 'flex', alignItems: 'center', justifyContent: 'center' }}
           >
-            <ArrowLeft size={20} />
+            <ArrowLeft size={20} style={{ transform: 'translateY(1px)' }} />
           </button>
           <h2>{channel.name} Settings</h2>
         </div>
@@ -145,8 +148,11 @@ export const ChannelSettingsScreen = () => {
               background: 'rgba(255,80,80,0.1)',
               borderRadius: '8px',
               border: '1px solid var(--error-color)',
+              display: 'flex',
+              alignItems: 'center',
+              gap: '8px'
             }}>
-              ⚠️ {errorText}
+               <AlertTriangle size={18} style={{ flexShrink: 0 }} /> {errorText}
             </div>
           )}
 

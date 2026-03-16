@@ -3,7 +3,7 @@ import { useParams, useNavigate } from 'react-router-dom';
 import { useTable, useReducer } from 'spacetimedb/react';
 import { tables, reducers } from '../module_bindings/index.ts';
 import { useAuth } from '../hooks/useAuth';
-import { Trash2, Edit2 } from 'lucide-react';
+import { Trash2, Edit2, ArrowLeft } from 'lucide-react';
 
 export const DesktopMessengerSyncScreen = () => {
   const { venueLink } = useParams<{ venueLink: string }>();
@@ -111,10 +111,10 @@ export const DesktopMessengerSyncScreen = () => {
       <div className="screen-header" style={{ flexShrink: 0 }}>
         <div className="flex-col" style={{ gap: '4px' }}>
           <span 
-            style={{ fontSize: '0.9rem', color: 'var(--accent-color)', cursor: 'pointer', fontWeight: 500 }}
+            style={{ fontSize: '0.9rem', color: 'var(--accent-color)', cursor: 'pointer', fontWeight: 500, display: 'inline-flex', alignItems: 'center', gap: '4px' }}
             onClick={() => navigate(`/venues/${venue.link}`)}
           >
-            ← Back to Channel List
+            <ArrowLeft size={16} /> Back to Channel List
           </span>
           <h2>{venue.name} Desktop Displays</h2>
         </div>
