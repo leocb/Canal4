@@ -9,7 +9,7 @@
 7. fix the ticker not being transparent
 8. fix the color picker in the settings not having a alpha value
 9. I have not tested it yet, but make sure the ticker can move between connected screens
-10. Add a "Display sample message" button on the settings to test the ticker settings
+
 11. enable a node to show only messages of selected channels. move the nove edit name to a proper screen and also add this feature there.
 12. enable unpair node in the desktop app 
 13. make the ticker immediately stop displaying a message when it's deleted.

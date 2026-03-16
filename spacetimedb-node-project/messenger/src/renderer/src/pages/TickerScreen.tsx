@@ -12,15 +12,42 @@ export const TickerScreen = () => {
     const updateStatus = useReducer(reducers.updateMessageDeliveryStatus);
     
     const [machineUid, setMachineUid] = useState<string>('');
-    const [activeMessage, setActiveMessage] = useState<{ id: bigint; messengerId: bigint; text: string; repeat: number; totalRepeats: number } | null>(null);
+    const [activeMessage, setActiveMessage] = useState<{ id: bigint; messengerId: bigint; text: string; repeat: number; totalRepeats: number; isTest?: boolean } | null>(null);
     const isAnimating = useRef(false);
-    const settings = loadTickerSettings();
+    const [settings, setSettings] = useState(loadTickerSettings());
 
     // Fix 1: Record start time with a generous buffer (5s behind) to avoid clock sync issues
     const [appStartTime] = useState<number>(() => Date.now());
     
     // Guard against race conditions where a message is finished but hasn't updated to 'Shown' in DB yet
     const effectivelyShownIds = useRef<Set<string>>(new Set());
+
+    useEffect(() => {
+        // Listen for settings changes and test messages from other windows
+        const handleStorage = (e: StorageEvent) => {
+            if (e.key === 'ticker_settings') {
+                console.log("[Ticker] Settings updated from storage");
+                setSettings(loadTickerSettings());
+            }
+            if (e.key === 'test_message' && e.newValue) {
+                console.log("[Ticker] Test message received:", e.newValue);
+                const text = e.newValue;
+                // If already showing a test message, we just update it
+                // If showing a real message, we wait? No, let's interrupt for testing
+                setActiveMessage({
+                    id: -1n,
+                    messengerId: -1n,
+                    text: text,
+                    repeat: 0,
+                    totalRepeats: loadTickerSettings().repeatCount,
+                    isTest: true
+                });
+                isAnimating.current = true;
+            }
+        };
+        window.addEventListener('storage', handleStorage);
+        return () => window.removeEventListener('storage', handleStorage);
+    }, []);
 
     useEffect(() => {
         // @ts-ignore
@@ -121,6 +148,18 @@ export const TickerScreen = () => {
 
     const handleAnimationIteration = () => {
         if (!activeMessage || !machineUid) return;
+
+        if (activeMessage.isTest) {
+            // Bypass DB checks for test messages
+            const nextRepeat = activeMessage.repeat + 1;
+            if (nextRepeat < activeMessage.totalRepeats) {
+                setActiveMessage(prev => prev ? { ...prev, repeat: nextRepeat } : null);
+            } else {
+                setActiveMessage(null);
+                isAnimating.current = false;
+            }
+            return;
+        }
 
         const msgExists = messages.some(m => BigInt(m.messageId) === BigInt(activeMessage.id));
         const deviceExists = devices.some(d => BigInt(d.messengerId) === BigInt(activeMessage.messengerId));

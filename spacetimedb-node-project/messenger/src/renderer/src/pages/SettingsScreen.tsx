@@ -227,6 +227,14 @@ export const SettingsScreen = () => {
     window.location.reload();
   };
 
+  const handleShowSample = () => {
+    // Clear first to ensure the storage event fires even if the value is the same
+    localStorage.removeItem('test_message');
+    setTimeout(() => {
+      localStorage.setItem('test_message', 'Sample Message: Testing ticker settings! (' + new Date().toLocaleTimeString() + ')');
+    }, 10);
+  };
+
   const TAB_CONFIG: { id: Tab; label: string; icon: React.ReactNode }[] = [
     { id: 'pairing', label: 'Pairing', icon: <IconLink /> },
     { id: 'logs', label: 'Log', icon: <IconList /> },
@@ -775,7 +783,24 @@ export const SettingsScreen = () => {
 
             {/* Preview */}
             <section style={sectionStyle}>
-              <h3 style={{ fontSize: '1rem', margin: '0 0 16px' }}>Preview</h3>
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px' }}>
+                <h3 style={{ fontSize: '1rem', margin: 0 }}>Preview</h3>
+                <button
+                  onClick={handleShowSample}
+                  style={{ 
+                    padding: '6px 12px', background: 'rgba(59,130,246,0.15)', color: '#3B82F6', 
+                    border: '1px solid rgba(59,130,246,0.3)', borderRadius: '8px', 
+                    fontSize: '0.75rem', fontWeight: 600, cursor: 'pointer',
+                    display: 'flex', alignItems: 'center', gap: '6px'
+                  }}
+                >
+                  <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round">
+                    <polyline points="23 4 23 10 17 10" />
+                    <path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10" />
+                  </svg>
+                  Display Test Message
+                </button>
+              </div>
               <div style={{ borderRadius: '8px', overflow: 'hidden', height: '64px', display: 'flex', alignItems: 'center', background: tickerSettings.bgColor, border: '1px solid rgba(255,255,255,0.08)' }}>
                 <div style={{ paddingLeft: '100%', animation: `marquee ${tickerSettings.scrollSpeed}s linear infinite`, fontFamily: tickerSettings.fontFamily, fontSize: `${Math.min(tickerSettings.fontSize, 32)}px`, fontWeight: tickerSettings.fontWeight, color: tickerSettings.fgColor, whiteSpace: 'nowrap' }}>
                   Sample: Welcome to Courier Notifications!
