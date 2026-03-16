@@ -2,9 +2,10 @@
 
 1. Add Email login pin (valid for 10 minutes) using a SMTP provider, configured through the .env file (host,port,user,password,from)
 2. Logins are valid for 30 days. After 30 days, the user needs to login again using the email pin method. Everytime the user open the app and login again, the expiration is extended for another 30 days.
-3. The permissions screen have some werid behavior. review.
+3. The permissions screen have some weird behavior. review.
 9. I have not tested it yet, but make sure the ticker can move between connected screens
 11. enable the option for a node to show only messages of selected channels. move the node "edit name" to a proper edit screen screen and also add the channel select feature there.
+12. The Create Venue and Create Channel screens have an unecessarly large top margin
 15. Create the installer for the desktop app (mac (intel and apple silicon) & windows)
 16. Create a docker container to deploy the web app
 17. Create docker compose file to spin up the web app and the spacetime database
