@@ -80,6 +80,13 @@ const IconArrowUp = () => (
   </svg>
 );
 
+const IconTrash = () => (
+  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+    <polyline points="3 6 5 6 21 6" /><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2" />
+    <line x1="10" y1="11" x2="10" y2="17" /><line x1="14" y1="11" x2="14" y2="17" />
+  </svg>
+);
+
 // --- Component ---
 export const SettingsScreen = () => {
   const { isActive: connected, connectionError } = useSpacetimeDB();
@@ -109,6 +116,7 @@ export const SettingsScreen = () => {
   );
 
   const requestPin = useReducer(reducers.createMessengerPin);
+  const unpair = useReducer(reducers.unpairMessenger);
 
   // PIN countdown timer state
   const [pinSecondsLeft, setPinSecondsLeft] = useState<number>(0);
@@ -368,7 +376,25 @@ export const SettingsScreen = () => {
                         <div style={{ fontWeight: 500, fontSize: '0.95rem' }}>{getVenueName(device.venueId)}</div>
                         <div style={{ fontSize: '0.75rem', color: '#64748b', marginTop: '2px' }}>as "{device.name}"</div>
                       </div>
-                      <span style={{ fontSize: '0.75rem', color: '#10B981', fontWeight: 600 }}>Active</span>
+                      <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+                        <span style={{ fontSize: '0.75rem', color: '#10B981', fontWeight: 600 }}>Active</span>
+                        <button 
+                          onClick={() => {
+                            if (window.confirm(`Unpair from "${getVenueName(device.venueId)}"? This device will stop receiving messages from this venue.`)) {
+                              unpair({ messengerId: device.messengerId });
+                            }
+                          }}
+                          style={{ 
+                            background: 'rgba(239,68,68,0.1)', color: '#EF4444', 
+                            border: '1px solid rgba(239,68,68,0.2)', borderRadius: '6px', 
+                            padding: '4px 8px', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '4px',
+                            fontSize: '0.75rem', fontWeight: 600
+                          }}
+                        >
+                          <IconTrash />
+                          Unpair
+                        </button>
+                      </div>
                     </div>
                   ))}
                 </div>

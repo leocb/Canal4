@@ -58,6 +58,7 @@ import SendMessageReducer from "./send_message_reducer";
 import SetChannelRoleReducer from "./set_channel_role_reducer";
 import SetVenueRoleReducer from "./set_venue_role_reducer";
 import UnblockUserReducer from "./unblock_user_reducer";
+import UnpairMessengerReducer from "./unpair_messenger_reducer";
 import UpdateChannelReducer from "./update_channel_reducer";
 import UpdateMessageDeliveryStatusReducer from "./update_message_delivery_status_reducer";
 import UpdateMessageTemplateReducer from "./update_message_template_reducer";
@@ -291,6 +292,7 @@ const reducersSchema = __reducers(
   __reducerSchema("set_channel_role", SetChannelRoleReducer),
   __reducerSchema("set_venue_role", SetVenueRoleReducer),
   __reducerSchema("unblock_user", UnblockUserReducer),
+  __reducerSchema("unpair_messenger", UnpairMessengerReducer),
   __reducerSchema("update_channel", UpdateChannelReducer),
   __reducerSchema("update_message_delivery_status", UpdateMessageDeliveryStatusReducer),
   __reducerSchema("update_message_template", UpdateMessageTemplateReducer),

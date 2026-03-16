@@ -915,4 +915,25 @@ export const update_messenger_name = spacetimedb.reducer(
   }
 );
 
+export const unpair_messenger = spacetimedb.reducer(
+  { messengerId: t.u64() },
+  (ctx, { messengerId }) => {
+    const device = ctx.db.MessengerDevice.messengerId.find(messengerId);
+    if (!device) throw new SenderError("Device not found");
+
+    // Allow the device ITSELF to unpair (security check: identity must match)
+    if (!device.identity.isEqual(ctx.sender)) {
+      throw new SenderError("Only the registered device identity can unpair itself.");
+    }
+
+    ctx.db.MessengerDevice.messengerId.delete(messengerId);
+    
+    // Cleanup delivery statuses
+    const statuses = [...ctx.db.MessageDeliveryStatus.delivery_status_messenger_id.filter(messengerId)];
+    for (const s of statuses) {
+      ctx.db.MessageDeliveryStatus.delete({ ...s });
+    }
+  }
+);
+
 export default spacetimedb;

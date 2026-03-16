@@ -9,16 +9,13 @@
 7. fix the ticker not being transparent
 8. fix the color picker in the settings not having a alpha value
 9. I have not tested it yet, but make sure the ticker can move between connected screens
-
-11. enable a node to show only messages of selected channels. move the nove edit name to a proper screen and also add this feature there.
-12. enable unpair node in the desktop app 
-13. make the ticker immediately stop displaying a message when it's deleted.
-14. Internally, change "delete message" to only hide the message (don't actually delete it) - this is so admins and owners can still review deleted messages in the logs
+11. enable the option for a node to show only messages of selected channels. move the node "edit name" to a proper edit screen screen and also add the channel select feature there.
+14. Internally, change "delete message" to only hide the message (don't actually delete it) - this is so admins and owners can still review deleted messages in the logs. Add "Cancelled" as a message status, don't forget to update the code for the message status badges too.
+13. make the display node ticker immediately stop displaying a message when it's deleted (hidden).
 15. Create the installer for the desktop app
 16. Create a docker container to deploy the web app
 17. Create docker compose file to spin up the web app and the spacetime database
-18. Remove default values from all apps (things that are configurable, like database host or .env values)
-19. remove all debug and log string
+18. Remove default values from all apps (remove from things that are configurable, like database host or .env values) - create env values to facilitate the dev environment
 20. Add internationalization to the whole app: Move all the message/button/text strings to a json file compatible with weblate. Add a way to switch between languages (English and Brazillian Portuguese) - also add language detection for the user and automatically load the most appropriate language
 21. Transalte all the string to Brazillian Portuguese
 22. Rebrand the App to "Canal4". Change all relevant strings
