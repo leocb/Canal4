@@ -357,23 +357,36 @@ export const SettingsScreen = () => {
                         <div style={{ fontWeight: 500, fontSize: '0.95rem' }}>{getVenueName(device.venueId)}</div>
                         <div style={{ fontSize: '0.75rem', color: '#64748b', marginTop: '2px' }}>as "{device.name}"</div>
                       </div>
-                      <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
-                        <span style={{ fontSize: '0.75rem', color: '#10B981', fontWeight: 600 }}>Active</span>
+                      <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
                         <button
                           onClick={() => {
                             if (window.confirm(`Unpair from "${getVenueName(device.venueId)}"? This device will stop receiving messages from this venue.`)) {
                               unpair({ messengerId: device.messengerId });
                             }
                           }}
+                          title="Unpair Node"
                           style={{
-                            background: 'rgba(239,68,68,0.1)', color: '#EF4444',
-                            border: '1px solid rgba(239,68,68,0.2)', borderRadius: '6px',
-                            padding: '4px 8px', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '4px',
-                            fontSize: '0.75rem', fontWeight: 600
+                            background: 'rgba(239, 68, 68, 0.1)',
+                            color: '#EF4444',
+                            border: '1px solid rgba(239, 68, 68, 0.2)',
+                            borderRadius: '8px',
+                            padding: '8px',
+                            cursor: 'pointer',
+                            display: 'flex',
+                            alignItems: 'center',
+                            justifyContent: 'center',
+                            transition: 'all 0.2s',
+                          }}
+                          onMouseEnter={(e) => {
+                            e.currentTarget.style.background = 'rgba(239, 68, 68, 0.2)';
+                            e.currentTarget.style.borderColor = 'rgba(239, 68, 68, 0.4)';
+                          }}
+                          onMouseLeave={(e) => {
+                            e.currentTarget.style.background = 'rgba(239, 68, 68, 0.1)';
+                            e.currentTarget.style.borderColor = 'rgba(239, 68, 68, 0.2)';
                           }}
                         >
                           <IconTrash />
-                          Unpair
                         </button>
                       </div>
                     </div>
