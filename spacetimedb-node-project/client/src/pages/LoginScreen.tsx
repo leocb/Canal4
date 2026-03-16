@@ -11,29 +11,36 @@ export const LoginScreen = () => {
   const { user, isLoggedIn, connected } = useAuth();
   const [email, setEmail] = useState('');
   const [pin, setPin] = useState('');
+  const [fullName, setFullName] = useState('');
   const [loading, setLoading] = useState(false);
   const [errorText, setErrorText] = useState('');
-  const [view, setView] = useState<'options' | 'email' | 'pin'>('options');
+  const [view, setView] = useState<'email' | 'pin' | 'name'>('email');
+  const [isCreatingAccount, setIsCreatingAccount] = useState(false);
 
   const loginWithEmailPin = useReducer(reducers.loginWithEmailPin);
+  const updateUserName = useReducer(reducers.updateUserName);
   const [pins] = useTable(tables.EmailLoginPin);
   const [lockouts] = useTable(tables.LoginLockout);
+  const [users] = useTable(tables.User);
+
+  const validateEmail = (emailStr: string) => {
+    return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(emailStr);
+  };
 
   // If already logging in (loading=true), keep spinner until auth resolves
   useEffect(() => {
-    if (isLoggedIn && user?.name) {
+    if (isLoggedIn && user?.name && !isCreatingAccount) {
       setLoading(false);
       navigate(redirect, { replace: true });
     }
-  }, [isLoggedIn, user, navigate, redirect]);
+  }, [isLoggedIn, user, navigate, redirect, isCreatingAccount]);
 
-  if (isLoggedIn && user?.name) {
+  if (isLoggedIn && user?.name && !isCreatingAccount) {
     return null;
   }
-
   const handleEmailSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!email) return;
+    if (!validateEmail(email.trim())) return;
     setErrorText('');
     setLoading(true);
 
@@ -65,6 +72,12 @@ export const LoginScreen = () => {
 
     try {
       const normalizedEmail = email.trim().toLowerCase();
+      // Check if this is a brand new account BEFORE we call the login reducer
+      const accountExists = users.some(u => u.email?.trim().toLowerCase() === normalizedEmail);
+      if (!accountExists) {
+        setIsCreatingAccount(true);
+      }
+      
       await loginWithEmailPin({
         email: normalizedEmail,
         pin: pin.trim()
@@ -73,7 +86,14 @@ export const LoginScreen = () => {
       // Wait for SpacetimeDB to sync the state changes back to us
       await new Promise(resolve => setTimeout(resolve, 800));
 
-      // 1. Are we logged in now?
+      // 1. If the account didn't exist before, it's a signup - go to name screen
+      if (!accountExists) {
+        setView('name');
+        setLoading(false);
+        return;
+      }
+
+      // If we are logged in now, the useEffect will handle navigation
       if (isLoggedIn) return;
 
       // 2. Check for Lockout
@@ -101,12 +121,32 @@ export const LoginScreen = () => {
     }
   };
 
+  const handleNameSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!fullName.trim() || !user) return;
+    setErrorText('');
+    setLoading(true);
+
+    try {
+      await updateUserName({
+        userId: user.userId,
+        newName: fullName.trim()
+      });
+      
+      setIsCreatingAccount(false); 
+      setLoading(false);
+    } catch (err: any) {
+      setLoading(false);
+      setErrorText(err.message || 'Error updating name');
+    }
+  };
+
   return (
     <div className="app-container" style={{ alignItems: 'center', justifyContent: 'center' }}>
       <div className="glass-panel" style={{ padding: '40px', textAlign: 'center', width: '100%', maxWidth: '400px' }}>
         <h2 style={{ marginBottom: '24px', fontSize: '1.8rem' }}>Courier Notifications</h2>
 
-        {errorText && (
+        {errorText && view !== 'email' && (
           <div style={{
             color: 'var(--error-color)',
             marginBottom: '16px',
@@ -121,16 +161,6 @@ export const LoginScreen = () => {
           </div>
         )}
 
-        {view === 'options' && (
-          <div className="flex-col">
-            <button
-              style={{ width: '100%' }}
-              onClick={() => setView('email')}
-            >
-              Sign-in via email
-            </button>
-          </div>
-        )}
 
         {view === 'email' && (
           <form onSubmit={handleEmailSubmit} className="flex-col">
@@ -140,21 +170,22 @@ export const LoginScreen = () => {
               type="email"
               placeholder="Your email address"
               value={email}
-              onChange={(e) => setEmail(e.target.value)}
+              onChange={(e) => {
+                setEmail(e.target.value);
+                if (errorText) setErrorText('');
+              }}
               required
               disabled={loading || !connected}
               autoFocus
             />
 
-            <button type="submit" disabled={loading || !connected} style={{ marginTop: '8px' }}>
+            <button 
+              type="submit" 
+              disabled={loading || !connected || !validateEmail(email)} 
+              style={{ marginTop: '16px' }}
+            >
               {loading ? 'Connecting...' : 'Continue'}
             </button>
-
-            <div style={{ marginTop: '16px' }}>
-              <a href="#" style={{ fontSize: '0.9rem' }} onClick={(e) => { e.preventDefault(); setView('options'); }}>
-                Go back
-              </a>
-            </div>
           </form>
         )}
 
@@ -181,10 +212,38 @@ export const LoginScreen = () => {
             </button>
 
             <div style={{ marginTop: '16px' }}>
-              <a href="#" style={{ fontSize: '0.9rem' }} onClick={(e) => { e.preventDefault(); setView('email'); setPin(''); }}>
+              <a href="#" style={{ fontSize: '0.9rem' }} onClick={(e) => { 
+                e.preventDefault(); 
+                setView('email'); 
+                setPin(''); 
+                setErrorText('');
+              }}>
                 Use a different email
               </a>
             </div>
+          </form>
+        )}
+
+        {view === 'name' && (
+          <form onSubmit={handleNameSubmit} className="flex-col">
+            <h3 style={{ marginBottom: '16px' }}>What should we call you?</h3>
+            <p style={{ fontSize: '0.9rem', color: 'var(--text-secondary)', marginBottom: '16px' }}>
+              We'll use this name for your profile and notifications.
+            </p>
+
+            <input
+              type="text"
+              placeholder="Your Full Name"
+              value={fullName}
+              onChange={(e) => setFullName(e.target.value)}
+              required
+              disabled={loading}
+              autoFocus
+            />
+
+            <button type="submit" disabled={loading || !fullName.trim()} style={{ marginTop: '16px' }}>
+              {loading ? 'Saving...' : 'Complete Sign-up'}
+            </button>
           </form>
         )}
       </div>
