@@ -11,6 +11,7 @@ declare global {
       onTokenUpdated: (callback: (token: string) => void) => void,
       showTicker: () => void,
       hideTicker: () => void,
+      updateTickerPosition: (position: 'top' | 'bottom') => void,
     }
   }
 }

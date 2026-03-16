@@ -75,6 +75,14 @@ export const TickerScreen = () => {
         }
     }, [!!activeMessage, connected]);
 
+    // Window Position Control
+    useEffect(() => {
+        if (window.api?.updateTickerPosition) {
+            console.log("[Ticker] Updating window position to:", settings.position);
+            window.api.updateTickerPosition(settings.position);
+        }
+    }, [settings.position]);
+
     // Cleanup finished IDs once DB reflects 'Shown' status
     useEffect(() => {
         const myDevices = devices.filter(d => d.uid === machineUid);

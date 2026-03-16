@@ -183,6 +183,15 @@ app.whenReady().then(() => {
     tickerWindow?.hide();
   });
 
+  ipcMain.on('update-ticker-position', (_event, position: 'top' | 'bottom') => {
+    if (!tickerWindow) return;
+    const primaryDisplay = screen.getPrimaryDisplay();
+    const { width, height, y: offsetY } = primaryDisplay.workArea;
+    const windowHeight = 80;
+    const y = position === 'top' ? offsetY : offsetY + height - windowHeight;
+    tickerWindow.setBounds({ x: 0, y, width, height: windowHeight });
+  });
+
   // App is fundamentally a background tray app, we only show Settings if opened directly on MacOS
   app.on('activate', function () {
     if (!settingsWindow) createSettingsWindow('pairing')
