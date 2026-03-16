@@ -238,6 +238,22 @@ export const TickerScreen = () => {
         }
     };
 
+    // Stop message if cancelled remotely
+    useEffect(() => {
+        if (!activeMessage || activeMessage.isTest) return;
+        
+        const currentStatus = Array.from(statuses).find(s => 
+            BigInt(s.messageId) === BigInt(activeMessage.id) && 
+            BigInt(s.messengerId) === BigInt(activeMessage.messengerId)
+        );
+
+        if (currentStatus?.status.tag === 'Cancelled') {
+            console.log("[Ticker] Actively displayed message was cancelled, stopping immediately.");
+            setActiveMessage(null);
+            isAnimating.current = false;
+        }
+    }, [statuses, activeMessage]);
+
     if (!activeMessage || !connected) return null;
 
     return (

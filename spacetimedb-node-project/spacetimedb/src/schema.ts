@@ -19,6 +19,7 @@ export const DeliveryStatus = t.enum("DeliveryStatus", {
   InProgress: t.string(),
   Shown: t.string(),
   Unavailable: t.string(),
+  Cancelled: t.string(),
 });
 
 // Tables

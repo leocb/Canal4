@@ -225,7 +225,8 @@ export const SettingsScreen = () => {
     if (statuses.length === 0) return 'rgba(59,130,246,0.5)';
 
     if (statuses.some(s => s === 'InProgress')) return '#3B82F6';
-    if (statuses.some(s => s === 'Unavailable')) return '#EF4444';
+    if (statuses.some(s => s === 'Unavailable')) return '#F59E0B';
+    if (statuses.every(s => s === 'Cancelled')) return '#EF4444';
     if (statuses.every(s => s === 'Shown')) return '#10B981';
     if (statuses.some(s => s === 'Queued')) return '#94A3B8';
 
@@ -565,12 +566,14 @@ export const SettingsScreen = () => {
                                   status === 'Shown' ? '#10B981' :
                                     status === 'InProgress' ? '#3B82F6' :
                                       status === 'Queued' ? '#94A3B8' :
-                                        status === 'Unavailable' ? '#EF4444' : '#334155';
+                                        status === 'Unavailable' ? '#F59E0B' :
+                                          status === 'Cancelled' ? '#EF4444' : '#334155';
                                 const statusLabel =
                                   status === 'Shown' ? 'Shown' :
                                     status === 'InProgress' ? 'In Progress' :
                                       status === 'Queued' ? 'Queued' :
-                                        status === 'Unavailable' ? 'Unavailable' : status;
+                                        status === 'Unavailable' ? 'Unavailable' :
+                                          status === 'Cancelled' ? 'Deleted' : status;
                                 return (
                                   <span key={d.messengerId.toString()} style={{ fontSize: '0.7rem', color: statusColor, display: 'flex', alignItems: 'center', gap: '4px' }}>
                                     <span style={{ width: '6px', height: '6px', borderRadius: '50%', background: statusColor, display: 'inline-block' }} />

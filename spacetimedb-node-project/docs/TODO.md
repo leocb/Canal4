@@ -5,8 +5,6 @@
 3. The permissions screen have some werid behavior. review.
 9. I have not tested it yet, but make sure the ticker can move between connected screens
 11. enable the option for a node to show only messages of selected channels. move the node "edit name" to a proper edit screen screen and also add the channel select feature there.
-14. Internally, change "delete message" to only hide the message (don't actually delete it) - this is so admins and owners can still review deleted messages in the logs. Add "Cancelled" as a message status, don't forget to update the code for the message status badges too.
-13. make the display node ticker immediately stop displaying a message when it's deleted (hidden).
 15. Create the installer for the desktop app (mac (intel and apple silicon) & windows)
 16. Create a docker container to deploy the web app
 17. Create docker compose file to spin up the web app and the spacetime database

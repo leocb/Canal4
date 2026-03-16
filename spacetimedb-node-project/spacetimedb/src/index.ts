@@ -62,15 +62,15 @@ export const update_user_name = spacetimedb.reducer(
   { userId: t.u64(), newName: t.string() },
   (ctx, { userId, newName }) => {
     const callerId = getUserId(ctx);
-    
+
     // Explicitly block others from changing names of other users
     if (callerId !== userId) {
       throw new SenderError("You are only permitted to change your own name.");
     }
-    
+
     const user = ctx.db.User.userId.find(userId);
     if (!user) throw new SenderError("User not found");
-    
+
     ctx.db.User.userId.update({
       ...user,
       name: newName.trim(),
@@ -82,7 +82,7 @@ export const delete_user_account = spacetimedb.reducer(
   { userId: t.u64(), confirmationName: t.string() },
   (ctx, { userId, confirmationName }) => {
     const callerId = getUserId(ctx);
-    
+
     // Explicitly block others from deleting other users' accounts
     if (callerId !== userId) {
       throw new SenderError("You are only permitted to delete your own account.");
@@ -90,7 +90,7 @@ export const delete_user_account = spacetimedb.reducer(
 
     const user = ctx.db.User.userId.find(userId);
     if (!user) throw new SenderError("User not found");
-    
+
     if (user.name !== confirmationName) {
       throw new SenderError("Confirmation name does not match");
     }
@@ -100,13 +100,13 @@ export const delete_user_account = spacetimedb.reducer(
     for (const identity of identities) {
       ctx.db.UserIdentity.identity.delete(identity.identity);
     }
-    
+
     // Delete venue memberships
     const memberships = [...ctx.db.VenueMember.iter()].filter(m => m.userId === userId);
     for (const m of memberships) {
       ctx.db.VenueMember.delete({ ...m });
     }
-    
+
     // Delete channel roles
     const roles = [...ctx.db.ChannelMemberRole.iter()].filter(r => r.userId === userId);
     for (const r of roles) {
@@ -236,7 +236,7 @@ export const create_channel = spacetimedb.reducer(
     const members = [...ctx.db.VenueMember.venue_member_venue_id.filter(venueId)];
     const myMembership = members.find(m => m.userId === userId);
     const isVenueAdmin = myMembership?.role.tag === "admin";
-    
+
     if (!isVenueOwner && !isVenueAdmin) {
       throw new SenderError("Only owners/admins can create channels");
     }
@@ -358,7 +358,7 @@ export const join_venue = spacetimedb.reducer(
   { token: t.string() },
   (ctx, { token }) => {
     const userId = getUserId(ctx);
-    
+
     const invite = ctx.db.VenueInviteToken.token.find(token);
     if (!invite) throw new SenderError("Invalid invitation token");
     if (ctx.timestamp.microsSinceUnixEpoch > invite.expiresAt.microsSinceUnixEpoch) {
@@ -432,7 +432,7 @@ export const set_venue_role = spacetimedb.reducer(
     if (!isVenueOwner && !isVenueAdmin) {
       throw new SenderError("Insufficient permissions to set venue roles");
     }
-    
+
     // Admin cannot grant "owner" or "admin" to others
     if (isVenueAdmin && !isVenueOwner && (role === "owner" || role === "admin")) {
       throw new SenderError("Admins can only assign Moderator or Member roles");
@@ -496,7 +496,7 @@ export const block_user = spacetimedb.reducer(
 
     const allMembers = [...ctx.db.VenueMember.venue_member_venue_id.filter(venueId)];
     const callerMember = allMembers.find(m => m.userId === userId);
-    
+
     const isVenueOwner = venue.ownerId === userId || callerMember?.role.tag === "owner";
     const isAdmin = isVenueOwner || callerMember?.role.tag === "admin";
 
@@ -522,7 +522,7 @@ export const unblock_user = spacetimedb.reducer(
 
     const allMembers = [...ctx.db.VenueMember.venue_member_venue_id.filter(venueId)];
     const callerMember = allMembers.find(m => m.userId === userId);
-    
+
     const isVenueOwner = venue.ownerId === userId || callerMember?.role.tag === "owner";
     const isAdmin = isVenueOwner || callerMember?.role.tag === "admin";
 
@@ -658,10 +658,13 @@ export const delete_message = spacetimedb.reducer(
       }
     }
 
-    ctx.db.Message.messageId.delete(messageId);
     const statuses = [...ctx.db.MessageDeliveryStatus.delivery_status_message_id.filter(messageId)];
     for (const st of statuses) {
-      ctx.db.MessageDeliveryStatus.delete({ ...st });
+      ctx.db.MessageDeliveryStatus.statusId.update({
+        ...st,
+        status: { tag: "Cancelled", value: "" },
+        updatedAt: ctx.timestamp,
+      });
     }
   }
 );
@@ -787,7 +790,7 @@ export const messenger_connect = spacetimedb.reducer(
     // Find devices with this UID and verify the identity matches the one stored at pairing time
     const devices = [...ctx.db.MessengerDevice.messenger_device_uid.filter(messengerUid)]
       .filter(d => d.identity.isEqual(ctx.sender));
-    
+
     if (devices.length === 0) {
       throw new SenderError("Messenger device not registered or identity mismatch");
     }
@@ -809,20 +812,20 @@ export const update_message_delivery_status = spacetimedb.reducer(
     // 1. Find the message and its venue
     const msg = ctx.db.Message.messageId.find(messageId);
     if (!msg) throw new SenderError(`Message ${messageId} not found`);
-    
+
     const channel = ctx.db.Channel.channelId.find(msg.channelId);
     if (!channel) throw new SenderError(`Channel for message ${messageId} not found`);
 
     // 2. Find the SPECIFIC device pairing for this machine and this venue
     const devicesByUid = [...ctx.db.MessengerDevice.messenger_device_uid.filter(uid)];
     const device = devicesByUid.find(d => d.identity.isEqual(ctx.sender) && d.venueId === channel.venueId);
-    
+
     if (!device) {
       const senderHex = ctx.sender.toHexString().slice(0, 10);
       console.error(`[UpdateStatus] Identity mismatch for UID ${uid}. Sender: ${senderHex}... Venue: ${channel.venueId}`);
       if (devicesByUid.length > 0) {
-          console.error(`[UpdateStatus] Found ${devicesByUid.length} devices with this UID but none match sender/venue.`);
-          devicesByUid.forEach(d => console.log(` - Device ${d.messengerId} Identity: ${d.identity.toHexString().slice(0, 10)}... Venue: ${d.venueId}`));
+        console.error(`[UpdateStatus] Found ${devicesByUid.length} devices with this UID but none match sender/venue.`);
+        devicesByUid.forEach(d => console.log(` - Device ${d.messengerId} Identity: ${d.identity.toHexString().slice(0, 10)}... Venue: ${d.venueId}`));
       }
       throw new SenderError("Messenger device not paired with this venue or identity mismatch");
     }
@@ -836,9 +839,9 @@ export const update_message_delivery_status = spacetimedb.reducer(
     if (statusRow) {
       console.log(`[UpdateStatus] Updating status for ID ${statusRow.statusId} to ${statusTag}`);
       ctx.db.MessageDeliveryStatus.statusId.update({
-          ...statusRow,
-          status: { tag: statusTag as any, value: "" },
-          updatedAt: ctx.timestamp,
+        ...statusRow,
+        status: { tag: statusTag as any, value: "" },
+        updatedAt: ctx.timestamp,
       });
     } else {
       console.log(`[UpdateStatus] No status row found, creating new one.`);
@@ -850,7 +853,7 @@ export const update_message_delivery_status = spacetimedb.reducer(
         updatedAt: ctx.timestamp,
       });
     }
-    
+
     console.log(`[UpdateStatus] Successfully set ${messageId}/${device.messengerId} to ${statusTag}`);
   }
 );
@@ -866,19 +869,19 @@ export const delete_messenger_device = spacetimedb.reducer(
     const venue = ctx.db.Venue.venueId.find(device.venueId);
     if (!venue) throw new SenderError("Venue not found");
     const isVenueOwner = venue.ownerId === userId;
-    
+
     if (!isVenueOwner) {
-       const channels = [...ctx.db.Channel.channel_venue_id.filter(device.venueId)];
-       const myRolesInVenue = channels.flatMap(ch =>
+      const channels = [...ctx.db.Channel.channel_venue_id.filter(device.venueId)];
+      const myRolesInVenue = channels.flatMap(ch =>
         [...ctx.db.ChannelMemberRole.channel_member_role_channel_id.filter(ch.channelId)]
           .filter(r => r.userId === userId)
-       );
-       const isAdmin = myRolesInVenue.some(r => r.role.tag === "owner" || r.role.tag === "admin");
-       if (!isAdmin) throw new SenderError("Only venue owners or channel admins can delete display nodes");
+      );
+      const isAdmin = myRolesInVenue.some(r => r.role.tag === "owner" || r.role.tag === "admin");
+      if (!isAdmin) throw new SenderError("Only venue owners or channel admins can delete display nodes");
     }
 
     ctx.db.MessengerDevice.messengerId.delete(messengerId);
-    
+
     // Cleanup delivery statuses
     const statuses = [...ctx.db.MessageDeliveryStatus.delivery_status_messenger_id.filter(messengerId)];
     for (const s of statuses) {
@@ -897,15 +900,15 @@ export const update_messenger_name = spacetimedb.reducer(
     const venue = ctx.db.Venue.venueId.find(device.venueId);
     if (!venue) throw new SenderError("Venue not found");
     const isVenueOwner = venue.ownerId === userId;
-    
+
     if (!isVenueOwner) {
-       const channels = [...ctx.db.Channel.channel_venue_id.filter(device.venueId)];
-       const myRolesInVenue = channels.flatMap(ch =>
+      const channels = [...ctx.db.Channel.channel_venue_id.filter(device.venueId)];
+      const myRolesInVenue = channels.flatMap(ch =>
         [...ctx.db.ChannelMemberRole.channel_member_role_channel_id.filter(ch.channelId)]
           .filter(r => r.userId === userId)
-       );
-       const isAdmin = myRolesInVenue.some(r => r.role.tag === "owner" || r.role.tag === "admin");
-       if (!isAdmin) throw new SenderError("Only venue owners or channel admins can rename display nodes");
+      );
+      const isAdmin = myRolesInVenue.some(r => r.role.tag === "owner" || r.role.tag === "admin");
+      if (!isAdmin) throw new SenderError("Only venue owners or channel admins can rename display nodes");
     }
 
     ctx.db.MessengerDevice.messengerId.update({
@@ -927,7 +930,7 @@ export const unpair_messenger = spacetimedb.reducer(
     }
 
     ctx.db.MessengerDevice.messengerId.delete(messengerId);
-    
+
     // Cleanup delivery statuses
     const statuses = [...ctx.db.MessageDeliveryStatus.delivery_status_messenger_id.filter(messengerId)];
     for (const s of statuses) {

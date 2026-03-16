@@ -4,7 +4,7 @@ import { useTable, useReducer } from 'spacetimedb/react';
 import { tables, reducers } from '../module_bindings/index.ts';
 import { useReadyTable } from '../hooks/useReadyTable';
 import { useAuth } from '../hooks/useAuth';
-import { MoreVertical, Settings, Send, History, LayoutTemplate, Repeat, Trash2, UserX, Clock, Play, CheckCircle2, AlertCircle, WifiOff, Monitor } from 'lucide-react';
+import { MoreVertical, Settings, Send, History, LayoutTemplate, Repeat, Trash2, UserX, Clock, Play, CheckCircle2, AlertCircle, WifiOff, Monitor, XCircle } from 'lucide-react';
 
 export const ChannelScreen = () => {
   const { venueLink, channelId } = useParams<{ venueLink: string, channelId: string }>();
@@ -69,6 +69,12 @@ export const ChannelScreen = () => {
   const channelMessages = [...(messages as any[])]
     .filter(m => m.channelId === channelIdBigInt)
     .filter(m => {
+      const isCancelled = Array.from(deliveryStatuses || []).some((ds: any) =>
+        BigInt(ds.messageId) === BigInt(m.messageId) && ds.status.tag === 'Cancelled'
+      );
+
+      if (isCancelled && !isModerator) return false;
+
       if (isModerator) return true;
       const ageMicros = BigInt(Date.now()) * 1000n - m.sentAt.microsSinceUnixEpoch;
       const maxAgeMicros = BigInt(channel?.messageMaxAgeHours || 4) * 3600n * 1000000n;
@@ -162,7 +168,7 @@ export const ChannelScreen = () => {
 
   const getMessageBorderColor = (messageId: bigint, isMe: boolean) => {
     if (!hasDevices) return isMe ? 'var(--accent-color)' : 'rgba(255, 255, 255, 0.15)';
-    
+
     const statuses = connectedDevices.map(d => ({
       status: getDeliveryStatus(messageId, d.messengerId),
       connected: isNodeConnected(d)
@@ -171,10 +177,11 @@ export const ChannelScreen = () => {
     if (statuses.length === 0) return isMe ? 'var(--accent-color)' : 'rgba(255, 255, 255, 0.15)';
 
     if (statuses.some(s => s === 'InProgress')) return '#3B82F6';
-    if (statuses.some(s => s === 'Unavailable')) return '#EF4444';
+    if (statuses.some(s => s === 'Unavailable')) return '#F59E0B';
+    if (statuses.every(s => s === 'Cancelled')) return '#EF4444';
     if (statuses.every(s => s === 'Shown')) return '#10B981';
     if (statuses.some(s => s === 'Queued')) return '#94A3B8';
-    
+
     return isMe ? 'var(--accent-color)' : 'rgba(255, 255, 255, 0.15)';
   };
 
@@ -221,7 +228,9 @@ export const ChannelScreen = () => {
       case 'Shown':
         return <span title={`${deviceName}: Shown`}><CheckCircle2 size={14} style={{ color: '#10B981' }} /></span>;
       case 'Unavailable':
-        return <span title={`${deviceName}: Unavailable`}><AlertCircle size={14} style={{ color: '#EF4444' }} /></span>;
+        return <span title={`${deviceName}: Unavailable`}><AlertCircle size={14} style={{ color: '#F59E0B' }} /></span>;
+      case 'Cancelled':
+        return <span title={`${deviceName}: Deleted`}><XCircle size={14} style={{ color: '#EF4444' }} /></span>;
       default:
         return <span title={`${deviceName}: ${status}`}><Clock size={14} style={{ color: 'rgba(255,255,255,0.2)' }} /></span>;
     }

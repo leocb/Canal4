@@ -47,6 +47,7 @@ export const DeliveryStatus = __t.enum("DeliveryStatus", {
   InProgress: __t.string(),
   Shown: __t.string(),
   Unavailable: __t.string(),
+  Cancelled: __t.string(),
 });
 export type DeliveryStatus = __Infer<typeof DeliveryStatus>;
 
