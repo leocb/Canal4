@@ -146,14 +146,19 @@ export const TickerScreen = () => {
                statusRec: status,
                msg: messages.find(m => BigInt(m.messageId) === BigInt(status.messageId))
             }))
-            .filter(({ msg }) => {
+            .filter(({ msg, statusRec }) => {
                 if (!msg) return false;
+                // If it's already InProgress (from a previous run), we pick it up regardless of time
+                if (statusRec.status.tag === 'InProgress') return true;
                 const msgTimeMs = Number(BigInt(msg.sentAt.microsSinceUnixEpoch) / 1000n);
                 // ONLY messages sent AFTER this app instance started (with 1s buffer)
                 return msgTimeMs >= (appStartTime - 1000);
             })
-            // Sort by message time (oldest first)
+            // Sort by status (InProgress first) then time (oldest first)
             .sort((a, b) => {
+                if (a.statusRec.status.tag === 'InProgress' && b.statusRec.status.tag === 'Queued') return -1;
+                if (a.statusRec.status.tag === 'Queued' && b.statusRec.status.tag === 'InProgress') return 1;
+                
                 const tA = BigInt(a.msg!.sentAt.microsSinceUnixEpoch);
                 const tB = BigInt(b.msg!.sentAt.microsSinceUnixEpoch);
                 if (tA < tB) return -1;
