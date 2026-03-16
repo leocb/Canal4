@@ -50,9 +50,7 @@ export const TickerScreen = () => {
     }, []);
 
     useEffect(() => {
-        // @ts-ignore
         if (window.api?.getMachineId) {
-            // @ts-ignore
             window.api.getMachineId().then((uid: string) => {
                 console.log("[Ticker] Machine ID loaded:", uid);
                 setMachineUid(uid);
@@ -63,6 +61,19 @@ export const TickerScreen = () => {
             setMachineUid(id);
         }
     }, []);
+
+    // Window Visibility Control
+    useEffect(() => {
+        if (window.api?.showTicker && window.api?.hideTicker) {
+            if (activeMessage && connected) {
+                console.log("[Ticker] Showing window for message");
+                window.api.showTicker();
+            } else {
+                console.log("[Ticker] Hiding window - no active message or disconnected");
+                window.api.hideTicker();
+            }
+        }
+    }, [!!activeMessage, connected]);
 
     // Cleanup finished IDs once DB reflects 'Shown' status
     useEffect(() => {

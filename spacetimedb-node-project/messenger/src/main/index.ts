@@ -37,7 +37,8 @@ function createTickerWindow(): void {
   tickerWindow.setAlwaysOnTop(true, 'screen-saver', 1)
 
   tickerWindow.on('ready-to-show', () => {
-    tickerWindow?.showInactive()
+    // We don't show the ticker window until there's a message to display
+    // tickerWindow?.showInactive()
   })
 
   const url = is.dev && process.env['ELECTRON_RENDERER_URL']
@@ -167,6 +168,14 @@ app.whenReady().then(() => {
       win.webContents.reload();
     }
     return messengerData.id;
+  });
+
+  ipcMain.on('show-ticker', () => {
+    tickerWindow?.showInactive();
+  });
+
+  ipcMain.on('hide-ticker', () => {
+    tickerWindow?.hide();
   });
 
   // App is fundamentally a background tray app, we only show Settings if opened directly on MacOS

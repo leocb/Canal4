@@ -9,7 +9,9 @@ const api = {
   resetIdentity: () => ipcRenderer.invoke('reset-identity'),
   onTokenUpdated: (callback: (token: string) => void) => {
     ipcRenderer.on('token-updated', (_event, token) => callback(token))
-  }
+  },
+  showTicker: () => ipcRenderer.send('show-ticker'),
+  hideTicker: () => ipcRenderer.send('hide-ticker'),
 }
 
 // Use `contextBridge` APIs to expose Electron APIs to
