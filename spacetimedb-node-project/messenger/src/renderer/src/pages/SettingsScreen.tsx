@@ -269,7 +269,7 @@ export const SettingsScreen = () => {
   ];
 
   return (
-    <div style={{ display: 'flex', flexDirection: 'column', height: '100vh', background: '#0B0E14', color: '#F8FAFC', fontFamily: 'Inter, system-ui, sans-serif' }}>
+    <div className="premium-bg" style={{ display: 'flex', flexDirection: 'column', height: '100vh', color: '#F8FAFC', fontFamily: 'Inter, system-ui, sans-serif' }}>
 
       {/* Header */}
       <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '14px 24px', borderBottom: '1px solid rgba(255,255,255,0.08)', background: 'rgba(255,255,255,0.02)', flexShrink: 0 }}>

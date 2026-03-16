@@ -11,13 +11,14 @@ let settingsWindow: BrowserWindow | null = null;
 
 function createTickerWindow(): void {
   const primaryDisplay = screen.getPrimaryDisplay()
-  const { width, height } = primaryDisplay.workAreaSize
+  const { width, x: startX } = primaryDisplay.bounds
+  const { height, y: offsetY } = primaryDisplay.workArea
 
   tickerWindow = new BrowserWindow({
     width: width,
     height: 80, // Height of the ticker tape
-    x: 0,
-    y: height - 80, // Position at bottom of screen
+    x: startX,
+    y: offsetY + height - 80, // Position at bottom of screen
     show: false,
     frame: false,
     transparent: true,
@@ -186,10 +187,11 @@ app.whenReady().then(() => {
   ipcMain.on('update-ticker-position', (_event, position: 'top' | 'bottom') => {
     if (!tickerWindow) return;
     const primaryDisplay = screen.getPrimaryDisplay();
-    const { width, height, y: offsetY } = primaryDisplay.workArea;
+    const { width, x: startX } = primaryDisplay.bounds;
+    const { height, y: offsetY } = primaryDisplay.workArea;
     const windowHeight = 80;
     const y = position === 'top' ? offsetY : offsetY + height - windowHeight;
-    tickerWindow.setBounds({ x: 0, y, width, height: windowHeight });
+    tickerWindow.setBounds({ x: startX, y, width, height: windowHeight });
   });
 
   // App is fundamentally a background tray app, we only show Settings if opened directly on MacOS
