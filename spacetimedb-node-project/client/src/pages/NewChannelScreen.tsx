@@ -56,12 +56,12 @@ export const NewChannelScreen = () => {
   };
 
   return (
-    <div className="app-container" style={{ alignItems: 'center', justifyContent: 'center' }}>
+    <div className="app-container" style={{ alignItems: 'center', justifyContent: 'flex-start' }}>
       <div className="screen-header" style={{ width: '100%', maxWidth: '400px' }}>
         <button className="secondary" onClick={() => navigate(-1)}>← Back</button>
       </div>
 
-      <form onSubmit={handleCreateChannel} className="glass-panel" style={{ padding: '40px', textAlign: 'center', width: '100%', maxWidth: '400px', marginTop: '16px' }}>
+      <form onSubmit={handleCreateChannel} className="glass-panel" style={{ padding: '40px', textAlign: 'center', width: '100%', maxWidth: '400px' }}>
         <h2 style={{ marginBottom: '24px', fontSize: '1.8rem' }}>Create a New Channel</h2>
 
         {errorText && (
@@ -101,6 +101,7 @@ export const NewChannelScreen = () => {
           </button>
         </div>
       </form>
+      <div style={{ flex: 1 }}></div>
     </div>
   );
 };
