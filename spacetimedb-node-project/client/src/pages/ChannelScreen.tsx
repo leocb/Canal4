@@ -131,6 +131,18 @@ export const ChannelScreen = () => {
   const connectedDevices = (messengerDevices as any[]).filter(d => d.venueId === venue.venueId);
   const hasDevices = connectedDevices.length > 0;
 
+  const isNodeConnected = (device: any) => {
+    if (!device.lastConnectedAt) return false;
+    try {
+      const lastActive = Number(BigInt(device.lastConnectedAt.microsSinceUnixEpoch) / 1000n);
+      const now = Date.now();
+      // Heartbeat is 5s, threshold is 17s
+      return (now - lastActive) < 17000;
+    } catch {
+      return false;
+    }
+  };
+
   const getDeliveryStatus = (messageId: bigint, deviceId: bigint) => {
     const list = Array.from(deliveryStatuses || []);
     const mid = BigInt(messageId);
@@ -148,18 +160,22 @@ export const ChannelScreen = () => {
     return s?.status?.tag;
   };
 
-  // Force re-render periodically to update relative status times
+  const getMessageBorderColor = (messageId: bigint, isMe: boolean) => {
+    if (!hasDevices) return isMe ? 'var(--accent-color)' : 'rgba(255, 255, 255, 0.15)';
+    
+    const statuses = connectedDevices.map(d => ({
+      status: getDeliveryStatus(messageId, d.messengerId),
+      connected: isNodeConnected(d)
+    })).filter(s => s.connected).map(s => s.status);
 
-  const isNodeConnected = (device: any) => {
-    if (!device.lastConnectedAt) return false;
-    try {
-      const lastActive = Number(BigInt(device.lastConnectedAt.microsSinceUnixEpoch) / 1000n);
-      const now = Date.now();
-      // Heartbeat is 5s, threshold is 17s
-      return (now - lastActive) < 17000;
-    } catch {
-      return false;
-    }
+    if (statuses.length === 0) return isMe ? 'var(--accent-color)' : 'rgba(255, 255, 255, 0.15)';
+
+    if (statuses.some(s => s === 'InProgress')) return '#3B82F6';
+    if (statuses.some(s => s === 'Unavailable')) return '#EF4444';
+    if (statuses.every(s => s === 'Shown')) return '#10B981';
+    if (statuses.some(s => s === 'Queued')) return '#94A3B8';
+    
+    return isMe ? 'var(--accent-color)' : 'rgba(255, 255, 255, 0.15)';
   };
 
 
@@ -363,7 +379,7 @@ export const ChannelScreen = () => {
                     padding: '16px 20px',
                     backgroundColor: 'rgba(255, 255, 255, 0.03)',
                     border: '1px solid rgba(255, 255, 255, 0.04)',
-                    borderLeft: `3px solid ${isMe ? 'var(--accent-color)' : 'rgba(255, 255, 255, 0.15)'}`,
+                    borderLeft: `3px solid ${getMessageBorderColor(msg.messageId, isMe)}`,
                     borderRadius: '12px',
                     boxShadow: '0 4px 20px rgba(0, 0, 0, 0.15)',
                     cursor: isModerator ? 'pointer' : 'default',

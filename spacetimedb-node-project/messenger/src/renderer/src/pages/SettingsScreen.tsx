@@ -171,6 +171,20 @@ export const SettingsScreen = () => {
     return s?.status?.tag;
   };
 
+  const getMessageBorderColor = (messageId: bigint) => {
+    const myIds = myDevices.map(d => BigInt(d.messengerId));
+    if (myIds.length === 0) return 'rgba(59,130,246,0.5)';
+
+    const statuses = myIds.map(did => getStatus(messageId, did));
+
+    if (statuses.some(s => s === 'InProgress')) return '#3B82F6';
+    if (statuses.some(s => s === 'Unavailable')) return '#EF4444';
+    if (statuses.every(s => s === 'Shown')) return '#10B981';
+    if (statuses.some(s => s === 'Queued')) return '#94A3B8';
+
+    return 'rgba(59,130,246,0.5)';
+  };
+
   // Heartbeat is handled in App.tsx
 
   // PIN expiry countdown — tick every second
@@ -535,7 +549,7 @@ export const SettingsScreen = () => {
                           <div style={{ flex: 1, height: '1px', background: 'rgba(255,255,255,0.06)' }} />
                         </div>
                       )}
-                      <div style={{ background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.07)', borderLeft: '3px solid rgba(59,130,246,0.5)', borderRadius: '12px', padding: '12px 16px' }}>
+                      <div style={{ background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.07)', borderLeft: `3px solid ${getMessageBorderColor(msg.messageId)}`, borderRadius: '12px', padding: '12px 16px' }}>
                         <div style={{ fontSize: '0.72rem', color: '#64748b', marginBottom: '6px', display: 'flex', flexWrap: 'wrap', gap: '6px', alignItems: 'center' }}>
                           <span style={{ fontFamily: 'monospace' }}>{msgDate.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</span>
                           <span style={{ color: '#334155' }}>·</span>
@@ -553,8 +567,16 @@ export const SettingsScreen = () => {
                           <div style={{ marginTop: '8px', display: 'flex', gap: '8px', flexWrap: 'wrap' }}>
                             {myDevices.map(d => {
                               const status = getStatus(msg.messageId, d.messengerId);
-                              const statusColor = status === 'Shown' ? '#10B981' : status === 'InProgress' ? '#3B82F6' : status === 'Queued' ? '#64748b' : '#334155';
-                              const statusLabel = status === 'Shown' ? 'Shown' : status === 'InProgress' ? 'In Progress' : status === 'Queued' ? 'Queued' : 'Unknown';
+                              const statusColor = 
+                                status === 'Shown' ? '#10B981' : 
+                                status === 'InProgress' ? '#3B82F6' : 
+                                status === 'Queued' ? '#94A3B8' : 
+                                status === 'Unavailable' ? '#EF4444' : '#334155';
+                              const statusLabel = 
+                                status === 'Shown' ? 'Shown' : 
+                                status === 'InProgress' ? 'In Progress' : 
+                                status === 'Queued' ? 'Queued' : 
+                                status === 'Unavailable' ? 'Unavailable' : 'Unknown';
                               return (
                                 <span key={d.messengerId.toString()} style={{ fontSize: '0.7rem', color: statusColor, display: 'flex', alignItems: 'center', gap: '4px' }}>
                                   <span style={{ width: '6px', height: '6px', borderRadius: '50%', background: statusColor, display: 'inline-block' }} />
