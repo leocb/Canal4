@@ -179,11 +179,16 @@ export const SettingsScreen = () => {
     return s?.status?.tag;
   };
 
-  const getMessageBorderColor = (messageId: bigint) => {
-    const myIds = myDevices.map(d => BigInt(d.messengerId));
+  const getMessageBorderColor = (messageId: bigint, venueId?: bigint | null) => {
+    const myIds = myDevices
+      .filter(d => !venueId || d.venueId === venueId)
+      .map(d => BigInt(d.messengerId));
+    
     if (myIds.length === 0) return 'rgba(59,130,246,0.5)';
 
-    const statuses = myIds.map(did => getStatus(messageId, did));
+    const statuses = myIds.map(did => getStatus(messageId, did)).filter(s => !!s);
+    
+    if (statuses.length === 0) return 'rgba(59,130,246,0.5)';
 
     if (statuses.some(s => s === 'InProgress')) return '#3B82F6';
     if (statuses.some(s => s === 'Unavailable')) return '#EF4444';
@@ -551,7 +556,7 @@ export const SettingsScreen = () => {
                           <div style={{ flex: 1, height: '1px', background: 'rgba(255,255,255,0.06)' }} />
                         </div>
                       )}
-                      <div style={{ background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.07)', borderLeft: `3px solid ${getMessageBorderColor(msg.messageId)}`, borderRadius: '12px', padding: '12px 16px' }}>
+                      <div style={{ background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.07)', borderLeft: `3px solid ${getMessageBorderColor(msg.messageId, venue?.venueId)}`, borderRadius: '12px', padding: '12px 16px' }}>
                         <div style={{ fontSize: '0.72rem', color: '#64748b', marginBottom: '6px', display: 'flex', flexWrap: 'wrap', gap: '6px', alignItems: 'center' }}>
                           <span style={{ fontFamily: 'monospace' }}>{msgDate.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</span>
                           <span style={{ color: '#334155' }}>·</span>
