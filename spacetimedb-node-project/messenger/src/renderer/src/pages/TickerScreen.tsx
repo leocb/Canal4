@@ -3,6 +3,16 @@ import { useTable, useSpacetimeDB, useReducer } from 'spacetimedb/react';
 import { tables, reducers } from '../module_bindings/index';
 import { loadTickerSettings } from './SettingsScreen';
 
+function getAlphaFromColor(color: string): number {
+    if (color.startsWith('rgba')) {
+        const parts = color.match(/[\d.]+/g);
+        if (parts && parts.length === 4) {
+            return parseFloat(parts[3]);
+        }
+    }
+    return 1;
+}
+
 export const TickerScreen = () => {
     const [messages] = useTable(tables.Message);
     const [devices] = useTable(tables.MessengerDevice);
@@ -232,7 +242,9 @@ export const TickerScreen = () => {
            <div
                className="marquee"
                onAnimationIteration={handleAnimationIteration}
-               style={{ textShadow: '1px 1px 4px rgba(0,0,0,0.8)' }}
+               style={{ 
+                   textShadow: `1px 1px 4px rgba(0,0,0,${0.8 * getAlphaFromColor(settings.fgColor)})` 
+               }}
            >
                {activeMessage.text}
            </div>

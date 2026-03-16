@@ -24,7 +24,7 @@ const DEFAULT_TICKER_SETTINGS: TickerSettings = {
   fontFamily: 'monospace',
   fontSize: 28,
   fontWeight: '600',
-  bgColor: 'rgba(0,0,0,0.75)',
+  bgColor: 'rgba(0,0,0,0.4)',
   fgColor: '#ffffff',
   scrollSpeed: 15,
   repeatCount: 1,
@@ -86,6 +86,37 @@ const IconTrash = () => (
     <line x1="10" y1="11" x2="10" y2="17" /><line x1="14" y1="11" x2="14" y2="17" />
   </svg>
 );
+
+function parseColorToHexAlpha(color: string): { hex: string; alpha: number } {
+  if (color.startsWith('rgba')) {
+    const parts = color.match(/[\d.]+/g);
+    if (parts && parts.length === 4) {
+      const r = parseInt(parts[0]);
+      const g = parseInt(parts[1]);
+      const b = parseInt(parts[2]);
+      const a = parseFloat(parts[3]);
+      const hex = "#" + ((1 << 24) + (r << 16) + (g << 8) + b).toString(16).slice(1);
+      return { hex, alpha: a };
+    }
+  } else if (color.startsWith('#')) {
+    // Basic hex support
+    if (color.length === 7) return { hex: color, alpha: 1 };
+    if (color.length === 4) {
+      const r = color[1] + color[1];
+      const g = color[2] + color[2];
+      const b = color[3] + color[3];
+      return { hex: `#${r}${g}${b}`, alpha: 1 };
+    }
+  }
+  return { hex: '#000000', alpha: 1 };
+}
+
+function hexAlphaToRgba(hex: string, alpha: number): string {
+  const r = parseInt(hex.slice(1, 3), 16);
+  const g = parseInt(hex.slice(3, 5), 16);
+  const b = parseInt(hex.slice(5, 7), 16);
+  return `rgba(${r}, ${g}, ${b}, ${alpha})`;
+}
 
 // --- Component ---
 export const SettingsScreen = () => {
@@ -734,55 +765,89 @@ export const SettingsScreen = () => {
                 {/* Text Color */}
                 <div style={{ flex: 1 }}>
                   <label style={labelStyle}>Text Color</label>
-                  <label style={{
-                    display: 'flex', alignItems: 'center', gap: '12px',
-                    background: 'rgba(0,0,0,0.3)', border: '1px solid rgba(255,255,255,0.1)',
-                    borderRadius: '10px', padding: '10px 14px', cursor: 'pointer',
-                  }}>
-                    <div style={{
-                      width: '36px', height: '36px', borderRadius: '8px',
-                      background: tickerSettings.fgColor,
-                      border: '2px solid rgba(255,255,255,0.15)',
-                      flexShrink: 0, position: 'relative', overflow: 'hidden',
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
+                    <label style={{
+                      display: 'flex', alignItems: 'center', gap: '12px',
+                      background: 'rgba(0,0,0,0.3)', border: '1px solid rgba(255,255,255,0.1)',
+                      borderRadius: '10px', padding: '10px 14px', cursor: 'pointer',
                     }}>
+                      <div style={{
+                        width: '36px', height: '36px', borderRadius: '8px',
+                        background: tickerSettings.fgColor,
+                        border: '2px solid rgba(255,255,255,0.15)',
+                        flexShrink: 0, position: 'relative', overflow: 'hidden',
+                      }}>
+                        <input
+                          type="color"
+                          value={parseColorToHexAlpha(tickerSettings.fgColor).hex}
+                          onChange={e => {
+                            const { alpha } = parseColorToHexAlpha(tickerSettings.fgColor);
+                            updateTickerSetting('fgColor', hexAlphaToRgba(e.target.value, alpha));
+                          }}
+                          style={{ opacity: 0, position: 'absolute', inset: 0, width: '100%', height: '100%', cursor: 'pointer', padding: 0, border: 'none' }}
+                        />
+                      </div>
+                      <span style={{ fontSize: '0.85rem', color: '#94A3B8', fontFamily: 'monospace' }}>{tickerSettings.fgColor}</span>
+                    </label>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+                      <span style={{ fontSize: '0.65rem', color: '#64748B', fontWeight: 600, width: '36px' }}>ALPHA</span>
                       <input
-                        type="color"
-                        value={tickerSettings.fgColor}
-                        onChange={e => updateTickerSetting('fgColor', e.target.value)}
-                        style={{ opacity: 0, position: 'absolute', inset: 0, width: '100%', height: '100%', cursor: 'pointer', padding: 0, border: 'none' }}
+                        type="range" min={0} max={1} step={0.01}
+                        value={parseColorToHexAlpha(tickerSettings.fgColor).alpha}
+                        onChange={e => {
+                          const { hex } = parseColorToHexAlpha(tickerSettings.fgColor);
+                          updateTickerSetting('fgColor', hexAlphaToRgba(hex, parseFloat(e.target.value)));
+                        }}
+                        style={{ flex: 1, accentColor: '#3B82F6' }}
                       />
                     </div>
-                    <span style={{ fontSize: '0.85rem', color: '#94A3B8', fontFamily: 'monospace' }}>{tickerSettings.fgColor}</span>
-                  </label>
+                  </div>
                 </div>
 
                 {/* Background Color */}
                 <div style={{ flex: 1 }}>
                   <label style={labelStyle}>Background Color</label>
-                  <label style={{
-                    display: 'flex', alignItems: 'center', gap: '12px',
-                    background: 'rgba(0,0,0,0.3)', border: '1px solid rgba(255,255,255,0.1)',
-                    borderRadius: '10px', padding: '10px 14px', cursor: 'pointer',
-                  }}>
-                    <div style={{
-                      width: '36px', height: '36px', borderRadius: '8px',
-                      background: tickerSettings.bgColor,
-                      border: '2px solid rgba(255,255,255,0.15)',
-                      flexShrink: 0, position: 'relative', overflow: 'hidden',
-                      backgroundImage: 'linear-gradient(45deg, #ccc 25%, transparent 25%), linear-gradient(-45deg, #ccc 25%, transparent 25%), linear-gradient(45deg, transparent 75%, #ccc 75%), linear-gradient(-45deg, transparent 75%, #ccc 75%)',
-                      backgroundSize: '8px 8px',
-                      backgroundPosition: '0 0, 0 4px, 4px -4px, -4px 0px',
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
+                    <label style={{
+                      display: 'flex', alignItems: 'center', gap: '12px',
+                      background: 'rgba(0,0,0,0.3)', border: '1px solid rgba(255,255,255,0.1)',
+                      borderRadius: '10px', padding: '10px 14px', cursor: 'pointer',
                     }}>
-                      <div style={{ position: 'absolute', inset: 0, background: tickerSettings.bgColor }} />
+                      <div style={{
+                        width: '36px', height: '36px', borderRadius: '8px',
+                        background: tickerSettings.bgColor,
+                        border: '2px solid rgba(255,255,255,0.15)',
+                        flexShrink: 0, position: 'relative', overflow: 'hidden',
+                        backgroundImage: 'linear-gradient(45deg, #ccc 25%, transparent 25%), linear-gradient(-45deg, #ccc 25%, transparent 25%), linear-gradient(45deg, transparent 75%, #ccc 75%), linear-gradient(-45deg, transparent 75%, #ccc 75%)',
+                        backgroundSize: '8px 8px',
+                        backgroundPosition: '0 0, 0 4px, 4px -4px, -4px 0px',
+                      }}>
+                        <div style={{ position: 'absolute', inset: 0, background: tickerSettings.bgColor }} />
+                        <input
+                          type="color"
+                          value={parseColorToHexAlpha(tickerSettings.bgColor).hex}
+                          onChange={e => {
+                            const { alpha } = parseColorToHexAlpha(tickerSettings.bgColor);
+                            updateTickerSetting('bgColor', hexAlphaToRgba(e.target.value, alpha));
+                          }}
+                          style={{ opacity: 0, position: 'absolute', inset: 0, width: '100%', height: '100%', cursor: 'pointer', padding: 0, border: 'none' }}
+                        />
+                      </div>
+                      <span style={{ fontSize: '0.85rem', color: '#94A3B8', fontFamily: 'monospace' }}>{tickerSettings.bgColor}</span>
+                    </label>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+                      <span style={{ fontSize: '0.65rem', color: '#64748B', fontWeight: 600, width: '36px' }}>ALPHA</span>
                       <input
-                        type="color"
-                        value={tickerSettings.bgColor.startsWith('rgba') ? '#000000' : tickerSettings.bgColor}
-                        onChange={e => updateTickerSetting('bgColor', e.target.value)}
-                        style={{ opacity: 0, position: 'absolute', inset: 0, width: '100%', height: '100%', cursor: 'pointer', padding: 0, border: 'none' }}
+                        type="range" min={0} max={1} step={0.01}
+                        value={parseColorToHexAlpha(tickerSettings.bgColor).alpha}
+                        onChange={e => {
+                          const { hex } = parseColorToHexAlpha(tickerSettings.bgColor);
+                          updateTickerSetting('bgColor', hexAlphaToRgba(hex, parseFloat(e.target.value)));
+                        }}
+                        style={{ flex: 1, accentColor: '#3B82F6' }}
                       />
                     </div>
-                    <span style={{ fontSize: '0.85rem', color: '#94A3B8', fontFamily: 'monospace' }}>{tickerSettings.bgColor}</span>
-                  </label>
+                  </div>
                 </div>
               </div>
             </section>

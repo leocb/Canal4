@@ -22,11 +22,12 @@ function createTickerWindow(): void {
     show: false,
     frame: false,
     transparent: true,
+    backgroundColor: '#00000000',
     hasShadow: false,
     alwaysOnTop: true,
     skipTaskbar: true,
     focusable: false, // Don't steal focus from user
-    type: 'toolbar', // Helps with alwaysOnTop on OS X
+    type: 'panel', 
     webPreferences: {
       preload: join(__dirname, '../preload/index.js'),
       sandbox: false,
