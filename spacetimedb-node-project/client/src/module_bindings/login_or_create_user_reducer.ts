@@ -12,6 +12,5 @@ import {
 
 export default {
   email: __t.option(__t.string()),
-  googleId: __t.option(__t.string()),
   name: __t.string(),
 };

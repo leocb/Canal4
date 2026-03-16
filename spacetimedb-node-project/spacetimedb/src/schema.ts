@@ -27,7 +27,6 @@ export const User = table(
   {
     userId: t.u64().primaryKey().autoInc(),
     email: t.string().optional(),
-    googleId: t.string().optional(),
     passkeyCredentialId: t.string().optional(),
     name: t.string(),
     pushToken: t.string().optional(),

@@ -45,7 +45,6 @@ export const LoginScreen = () => {
       setLoading(true);
       loginOrCreateUser({
          email: normalizedEmail,
-         googleId: undefined,
          name: '' // Ignored by backend for existing users
       });
       // If auth hasn't resolved in 8 seconds, show error
@@ -62,7 +61,6 @@ export const LoginScreen = () => {
     setLoading(true);
     loginOrCreateUser({
        email: email.trim().toLowerCase(),
-       googleId: undefined,
        name: name.trim()
     });
     // If auth hasn't resolved in 8 seconds, show error
@@ -91,14 +89,6 @@ export const LoginScreen = () => {
         
         {view === 'options' && (
           <div className="flex-col">
-            <button 
-              className="secondary" 
-              style={{ width: '100%' }}
-              onClick={() => alert("Google Auth Mock - In Prototype use Email")}
-            >
-              Sign-in with Google
-            </button>
-            
             <button 
               style={{ width: '100%' }}
               onClick={() => setView('email')}

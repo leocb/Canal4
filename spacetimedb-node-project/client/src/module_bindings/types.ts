@@ -120,7 +120,6 @@ export type NotificationFilterType = __Infer<typeof NotificationFilterType>;
 export const User = __t.object("User", {
   userId: __t.u64(),
   email: __t.option(__t.string()),
-  googleId: __t.option(__t.string()),
   passkeyCredentialId: __t.option(__t.string()),
   name: __t.string(),
   pushToken: __t.option(__t.string()),

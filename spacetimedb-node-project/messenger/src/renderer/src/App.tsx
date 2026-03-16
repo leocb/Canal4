@@ -43,7 +43,6 @@ function App() {
       setHasAttemptedAutoRegister(true);
       loginOrCreateUser({
         email: `messenger-${machineUid.slice(0, 12)}@courier.local`,
-        googleId: undefined,
         name: `Display Node (${machineUid.slice(0, 6)})`
       }).catch(err => {
         console.error("[App] Auto-registration failed:", err);

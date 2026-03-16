@@ -11,10 +11,10 @@ function getUserId(ctx: any): bigint {
 }
 
 export const login_or_create_user = spacetimedb.reducer(
-  { email: t.string().optional(), googleId: t.string().optional(), name: t.string() },
-  (ctx, { email, googleId, name }) => {
-    if (!email && !googleId) {
-      throw new SenderError("Must provide either email or googleId to login/create user");
+  { email: t.string().optional(), name: t.string() },
+  (ctx, { email, name }) => {
+    if (!email) {
+      throw new SenderError("Must provide email to login/create user");
     }
 
     const normalizedEmail = email?.trim().toLowerCase();
@@ -29,7 +29,6 @@ export const login_or_create_user = spacetimedb.reducer(
       user = ctx.db.User.insert({
         userId: 0n,
         email: normalizedEmail,
-        googleId,
         passkeyCredentialId: undefined,
         name: name.trim(),
         pushToken: undefined,
@@ -39,7 +38,6 @@ export const login_or_create_user = spacetimedb.reducer(
       ctx.db.User.userId.update({
         ...user,
         email: normalizedEmail || user.email,
-        googleId: googleId || user.googleId,
         // Intentionally do not allow updating the name through login_or_create_user to prevent spoofing
       });
     }
