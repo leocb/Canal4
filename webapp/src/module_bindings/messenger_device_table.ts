@@ -11,7 +11,7 @@ import {
 } from "spacetimedb";
 
 export default __t.row({
-  messengerId: __t.u64().primaryKey().name("messenger_id"),
+  displayId: __t.u64().primaryKey().name("display_id"),
   uid: __t.string(),
   identity: __t.identity(),
   venueId: __t.u64().name("venue_id"),

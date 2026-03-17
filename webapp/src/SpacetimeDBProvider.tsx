@@ -52,8 +52,8 @@ export const SpacetimeDBProvider = ({ children }: { children: ReactNode }) => {
           "SELECT * FROM MessageTemplate",
           "SELECT * FROM Message",
           "SELECT * FROM NotificationFilter",
-          "SELECT * FROM MessengerDevice",
-          "SELECT * FROM MessengerPairingPin",
+          "SELECT * FROM DisplayDevice",
+          "SELECT * FROM DisplayPairingPin",
           "SELECT * FROM MessageDeliveryStatus",
           "SELECT * FROM VenueInviteToken"
         ]);

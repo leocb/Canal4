@@ -12,7 +12,7 @@ import {
 
 export default __t.row({
   pin: __t.string().primaryKey(),
-  messengerUid: __t.string().name("messenger_uid"),
+  displayUid: __t.string().name("display_uid"),
   identity: __t.identity(),
   expiresAt: __t.timestamp().name("expires_at"),
 });

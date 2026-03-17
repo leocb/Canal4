@@ -13,7 +13,7 @@ export const AddNodeScreen = () => {
   const { user, isLoggedIn } = useAuth();
 
   const [venues] = useTable(tables.Venue);
-  const registerMessenger = useReducer(reducers.registerMessengerToVenue);
+  const registerDisplay = useReducer(reducers.registerDisplayToVenue);
 
   const [nodeName, setNodeName] = useState('');
   const [pin, setPin] = useState('');
@@ -51,7 +51,7 @@ export const AddNodeScreen = () => {
     setLoading(true);
     try {
       // useReducer returns a Promise<void> that rejects on backend error
-      await registerMessenger({
+      await registerDisplay({
         venueId: venue.venueId,
         name: nodeName.trim(),
         pin: pin,

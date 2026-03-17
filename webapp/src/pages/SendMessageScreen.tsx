@@ -31,7 +31,7 @@ export const SendMessageScreen = () => {
   const [channelRoles] = useTable(tables.ChannelMemberRole);
   const [venueMembers] = useTable(tables.VenueMember);
   const [templates] = useTable(tables.MessageTemplate);
-  const [messengerDevices] = useTable(tables.MessengerDevice);
+  const [displayDevices] = useTable(tables.DisplayDevice);
 
   const sendMessage = useReducer(reducers.sendMessage);
 
@@ -66,7 +66,7 @@ export const SendMessageScreen = () => {
     }
   };
 
-  const hasActiveDevices = messengerDevices
+  const hasActiveDevices = displayDevices
     .filter((d: any) => d.venueId === venue?.venueId)
     .some(isNodeConnected);
 

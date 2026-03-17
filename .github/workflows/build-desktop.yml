@@ -25,7 +25,7 @@ jobs:
 
     defaults:
       run:
-        working-directory: spacetimedb-node-project/messenger
+        working-directory: spacetimedb-node-project/display
 
     steps:
       - name: Checkout
@@ -36,7 +36,7 @@ jobs:
         with:
           node-version: '22'
           cache: 'npm'
-          cache-dependency-path: spacetimedb-node-project/messenger/package-lock.json
+          cache-dependency-path: spacetimedb-node-project/display/package-lock.json
 
       - name: Install dependencies
         run: npm ci
@@ -54,7 +54,7 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: mac-${{ matrix.arch }}-dmg
-          path: spacetimedb-node-project/messenger/dist/*.dmg
+          path: spacetimedb-node-project/display/dist/*.dmg
           if-no-files-found: error
           retention-days: 7
 
@@ -65,7 +65,7 @@ jobs:
 
     defaults:
       run:
-        working-directory: spacetimedb-node-project/messenger
+        working-directory: spacetimedb-node-project/display
 
     steps:
       - name: Checkout
@@ -76,7 +76,7 @@ jobs:
         with:
           node-version: '22'
           cache: 'npm'
-          cache-dependency-path: spacetimedb-node-project/messenger/package-lock.json
+          cache-dependency-path: spacetimedb-node-project/display/package-lock.json
 
       - name: Install dependencies
         run: npm ci
@@ -91,7 +91,7 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: windows-setup
-          path: spacetimedb-node-project/messenger/dist/*-setup.exe
+          path: spacetimedb-node-project/display/dist/*-setup.exe
           if-no-files-found: error
           retention-days: 7
 

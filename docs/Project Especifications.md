@@ -9,7 +9,7 @@ Courier Notifications
 ## Software parts
 
 - App: a Website/PWA React app for managing venues and channels
-- Messenger: an Desktop Electron app for displaying messages
+- Display: an Desktop Electron app for displaying messages
 - API: SpacetimeDB for real time communication
 
 ## Roles
@@ -48,29 +48,29 @@ More permisseve roles have the same capabilities of lower permission roles
 
 - We'll use Firebase for sending push notifications
 
-### The messenger desktop app
+### The display desktop app
 
-- The messenger is an desktop app that connects to a channel and show messages on a screen.
+- The display is an desktop app that connects to a channel and show messages on a screen.
 - It uses SpacetimeDB to receive messages in real time. The app is built using Electron and React.
 - It uses the SpacetimeDB React SDK to connect to the SpacetimeDB database.
 - It can receive multiple messages at once, it enqueues the message to be shown one after another
 - It's identified by a UID created when the app first loads, saved in the windows registry, this ID is sent to spacetime db when needed. The ID can be renewed if necessary (dangerous! resets all connections!)
-- The messenger UID can be used to authenticate this instance again when the app opens a second time (treat it as a access token)
-- The messenger does not show messages that were sent prior to its *initial* connection and registration to the database. However, if the app is already registered and temporarily loses connection, upon reconnecting it will fetch and display any messages sent while it was disconnected. The app should be as self-healing as possible, managing its own reconnection and syncing gracefully.
+- The display UID can be used to authenticate this instance again when the app opens a second time (treat it as a access token)
+- The display does not show messages that were sent prior to its *initial* connection and registration to the database. However, if the app is already registered and temporarily loses connection, upon reconnecting it will fetch and display any messages sent while it was disconnected. The app should be as self-healing as possible, managing its own reconnection and syncing gracefully.
 - It can connect to several venues and show messages from multiple channels at once. The connection is stabilished as follows:
 
-#### Connecting the messenger to a venue
+#### Connecting the display to a venue
 
 1. The user navigates to a Venue, then clicks the "View Desktop Displays" button at the bottom of the channel list. Only Admins and Owners can see this button.
 2. In the "Desktop Displays" screen, the app displays a list of the currently connected nodes. At the bottom, a form helps to pair a new node.
-3. On the messenger, the user click on "Register new Venue" a 6 digit PIN is created and is valid for 10 minutes
+3. On the display, the user click on "Register new Venue" a 6 digit PIN is created and is valid for 10 minutes
 4. The user enters the 6 digit PIN on the app form under "Pair New Display"
 5. The app connects to the SpacetimeDB database and retrieves the venue information
 6. The app shows the venue information on the screen and asks for confirmation, OK saves that venue on the app and on the database
 
 #### Screens
 
-The messenger app usually have no screen visible, it runs in the background with a icon on the taskbar notification section. Clicking on it shows a menu with 2 screens the user can open: "Log" and "Settings". A third screen "message display" window is used to show the messages when one is received.
+The display app usually have no screen visible, it runs in the background with a icon on the taskbar notification section. Clicking on it shows a menu with 2 screens the user can open: "Log" and "Settings". A third screen "message display" window is used to show the messages when one is received.
 
 
 ##### Message Display Screen
@@ -232,7 +232,7 @@ Screen for managing notifications of that channels is shown
 - A screen for viewing and pairing desktop displays is shown
 - At the top "[Venue name] Desktop Displays" is shown
 - A "Back" button appears at the top left
-- Centered on screen, a list of current messenger nodes connected to this venue is shown
+- Centered on screen, a list of current display nodes connected to this venue is shown
 - At the top right of the screen header, an "Add Node" button directs the user to a standalone screen to enter a Node Name and the 6-digit PIN from the Electron app.
 
 ##### Channel Screen
@@ -250,7 +250,7 @@ Screen for managing notifications of that channels is shown
 - Deleting a message immediatly stops it being displayed in the desktop app, if it's in progress or queued
 - View info displays the whole message information: Who sent it, when, in progress/shown/queued
 - Moderators and above can see the message display status icon (enqueued, in progress, shown)
-- If more than one Messenger is connected to the venue, one status icon is displayed per connected messenger
+- If more than one Display is connected to the venue, one status icon is displayed per connected display
 - Permissions: Owners can do anything, Admins may add new Moderators and can block users, but not change settings. Moderators may moderate messages and send messages, but can't block, Members may only view messages.
 - Blocked users are forcefully demoted to the permissions of a member across all channels of the venue. They cannot be "promoted" again (e.g., to moderator) until an Admin releases the block.
 
@@ -303,7 +303,7 @@ A screen for sending messages is shown
 - User fills in all the fields of that template
 - A preview of the message is displayed at the bottom
 - A "Send" is shown at the bottom
-- If no messenger is currently available, ask the user if they want to send the message anyway
+- If no display is currently available, ask the user if they want to send the message anyway
 - When sending the message, the template is collapsed into a single string and then sent to the database.
 - Sending successful: show a message on full screen then return to the channel screen after a few seconds.
 

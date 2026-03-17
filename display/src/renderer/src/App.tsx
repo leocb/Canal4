@@ -10,7 +10,7 @@ import { useTranslation } from 'react-i18next';
 function App() {
   const { t } = useTranslation();
   const { isActive: connected, identity } = useSpacetimeDB();
-  const messengerConnect = useReducer(reducers.messengerConnect);
+  const displayConnect = useReducer(reducers.displayConnect);
   const loginOrCreateUser = useReducer(reducers.loginOrCreateUser);
   const [userIdentities] = useTable(tables.UserIdentity);
 
@@ -44,7 +44,7 @@ function App() {
       console.log("[App] Identity not registered as User, auto-registering...");
       setHasAttemptedAutoRegister(true);
       loginOrCreateUser({
-        email: `messenger-${machineUid.slice(0, 12)}@canal4.local`,
+        email: `display-${machineUid.slice(0, 12)}@canal4.local`,
         name: t('app.default_node_name', { id: machineUid.slice(0, 6) })
       }).catch(err => {
         console.error("[App] Auto-registration failed:", err);
@@ -62,7 +62,7 @@ function App() {
 
     const runHeartbeat = () => {
       console.log("[App] Sending heartbeat for UID:", machineUid);
-      messengerConnect({ messengerUid: machineUid })
+      displayConnect({ displayUid: machineUid })
         .catch(err => console.error("[App] Heartbeat failed:", err));
     };
 

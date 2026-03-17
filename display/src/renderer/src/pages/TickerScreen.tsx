@@ -15,14 +15,14 @@ function getAlphaFromColor(color: string): number {
 
 export const TickerScreen = () => {
     const [messages] = useTable(tables.Message);
-    const [devices] = useTable(tables.MessengerDevice);
+    const [devices] = useTable(tables.DisplayDevice);
     const [statuses] = useTable(tables.MessageDeliveryStatus);
     const { isActive: connected } = useSpacetimeDB();
     
     const updateStatus = useReducer(reducers.updateMessageDeliveryStatus);
     
     const [machineUid, setMachineUid] = useState<string>('');
-    const [activeMessage, setActiveMessage] = useState<{ id: bigint; messengerId: bigint; text: string; repeat: number; totalRepeats: number; isTest?: boolean } | null>(null);
+    const [activeMessage, setActiveMessage] = useState<{ id: bigint; displayId: bigint; text: string; repeat: number; totalRepeats: number; isTest?: boolean } | null>(null);
     const isAnimating = useRef(false);
     const [settings, setSettings] = useState(loadTickerSettings());
     const marqueeRef = useRef<HTMLDivElement>(null);
@@ -48,7 +48,7 @@ export const TickerScreen = () => {
                 // If showing a real message, we wait? No, let's interrupt for testing
                 setActiveMessage({
                     id: -1n,
-                    messengerId: -1n,
+                    displayId: -1n,
                     text: text,
                     repeat: 0,
                     totalRepeats: loadTickerSettings().repeatCount,
@@ -108,14 +108,14 @@ export const TickerScreen = () => {
     // Cleanup finished IDs once DB reflects 'Shown' status
     useEffect(() => {
         const myDevices = devices.filter(d => d.uid === machineUid);
-        const myMessengerIds = myDevices.map(d => BigInt(d.messengerId));
+        const myDisplayIds = myDevices.map(d => BigInt(d.displayId));
         
         for (const idStr of effectivelyShownIds.current) {
             const id = BigInt(idStr);
             const status = Array.from(statuses).find(s => {
                 const sid = BigInt(s.messageId);
-                const smid = BigInt(s.messengerId);
-                return sid === id && myMessengerIds.some(mid => mid === smid);
+                const smid = BigInt(s.displayId);
+                return sid === id && myDisplayIds.some(mid => mid === smid);
             });
             
             if (!status || status.status.tag === 'Shown') {
@@ -132,12 +132,12 @@ export const TickerScreen = () => {
         const myDevices = devices.filter(d => d.uid === machineUid);
         if (myDevices.length === 0) return;
 
-        const myMessengerIds = myDevices.map(d => BigInt(d.messengerId));
+        const myDisplayIds = myDevices.map(d => BigInt(d.displayId));
 
         // Build the pending queue for this machine
         const pendingQueue = Array.from(statuses)
             .filter(s => {
-                const isMine = myMessengerIds.includes(BigInt(s.messengerId));
+                const isMine = myDisplayIds.includes(BigInt(s.displayId));
                 const isPending = s.status.tag === 'Queued' || s.status.tag === 'InProgress';
                 const notRecentlyShown = !effectivelyShownIds.current.has(s.messageId.toString());
                 return isMine && isPending && notRecentlyShown;
@@ -174,7 +174,7 @@ export const TickerScreen = () => {
             
             setActiveMessage({ 
                 id: next.msg!.messageId, 
-                messengerId: next.statusRec.messengerId,
+                displayId: next.statusRec.displayId,
                 text: next.msg!.content, 
                 repeat: 0, 
                 totalRepeats: repeatCount 
@@ -208,7 +208,7 @@ export const TickerScreen = () => {
         }
 
         const msgExists = messages.some(m => BigInt(m.messageId) === BigInt(activeMessage.id));
-        const deviceExists = devices.some(d => BigInt(d.messengerId) === BigInt(activeMessage.messengerId));
+        const deviceExists = devices.some(d => BigInt(d.displayId) === BigInt(activeMessage.displayId));
         
         if (!msgExists || !deviceExists) {
             console.log("[Ticker] Message or device disappeared, stopping.");
@@ -244,7 +244,7 @@ export const TickerScreen = () => {
         
         const currentStatus = Array.from(statuses).find(s => 
             BigInt(s.messageId) === BigInt(activeMessage.id) && 
-            BigInt(s.messengerId) === BigInt(activeMessage.messengerId)
+            BigInt(s.displayId) === BigInt(activeMessage.displayId)
         );
 
         if (currentStatus?.status.tag === 'Cancelled') {

@@ -38,31 +38,31 @@ import BlockUserReducer from "./block_user_reducer";
 import CreateChannelReducer from "./create_channel_reducer";
 import CreateInviteTokenReducer from "./create_invite_token_reducer";
 import CreateMessageTemplateReducer from "./create_message_template_reducer";
-import CreateMessengerPinReducer from "./create_messenger_pin_reducer";
+import CreateDisplayPinReducer from "./create_display_pin_reducer";
 import CreateVenueReducer from "./create_venue_reducer";
 import DeleteChannelReducer from "./delete_channel_reducer";
 import DeleteMessageReducer from "./delete_message_reducer";
 import DeleteMessageTemplateReducer from "./delete_message_template_reducer";
-import DeleteMessengerDeviceReducer from "./delete_messenger_device_reducer";
+import DeleteDisplayDeviceReducer from "./delete_display_device_reducer";
 import DeleteUserAccountReducer from "./delete_user_account_reducer";
 import DeleteVenueReducer from "./delete_venue_reducer";
 import JoinVenueReducer from "./join_venue_reducer";
 import LeaveVenueReducer from "./leave_venue_reducer";
 import LoginOrCreateUserReducer from "./login_or_create_user_reducer";
 import LoginWithPasskeyReducer from "./login_with_passkey_reducer";
-import MessengerConnectReducer from "./messenger_connect_reducer";
-import RegisterMessengerToVenueReducer from "./register_messenger_to_venue_reducer";
+import DisplayConnectReducer from "./display_connect_reducer";
+import RegisterDisplayToVenueReducer from "./register_display_to_venue_reducer";
 import RegisterPasskeyReducer from "./register_passkey_reducer";
 import RepeatMessageReducer from "./repeat_message_reducer";
 import SendMessageReducer from "./send_message_reducer";
 import SetChannelRoleReducer from "./set_channel_role_reducer";
 import SetVenueRoleReducer from "./set_venue_role_reducer";
 import UnblockUserReducer from "./unblock_user_reducer";
-import UnpairMessengerReducer from "./unpair_messenger_reducer";
+import UnpairDisplayReducer from "./unpair_display_reducer";
 import UpdateChannelReducer from "./update_channel_reducer";
 import UpdateMessageDeliveryStatusReducer from "./update_message_delivery_status_reducer";
 import UpdateMessageTemplateReducer from "./update_message_template_reducer";
-import UpdateMessengerNameReducer from "./update_messenger_name_reducer";
+import UpdateDisplayNameReducer from "./update_display_name_reducer";
 import UpdatePushTokenReducer from "./update_push_token_reducer";
 import UpdateUserNameReducer from "./update_user_name_reducer";
 import UpdateVenueReducer from "./update_venue_reducer";
@@ -75,8 +75,8 @@ import ChannelMemberRoleRow from "./channel_member_role_table";
 import MessageRow from "./message_table";
 import MessageDeliveryStatusRow from "./message_delivery_status_table";
 import MessageTemplateRow from "./message_template_table";
-import MessengerDeviceRow from "./messenger_device_table";
-import MessengerPairingPinRow from "./messenger_pairing_pin_table";
+import DisplayDeviceRow from "./display_device_table";
+import DisplayPairingPinRow from "./display_pairing_pin_table";
 import NotificationFilterRow from "./notification_filter_table";
 import UserRow from "./user_table";
 import UserIdentityRow from "./user_identity_table";
@@ -135,8 +135,8 @@ const tablesSchema = __schema({
       { name: 'delivery_status_message_id', algorithm: 'btree', columns: [
         'messageId',
       ] },
-      { name: 'delivery_status_messenger_id', algorithm: 'btree', columns: [
-        'messengerId',
+      { name: 'delivery_status_display_id', algorithm: 'btree', columns: [
+        'displayId',
       ] },
       { name: 'statusId', algorithm: 'btree', columns: [
         'statusId',
@@ -160,34 +160,34 @@ const tablesSchema = __schema({
       { name: 'message_template_template_id_key', constraint: 'unique', columns: ['templateId'] },
     ],
   }, MessageTemplateRow),
-  MessengerDevice: __table({
-    name: 'messenger_device',
+  DisplayDevice: __table({
+    name: 'display_device',
     indexes: [
-      { name: 'messengerId', algorithm: 'btree', columns: [
-        'messengerId',
+      { name: 'displayId', algorithm: 'btree', columns: [
+        'displayId',
       ] },
-      { name: 'messenger_device_uid', algorithm: 'btree', columns: [
+      { name: 'display_device_uid', algorithm: 'btree', columns: [
         'uid',
       ] },
-      { name: 'messenger_device_venue_id', algorithm: 'btree', columns: [
+      { name: 'display_device_venue_id', algorithm: 'btree', columns: [
         'venueId',
       ] },
     ],
     constraints: [
-      { name: 'messenger_device_messenger_id_key', constraint: 'unique', columns: ['messengerId'] },
+      { name: 'display_device_display_id_key', constraint: 'unique', columns: ['displayId'] },
     ],
-  }, MessengerDeviceRow),
-  MessengerPairingPin: __table({
-    name: 'messenger_pairing_pin',
+  }, DisplayDeviceRow),
+  DisplayPairingPin: __table({
+    name: 'display_pairing_pin',
     indexes: [
       { name: 'pin', algorithm: 'btree', columns: [
         'pin',
       ] },
     ],
     constraints: [
-      { name: 'messenger_pairing_pin_pin_key', constraint: 'unique', columns: ['pin'] },
+      { name: 'display_pairing_pin_pin_key', constraint: 'unique', columns: ['pin'] },
     ],
-  }, MessengerPairingPinRow),
+  }, DisplayPairingPinRow),
   NotificationFilter: __table({
     name: 'notification_filter',
     indexes: [
@@ -272,31 +272,31 @@ const reducersSchema = __reducers(
   __reducerSchema("create_channel", CreateChannelReducer),
   __reducerSchema("create_invite_token", CreateInviteTokenReducer),
   __reducerSchema("create_message_template", CreateMessageTemplateReducer),
-  __reducerSchema("create_messenger_pin", CreateMessengerPinReducer),
+  __reducerSchema("create_display_pin", CreateDisplayPinReducer),
   __reducerSchema("create_venue", CreateVenueReducer),
   __reducerSchema("delete_channel", DeleteChannelReducer),
   __reducerSchema("delete_message", DeleteMessageReducer),
   __reducerSchema("delete_message_template", DeleteMessageTemplateReducer),
-  __reducerSchema("delete_messenger_device", DeleteMessengerDeviceReducer),
+  __reducerSchema("delete_display_device", DeleteDisplayDeviceReducer),
   __reducerSchema("delete_user_account", DeleteUserAccountReducer),
   __reducerSchema("delete_venue", DeleteVenueReducer),
   __reducerSchema("join_venue", JoinVenueReducer),
   __reducerSchema("leave_venue", LeaveVenueReducer),
   __reducerSchema("login_or_create_user", LoginOrCreateUserReducer),
   __reducerSchema("login_with_passkey", LoginWithPasskeyReducer),
-  __reducerSchema("messenger_connect", MessengerConnectReducer),
-  __reducerSchema("register_messenger_to_venue", RegisterMessengerToVenueReducer),
+  __reducerSchema("display_connect", DisplayConnectReducer),
+  __reducerSchema("register_display_to_venue", RegisterDisplayToVenueReducer),
   __reducerSchema("register_passkey", RegisterPasskeyReducer),
   __reducerSchema("repeat_message", RepeatMessageReducer),
   __reducerSchema("send_message", SendMessageReducer),
   __reducerSchema("set_channel_role", SetChannelRoleReducer),
   __reducerSchema("set_venue_role", SetVenueRoleReducer),
   __reducerSchema("unblock_user", UnblockUserReducer),
-  __reducerSchema("unpair_messenger", UnpairMessengerReducer),
+  __reducerSchema("unpair_display", UnpairDisplayReducer),
   __reducerSchema("update_channel", UpdateChannelReducer),
   __reducerSchema("update_message_delivery_status", UpdateMessageDeliveryStatusReducer),
   __reducerSchema("update_message_template", UpdateMessageTemplateReducer),
-  __reducerSchema("update_messenger_name", UpdateMessengerNameReducer),
+  __reducerSchema("update_display_name", UpdateDisplayNameReducer),
   __reducerSchema("update_push_token", UpdatePushTokenReducer),
   __reducerSchema("update_user_name", UpdateUserNameReducer),
   __reducerSchema("update_venue", UpdateVenueReducer),

@@ -129,52 +129,52 @@ app.whenReady().then(() => {
   const fs = require('fs');
   const path = require('path');
   const crypto = require('crypto');
-  const dataPath = path.join(app.getPath('userData'), 'messengerData.json');
+  const dataPath = path.join(app.getPath('userData'), 'displayData.json');
 
-  let messengerData = { id: '', token: '' };
+  let displayData = { id: '', token: '' };
   try {
     if (fs.existsSync(dataPath)) {
-      messengerData = JSON.parse(fs.readFileSync(dataPath, 'utf-8'));
+      displayData = JSON.parse(fs.readFileSync(dataPath, 'utf-8'));
     }
-  } catch (e) { console.error("Could not load messengerData", e); }
+  } catch (e) { console.error("Could not load displayData", e); }
 
-  if (!messengerData.id) {
-    messengerData.id = crypto.randomUUID();
-    fs.writeFileSync(dataPath, JSON.stringify(messengerData));
+  if (!displayData.id) {
+    displayData.id = crypto.randomUUID();
+    fs.writeFileSync(dataPath, JSON.stringify(displayData));
   }
 
   // Handle IPC requests
-  ipcMain.handle('get-machine-id', () => messengerData.id);
-  ipcMain.handle('get-token', () => messengerData.token);
+  ipcMain.handle('get-machine-id', () => displayData.id);
+  ipcMain.handle('get-token', () => displayData.token);
 
   ipcMain.on('set-token', (event, token) => {
     // We allow empty string/null to clear the token, only skip if strictly undefined or same as current
-    if (token === undefined || token === messengerData.token) return;
+    if (token === undefined || token === displayData.token) return;
 
     console.log(`[Main] Updating token (length: ${token?.length || 0})`);
-    messengerData.token = token || '';
-    fs.writeFileSync(dataPath, JSON.stringify(messengerData));
+    displayData.token = token || '';
+    fs.writeFileSync(dataPath, JSON.stringify(displayData));
 
     // Broadcast to other windows
     const windows = BrowserWindow.getAllWindows();
     for (const win of windows) {
       if (win.webContents !== event.sender) {
-        win.webContents.send('token-updated', messengerData.token);
+        win.webContents.send('token-updated', displayData.token);
       }
     }
   });
 
   ipcMain.handle('reset-identity', () => {
     if (fs.existsSync(dataPath)) fs.unlinkSync(dataPath);
-    messengerData = { id: crypto.randomUUID(), token: '' };
-    fs.writeFileSync(dataPath, JSON.stringify(messengerData));
+    displayData = { id: crypto.randomUUID(), token: '' };
+    fs.writeFileSync(dataPath, JSON.stringify(displayData));
 
     // Reload all windows to pick up new anonymous identity
     const windows = BrowserWindow.getAllWindows();
     for (const win of windows) {
       win.webContents.reload();
     }
-    return messengerData.id;
+    return displayData.id;
   });
 
   ipcMain.on('show-ticker', () => {

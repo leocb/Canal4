@@ -19,7 +19,7 @@ export const ChannelScreen = () => {
   const [venueMembers, membersReady] = useReadyTable(tables.VenueMember);
   const [channelRoles] = useTable(tables.ChannelMemberRole);
   const [users] = useTable(tables.User);
-  const [messengerDevices] = useTable(tables.MessengerDevice);
+  const [displayDevices] = useTable(tables.DisplayDevice);
   const [deliveryStatuses] = useTable(tables.MessageDeliveryStatus);
 
   const deleteMessage = useReducer(reducers.deleteMessage);
@@ -141,8 +141,8 @@ export const ChannelScreen = () => {
     return u?.name || t('channel.deleted_user');
   };
 
-  // Messenger devices connected to this venue
-  const connectedDevices = (messengerDevices as any[]).filter(d => d.venueId === venue.venueId);
+  // Display devices connected to this venue
+  const connectedDevices = (displayDevices as any[]).filter(d => d.venueId === venue.venueId);
   const hasDevices = connectedDevices.length > 0;
 
   const isNodeConnected = (device: any) => {
@@ -165,7 +165,7 @@ export const ChannelScreen = () => {
     // Find matching status record
     const s = list.find((ds: any) => {
       try {
-        return BigInt(ds.messageId) === mid && BigInt(ds.messengerId) === did;
+        return BigInt(ds.messageId) === mid && BigInt(ds.displayId) === did;
       } catch {
         return false;
       }
@@ -178,7 +178,7 @@ export const ChannelScreen = () => {
     if (!hasDevices) return isMe ? 'var(--accent-color)' : 'rgba(255, 255, 255, 0.15)';
 
     const statuses = connectedDevices.map(d => ({
-      status: getDeliveryStatus(messageId, d.messengerId),
+      status: getDeliveryStatus(messageId, d.displayId),
       connected: isNodeConnected(d)
     })).filter(s => s.connected).map(s => s.status);
 
@@ -253,7 +253,7 @@ export const ChannelScreen = () => {
 
   const handleRepeat = async (msg: any) => {
     setContextMsg(null);
-    const hasActiveDevices = (messengerDevices as any[])
+    const hasActiveDevices = (displayDevices as any[])
       .filter(d => d.venueId === venue?.venueId)
       .some(isNodeConnected);
 
@@ -344,7 +344,7 @@ export const ChannelScreen = () => {
                 const connected = isNodeConnected(d);
                 return (
                   <div
-                    key={d.messengerId.toString()}
+                    key={d.displayId.toString()}
                     className="glass-panel"
                     style={{
                       minWidth: '200px',
@@ -433,8 +433,8 @@ export const ChannelScreen = () => {
                       <span style={{ display: 'flex', gap: '8px', background: 'rgba(0,0,0,0.2)', padding: '4px 8px', borderRadius: '12px', alignItems: 'center' }}>
                         {connectedDevices.map((d: any) => (
                           <StatusIcon
-                            key={d.messengerId.toString()}
-                            status={getDeliveryStatus(msg.messageId, d.messengerId)}
+                            key={d.displayId.toString()}
+                            status={getDeliveryStatus(msg.messageId, d.displayId)}
                             isConnected={isNodeConnected(d)}
                             deviceName={d.name}
                           />

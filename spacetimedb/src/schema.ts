@@ -185,17 +185,17 @@ export const Message = table(
   }
 );
 
-export const MessengerDevice = table(
+export const DisplayDevice = table(
   {
-    name: "messenger_device",
+    name: "display_device",
     public: true,
     indexes: [
-      { name: "messenger_device_uid", accessor: "messenger_device_uid", algorithm: "btree", columns: ["uid"] },
-      { name: "messenger_device_venue_id", accessor: "messenger_device_venue_id", algorithm: "btree", columns: ["venueId"] },
+      { name: "display_device_uid", accessor: "display_device_uid", algorithm: "btree", columns: ["uid"] },
+      { name: "display_device_venue_id", accessor: "display_device_venue_id", algorithm: "btree", columns: ["venueId"] },
     ] as const,
   },
   {
-    messengerId: t.u64().primaryKey().autoInc(),
+    displayId: t.u64().primaryKey().autoInc(),
     uid: t.string(),
     identity: t.identity(),
     venueId: t.u64(),
@@ -205,11 +205,11 @@ export const MessengerDevice = table(
   }
 );
 
-export const MessengerPairingPin = table(
-  { name: "messenger_pairing_pin", public: true },
+export const DisplayPairingPin = table(
+  { name: "display_pairing_pin", public: true },
   {
     pin: t.string().primaryKey(),
-    messengerUid: t.string(),
+    displayUid: t.string(),
     identity: t.identity(),
     expiresAt: t.timestamp(),
   }
@@ -221,13 +221,13 @@ export const MessageDeliveryStatus = table(
     public: true,
     indexes: [
       { name: "delivery_status_message_id", accessor: "delivery_status_message_id", algorithm: "btree", columns: ["messageId"] },
-      { name: "delivery_status_messenger_id", accessor: "delivery_status_messenger_id", algorithm: "btree", columns: ["messengerId"] },
+      { name: "delivery_status_display_id", accessor: "delivery_status_display_id", algorithm: "btree", columns: ["displayId"] },
     ] as const,
   },
   {
     statusId: t.u64().primaryKey().autoInc(),
     messageId: t.u64(),
-    messengerId: t.u64(),
+    displayId: t.u64(),
     status: DeliveryStatus,
     updatedAt: t.timestamp(),
   }
@@ -263,8 +263,8 @@ const spacetimedb = schema({
   NotificationFilter,
   MessageTemplate,
   Message,
-  MessengerDevice,
-  MessengerPairingPin,
+  DisplayDevice,
+  DisplayPairingPin,
   MessageDeliveryStatus,
   VenueInviteToken,
 });

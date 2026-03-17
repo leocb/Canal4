@@ -51,12 +51,12 @@ spacetime publish --skip-clippy canal4-dev
 cd ..
 
 # 3. Start the web dashboard
-cd client && npm install && cp .env.example .env
+cd webapp && npm install && cp .env.example .env
 # Edit .env with your local SpacetimeDB values
 npm run dev
 
 # 4. (Optional) Start the desktop display node
-cd ../messenger && npm install && npm run dev
+cd ../display && npm install && npm run dev
 ```
 
 ---
@@ -72,16 +72,16 @@ spacetimedb-node-project/
 │   │   └── schema.ts     # Table definitions
 │   └── dist/bundle.js    # Compiled output (committed for Docker deploy)
 │
-├── client/               # Web dashboard
+├── webapp/               # Web dashboard
 │   ├── src/
 │   │   ├── pages/        # Route-level React components
 │   │   ├── components/   # Shared UI components
 │   │   ├── hooks/        # Custom React hooks
 │   │   ├── locales/      # i18n JSON files (en, pt-BR)
-│   │   └── module_bindings/  # Auto-generated SpacetimeDB client types
+│   │   └── module_bindings/  # Auto-generated SpacetimeDB webapp types
 │   └── server.js         # Express: serves SPA + /api/request-pin + /env-config.js
 │
-├── messenger/            # Desktop display node (Electron)
+├── display/            # Desktop display node (Electron)
 │   └── src/
 │       ├── main/         # Electron main process
 │       └── renderer/     # React renderer (pages, hooks, locales)
@@ -99,22 +99,22 @@ spacetimedb-node-project/
 1. Edit `spacetimedb/src/index.ts` (reducers) or `spacetimedb/src/schema.ts` (tables)
 2. Rebuild: `cd spacetimedb && npm run build`
 3. Republish: `spacetime publish --skip-clippy canal4-dev`
-4. Regenerate client bindings if the schema changed:
+4. Regenerate webapp bindings if the schema changed:
    ```bash
-   spacetime generate --lang typescript --out-dir client/src/module_bindings canal4-dev
-   spacetime generate --lang typescript --out-dir messenger/src/renderer/src/module_bindings canal4-dev
+   spacetime generate --lang typescript --out-dir webapp/src/module_bindings canal4-dev
+   spacetime generate --lang typescript --out-dir display/src/renderer/src/module_bindings canal4-dev
    ```
 
 ### Adding a new UI string
 
-1. Add the key to `client/src/locales/en.json` (and `messenger/src/renderer/src/locales/en.json` if it's in the desktop app)
+1. Add the key to `webapp/src/locales/en.json` (and `display/src/renderer/src/locales/en.json` if it's in the desktop app)
 2. Add the Portuguese translation to the corresponding `pt-BR.json`
 3. Use `t('your.key')` in the component — never hardcode user-visible strings
 
 ### Adding a new page (web app)
 
-1. Create `client/src/pages/YourScreen.tsx`
-2. Register the route in `client/src/App.tsx`
+1. Create `webapp/src/pages/YourScreen.tsx`
+2. Register the route in `webapp/src/App.tsx`
 3. Wrap with `<ProtectedRoute>` if login is required
 
 ---
@@ -132,8 +132,8 @@ spacetimedb-node-project/
 
 4. **Check for TypeScript errors**:
    ```bash
-   cd client && npm run typecheck
-   cd ../messenger && npm run typecheck
+   cd webapp && npm run typecheck
+   cd ../display && npm run typecheck
    ```
 
 5. **Open a PR** against `main` with:

@@ -788,12 +788,12 @@ export const send_message = spacetimedb.reducer(
       sentAt: ctx.timestamp,
     });
 
-    const activeMessengers = [...ctx.db.MessengerDevice.messenger_device_venue_id.filter(ch.venueId)];
-    for (const messenger of activeMessengers) {
+    const activeDisplays = [...ctx.db.DisplayDevice.display_device_venue_id.filter(ch.venueId)];
+    for (const display of activeDisplays) {
       ctx.db.MessageDeliveryStatus.insert({
         statusId: 0n,
         messageId: row.messageId,
-        messengerId: messenger.messengerId,
+        displayId: display.displayId,
         status: { tag: "Queued", value: "" },
         updatedAt: ctx.timestamp,
       });
@@ -864,12 +864,12 @@ export const repeat_message = spacetimedb.reducer(
       sentAt: ctx.timestamp,
     });
 
-    const activeMessengers = [...ctx.db.MessengerDevice.messenger_device_venue_id.filter(ch.venueId)];
-    for (const messenger of activeMessengers) {
+    const activeDisplays = [...ctx.db.DisplayDevice.display_device_venue_id.filter(ch.venueId)];
+    for (const display of activeDisplays) {
       ctx.db.MessageDeliveryStatus.insert({
         statusId: 0n, // Added statusId
         messageId: row.messageId,
-        messengerId: messenger.messengerId,
+        displayId: display.displayId,
         status: { tag: "Queued", value: "" },
         updatedAt: ctx.timestamp,
       });
@@ -877,26 +877,26 @@ export const repeat_message = spacetimedb.reducer(
   }
 );
 
-/*** ELECTRON MESSENGER SYNC ***/
+/*** ELECTRON DISPLAY SYNC ***/
 
-export const create_messenger_pin = spacetimedb.reducer(
-  { messengerUid: t.string() },
-  (ctx, { messengerUid }) => {
+export const create_display_pin = spacetimedb.reducer(
+  { displayUid: t.string() },
+  (ctx, { displayUid }) => {
     // We allow anonymous callers to generate a PIN.
     // The PIN is linked to the caller's identity so only they can use it to pair later.
     const pin = ctx.random.integerInRange(100000, 999999).toString();
     const expiresAt = ctx.timestamp.microsSinceUnixEpoch + (10n * 60n * 1000000n); // 10 mins
 
-    ctx.db.MessengerPairingPin.insert({
+    ctx.db.DisplayPairingPin.insert({
       pin,
-      messengerUid,
+      displayUid,
       identity: ctx.sender,
       expiresAt: new Timestamp(expiresAt)
     });
   }
 );
 
-export const register_messenger_to_venue = spacetimedb.reducer(
+export const register_display_to_venue = spacetimedb.reducer(
   { pin: t.string(), venueId: t.u64(), name: t.string() },
   (ctx, { pin, venueId, name }) => {
     const userId = getUserId(ctx);
@@ -920,7 +920,7 @@ export const register_messenger_to_venue = spacetimedb.reducer(
       if (!isAdmin) throw new SenderError("api_errors.register_node_forbidden");
     }
 
-    const pairing = ctx.db.MessengerPairingPin.pin.find(pin);
+    const pairing = ctx.db.DisplayPairingPin.pin.find(pin);
     if (!pairing) throw new SenderError("api_errors.invalid_pin_expired");
     if (ctx.timestamp.microsSinceUnixEpoch > pairing.expiresAt.microsSinceUnixEpoch) {
       throw new SenderError("api_errors.pin_expired");
@@ -928,15 +928,15 @@ export const register_messenger_to_venue = spacetimedb.reducer(
 
     // Clean up old registrations for this UID in THIS venue 
     // (prevents ghost nodes on re-pairing after reset)
-    const oldDevices = [...ctx.db.MessengerDevice.messenger_device_uid.filter(pairing.messengerUid)]
+    const oldDevices = [...ctx.db.DisplayDevice.display_device_uid.filter(pairing.displayUid)]
       .filter(d => d.venueId === venueId);
     for (const old of oldDevices) {
-      ctx.db.MessengerDevice.messengerId.delete(old.messengerId);
+      ctx.db.DisplayDevice.displayId.delete(old.displayId);
     }
 
-    ctx.db.MessengerDevice.insert({
-      messengerId: 0n,
-      uid: pairing.messengerUid,
+    ctx.db.DisplayDevice.insert({
+      displayId: 0n,
+      uid: pairing.displayUid,
       identity: pairing.identity,
       venueId,
       name,
@@ -944,23 +944,23 @@ export const register_messenger_to_venue = spacetimedb.reducer(
       lastConnectedAt: ctx.timestamp,
     });
 
-    ctx.db.MessengerPairingPin.pin.delete(pin);
+    ctx.db.DisplayPairingPin.pin.delete(pin);
   }
 );
 
-export const messenger_connect = spacetimedb.reducer(
-  { messengerUid: t.string() },
-  (ctx, { messengerUid }) => {
+export const display_connect = spacetimedb.reducer(
+  { displayUid: t.string() },
+  (ctx, { displayUid }) => {
     // Find devices with this UID and verify the identity matches the one stored at pairing time
-    const devices = [...ctx.db.MessengerDevice.messenger_device_uid.filter(messengerUid)]
+    const devices = [...ctx.db.DisplayDevice.display_device_uid.filter(displayUid)]
       .filter(d => d.identity.isEqual(ctx.sender));
 
     if (devices.length === 0) {
-      throw new SenderError("api_errors.messenger_device_not_registered");
+      throw new SenderError("api_errors.display_device_not_registered");
     }
 
     for (const device of devices) {
-      ctx.db.MessengerDevice.messengerId.update({
+      ctx.db.DisplayDevice.displayId.update({
         ...device,
         lastConnectedAt: ctx.timestamp,
       });
@@ -981,7 +981,7 @@ export const update_message_delivery_status = spacetimedb.reducer(
     if (!channel) throw new SenderError("api_errors.channel_not_found_for_message");
 
     // 2. Find the SPECIFIC device pairing for this machine and this venue
-    const devicesByUid = [...ctx.db.MessengerDevice.messenger_device_uid.filter(uid)];
+    const devicesByUid = [...ctx.db.DisplayDevice.display_device_uid.filter(uid)];
     const device = devicesByUid.find(d => d.identity.isEqual(ctx.sender) && d.venueId === channel.venueId);
 
     if (!device) {
@@ -989,16 +989,16 @@ export const update_message_delivery_status = spacetimedb.reducer(
       console.error(`[UpdateStatus] Identity mismatch for UID ${uid}. Sender: ${senderHex}... Venue: ${channel.venueId}`);
       if (devicesByUid.length > 0) {
         console.error(`[UpdateStatus] Found ${devicesByUid.length} devices with this UID but none match sender/venue.`);
-        devicesByUid.forEach(d => console.log(` - Device ${d.messengerId} Identity: ${d.identity.toHexString().slice(0, 10)}... Venue: ${d.venueId}`));
+        devicesByUid.forEach(d => console.log(` - Device ${d.displayId} Identity: ${d.identity.toHexString().slice(0, 10)}... Venue: ${d.venueId}`));
       }
-      throw new SenderError("api_errors.messenger_device_mismatch");
+      throw new SenderError("api_errors.display_device_mismatch");
     }
 
-    console.log(`[UpdateStatus] Found device: ${device.messengerId} (${device.name})`);
+    console.log(`[UpdateStatus] Found device: ${device.displayId} (${device.name})`);
 
     // 3. Update the status row
     const statusRow = [...ctx.db.MessageDeliveryStatus.delivery_status_message_id.filter(messageId)]
-      .find(s => s.messengerId === device.messengerId);
+      .find(s => s.displayId === device.displayId);
 
     if (statusRow) {
       console.log(`[UpdateStatus] Updating status for ID ${statusRow.statusId} to ${statusTag}`);
@@ -1012,21 +1012,21 @@ export const update_message_delivery_status = spacetimedb.reducer(
       ctx.db.MessageDeliveryStatus.insert({
         statusId: 0n,
         messageId,
-        messengerId: device.messengerId,
+        displayId: device.displayId,
         status: { tag: statusTag as any, value: "" },
         updatedAt: ctx.timestamp,
       });
     }
 
-    console.log(`[UpdateStatus] Successfully set ${messageId}/${device.messengerId} to ${statusTag}`);
+    console.log(`[UpdateStatus] Successfully set ${messageId}/${device.displayId} to ${statusTag}`);
   }
 );
 
-export const delete_messenger_device = spacetimedb.reducer(
-  { messengerId: t.u64() },
-  (ctx, { messengerId }) => {
+export const delete_display_device = spacetimedb.reducer(
+  { displayId: t.u64() },
+  (ctx, { displayId }) => {
     const userId = getUserId(ctx);
-    const device = ctx.db.MessengerDevice.messengerId.find(messengerId);
+    const device = ctx.db.DisplayDevice.displayId.find(displayId);
     if (!device) throw new SenderError("api_errors.device_not_found");
 
     // Must be venue owner or admin to delete nodes
@@ -1044,21 +1044,21 @@ export const delete_messenger_device = spacetimedb.reducer(
       if (!isAdmin) throw new SenderError("api_errors.delete_node_forbidden");
     }
 
-    ctx.db.MessengerDevice.messengerId.delete(messengerId);
+    ctx.db.DisplayDevice.displayId.delete(displayId);
 
     // Cleanup delivery statuses
-    const statuses = [...ctx.db.MessageDeliveryStatus.delivery_status_messenger_id.filter(messengerId)];
+    const statuses = [...ctx.db.MessageDeliveryStatus.delivery_status_display_id.filter(displayId)];
     for (const s of statuses) {
       ctx.db.MessageDeliveryStatus.delete({ ...s });
     }
   }
 );
 
-export const update_messenger_name = spacetimedb.reducer(
-  { messengerId: t.u64(), newName: t.string() },
-  (ctx, { messengerId, newName }) => {
+export const update_display_name = spacetimedb.reducer(
+  { displayId: t.u64(), newName: t.string() },
+  (ctx, { displayId, newName }) => {
     const userId = getUserId(ctx);
-    const device = ctx.db.MessengerDevice.messengerId.find(messengerId);
+    const device = ctx.db.DisplayDevice.displayId.find(displayId);
     if (!device) throw new SenderError("api_errors.device_not_found");
 
     const venue = ctx.db.Venue.venueId.find(device.venueId);
@@ -1075,17 +1075,17 @@ export const update_messenger_name = spacetimedb.reducer(
       if (!isAdmin) throw new SenderError("api_errors.rename_node_forbidden");
     }
 
-    ctx.db.MessengerDevice.messengerId.update({
+    ctx.db.DisplayDevice.displayId.update({
       ...device,
       name: newName.trim(),
     });
   }
 );
 
-export const unpair_messenger = spacetimedb.reducer(
-  { messengerId: t.u64() },
-  (ctx, { messengerId }) => {
-    const device = ctx.db.MessengerDevice.messengerId.find(messengerId);
+export const unpair_display = spacetimedb.reducer(
+  { displayId: t.u64() },
+  (ctx, { displayId }) => {
+    const device = ctx.db.DisplayDevice.displayId.find(displayId);
     if (!device) throw new SenderError("api_errors.device_not_found");
 
     // Allow the device ITSELF to unpair (security check: identity must match)
@@ -1093,10 +1093,10 @@ export const unpair_messenger = spacetimedb.reducer(
       throw new SenderError("api_errors.unpair_node_forbidden");
     }
 
-    ctx.db.MessengerDevice.messengerId.delete(messengerId);
+    ctx.db.DisplayDevice.displayId.delete(displayId);
 
     // Cleanup delivery statuses
-    const statuses = [...ctx.db.MessageDeliveryStatus.delivery_status_messenger_id.filter(messengerId)];
+    const statuses = [...ctx.db.MessageDeliveryStatus.delivery_status_display_id.filter(displayId)];
     for (const s of statuses) {
       ctx.db.MessageDeliveryStatus.delete({ ...s });
     }

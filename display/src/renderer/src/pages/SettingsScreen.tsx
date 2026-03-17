@@ -129,12 +129,12 @@ export const SettingsScreen = () => {
   const [venues] = useTable(tables.Venue);
   const [channels] = useTable(tables.Channel);
   const [templates] = useTable(tables.MessageTemplate);
-  const [devices] = useTable(tables.MessengerDevice);
+  const [devices] = useTable(tables.DisplayDevice);
   const [users] = useTable(tables.User);
   const [deliveryStatuses] = useTable(tables.MessageDeliveryStatus);
 
   const [machineUid, setMachineUid] = useState<string>('Loading...');
-  const [pins] = useTable(tables.MessengerPairingPin);
+  const [pins] = useTable(tables.DisplayPairingPin);
   const { tab } = useParams<{ tab: string }>();
   const navigate = useNavigate();
   const activeTab: Tab = (tab as Tab) || 'pairing';
@@ -153,8 +153,8 @@ export const SettingsScreen = () => {
   const previewRef = useRef<HTMLDivElement>(null);
   const [previewDuration, setPreviewDuration] = useState(10);
 
-  const requestPin = useReducer(reducers.createMessengerPin);
-  const unpair = useReducer(reducers.unpairMessenger);
+  const requestPin = useReducer(reducers.createDisplayPin);
+  const unpair = useReducer(reducers.unpairDisplay);
 
   // PIN countdown timer state
   const [pinSecondsLeft, setPinSecondsLeft] = useState<number>(0);
@@ -185,7 +185,7 @@ export const SettingsScreen = () => {
   }, []);
 
   const activePin = useMemo(() => {
-    const pin = pins.find(p => p.messengerUid === machineUid);
+    const pin = pins.find(p => p.displayUid === machineUid);
     console.log("Settings: Checking for active PIN", { machineUid, pins, found: !!pin });
     return pin;
   }, [pins, machineUid]);
@@ -213,14 +213,14 @@ export const SettingsScreen = () => {
   const getStatus = (messageId: any, deviceId: any) => {
     const mid = BigInt(messageId);
     const did = BigInt(deviceId);
-    const s = Array.from(deliveryStatuses || []).find(ds => BigInt(ds.messageId) === mid && BigInt(ds.messengerId) === did);
+    const s = Array.from(deliveryStatuses || []).find(ds => BigInt(ds.messageId) === mid && BigInt(ds.displayId) === did);
     return s?.status?.tag;
   };
 
   const getMessageBorderColor = (messageId: bigint, venueId?: bigint | null) => {
     const myIds = myDevices
       .filter(d => !venueId || d.venueId === venueId)
-      .map(d => BigInt(d.messengerId));
+      .map(d => BigInt(d.displayId));
 
     if (myIds.length === 0) return 'rgba(59,130,246,0.5)';
 
@@ -259,11 +259,11 @@ export const SettingsScreen = () => {
   // Detect newly paired venues — compare device IDs
   useEffect(() => {
     if (machineUid.startsWith('Loading')) return;
-    const currentIds = new Set(myDevices.map(d => d.messengerId.toString()));
+    const currentIds = new Set(myDevices.map(d => d.displayId.toString()));
     const newIds = [...currentIds].filter(id => !prevDeviceIds.has(id));
     if (newIds.length > 0 && prevDeviceIds.size > 0) {
       // A new device was just added — find the venue name
-      const newDevice = myDevices.find(d => newIds.includes(d.messengerId.toString()));
+      const newDevice = myDevices.find(d => newIds.includes(d.displayId.toString()));
       const venueName = newDevice ? getVenueName(newDevice.venueId) : 'a venue';
       setNewPairingToast(t('settings.pairing.toast_success', { venue: venueName, name: newDevice?.name }));
       // Auto-dismiss after 6s
@@ -426,7 +426,7 @@ export const SettingsScreen = () => {
                 <h3 style={{ fontSize: '1rem', marginBottom: '12px', margin: '0 0 12px' }}>{t('settings.pairing.paired_venues')}</h3>
                 <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
                   {myDevices.map(device => (
-                    <div key={device.messengerId.toString()} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '10px 14px', background: 'rgba(255,255,255,0.03)', borderRadius: '10px', border: '1px solid rgba(255,255,255,0.06)' }}>
+                    <div key={device.displayId.toString()} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '10px 14px', background: 'rgba(255,255,255,0.03)', borderRadius: '10px', border: '1px solid rgba(255,255,255,0.06)' }}>
                       <div>
                         <div style={{ fontWeight: 500, fontSize: '0.95rem' }}>{getVenueName(device.venueId)}</div>
                         <div style={{ fontSize: '0.75rem', color: '#64748b', marginTop: '2px' }}>{t('settings.pairing.as_name', { name: device.name })}</div>
@@ -435,7 +435,7 @@ export const SettingsScreen = () => {
                         <button
                           onClick={() => {
                             if (window.confirm(t('settings.pairing.unpair_confirm', { name: getVenueName(device.venueId) }))) {
-                              unpair({ messengerId: device.messengerId });
+                              unpair({ displayId: device.displayId });
                             }
                           }}
                           title={t('settings.display.delete_node')}
@@ -527,7 +527,7 @@ export const SettingsScreen = () => {
                     onClick={async () => {
                       console.log("Settings: Requesting PIN for", machineUid);
                       try {
-                        await requestPin({ messengerUid: machineUid });
+                        await requestPin({ displayUid: machineUid });
                         console.log("Settings: PIN request sent successfully");
                       } catch (err) {
                         console.error("Settings: Failed to request PIN", err);
@@ -597,7 +597,7 @@ export const SettingsScreen = () => {
                             {myDevices
                               .filter(d => venue && d.venueId === venue.venueId)
                               .map(d => {
-                                const status = getStatus(msg.messageId, d.messengerId);
+                                const status = getStatus(msg.messageId, d.displayId);
                                 if (!status) return null;
 
                                 const statusColor =
@@ -613,7 +613,7 @@ export const SettingsScreen = () => {
                                         status === 'Unavailable' ? t('settings.logs.status.unavailable') :
                                           status === 'Cancelled' ? t('settings.logs.status.deleted') : status;
                                 return (
-                                  <span key={d.messengerId.toString()} style={{ fontSize: '0.7rem', color: statusColor, display: 'flex', alignItems: 'center', gap: '4px' }}>
+                                  <span key={d.displayId.toString()} style={{ fontSize: '0.7rem', color: statusColor, display: 'flex', alignItems: 'center', gap: '4px' }}>
                                     <span style={{ width: '6px', height: '6px', borderRadius: '50%', background: statusColor, display: 'inline-block' }} />
                                     {d.name}: {statusLabel}
                                   </span>

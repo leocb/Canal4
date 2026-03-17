@@ -15,10 +15,10 @@ export const DesktopDisplaySyncScreen = () => {
   const [venues] = useTable(tables.Venue);
   const [channels] = useTable(tables.Channel);
   const [channelRoles] = useTable(tables.ChannelMemberRole);
-  const [messengerDevices] = useTable(tables.MessengerDevice);
+  const [displayDevices] = useTable(tables.DisplayDevice);
   
-  const deleteDevice = useReducer(reducers.deleteMessengerDevice);
-  const updateDeviceName = useReducer(reducers.updateMessengerName);
+  const deleteDevice = useReducer(reducers.deleteDisplayDevice);
+  const updateDeviceName = useReducer(reducers.updateDisplayName);
 
   // Force re-render periodically to update relative status times
   const [, setTick] = useState(0);
@@ -31,7 +31,7 @@ export const DesktopDisplaySyncScreen = () => {
   const venueIdBigInt = venue ? venue.venueId : 0n;
   
   const venueChannels = channels.filter(c => c.venueId === venueIdBigInt);
-  const venueDevices = messengerDevices.filter(d => d.venueId === venueIdBigInt);
+  const venueDevices = displayDevices.filter(d => d.venueId === venueIdBigInt);
 
   if (!venue) {
     return (
@@ -72,7 +72,7 @@ export const DesktopDisplaySyncScreen = () => {
   const handleDelete = async (device: any) => {
     if (!window.confirm(t('display_nodes.confirm_delete', { name: device.name }))) return;
     try {
-      await deleteDevice({ messengerId: device.messengerId });
+      await deleteDevice({ displayId: device.displayId });
     } catch (err: any) {
       alert(t('display_nodes.error_delete', { error: t(err.message) }));
     }
@@ -82,7 +82,7 @@ export const DesktopDisplaySyncScreen = () => {
     const newName = prompt(t('display_nodes.rename_prompt'), device.name);
     if (newName && newName.trim() && newName !== device.name) {
       try {
-        await updateDeviceName({ messengerId: device.messengerId, newName: newName.trim() });
+        await updateDeviceName({ displayId: device.displayId, newName: newName.trim() });
       } catch (err: any) {
         alert(t('display_nodes.error_rename', { error: t(err.message) }));
       }
@@ -137,7 +137,7 @@ export const DesktopDisplaySyncScreen = () => {
               const connected = isNodeConnected(device);
               return (
                 <div 
-                  key={device.messengerId.toString()} 
+                  key={device.displayId.toString()} 
                   className="glass-panel" 
                   style={{ padding: '24px', marginBottom: '16px', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}
                 >

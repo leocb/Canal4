@@ -11,5 +11,5 @@ import {
 } from "spacetimedb";
 
 export default {
-  messengerUid: __t.string(),
+  displayUid: __t.string(),
 };

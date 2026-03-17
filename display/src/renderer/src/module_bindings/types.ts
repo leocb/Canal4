@@ -64,7 +64,7 @@ export type Message = __Infer<typeof Message>;
 export const MessageDeliveryStatus = __t.object("MessageDeliveryStatus", {
   statusId: __t.u64(),
   messageId: __t.u64(),
-  messengerId: __t.u64(),
+  displayId: __t.u64(),
   get status() {
     return DeliveryStatus;
   },
@@ -81,8 +81,8 @@ export const MessageTemplate = __t.object("MessageTemplate", {
 });
 export type MessageTemplate = __Infer<typeof MessageTemplate>;
 
-export const MessengerDevice = __t.object("MessengerDevice", {
-  messengerId: __t.u64(),
+export const DisplayDevice = __t.object("DisplayDevice", {
+  displayId: __t.u64(),
   uid: __t.string(),
   identity: __t.identity(),
   venueId: __t.u64(),
@@ -90,15 +90,15 @@ export const MessengerDevice = __t.object("MessengerDevice", {
   registeredAt: __t.timestamp(),
   lastConnectedAt: __t.timestamp(),
 });
-export type MessengerDevice = __Infer<typeof MessengerDevice>;
+export type DisplayDevice = __Infer<typeof DisplayDevice>;
 
-export const MessengerPairingPin = __t.object("MessengerPairingPin", {
+export const DisplayPairingPin = __t.object("DisplayPairingPin", {
   pin: __t.string(),
-  messengerUid: __t.string(),
+  displayUid: __t.string(),
   identity: __t.identity(),
   expiresAt: __t.timestamp(),
 });
-export type MessengerPairingPin = __Infer<typeof MessengerPairingPin>;
+export type DisplayPairingPin = __Infer<typeof DisplayPairingPin>;
 
 export const NotificationFilter = __t.object("NotificationFilter", {
   channelId: __t.u64(),
