@@ -5,12 +5,13 @@ import NavBar from "./components/NavBar";
 import { useAuth } from "./hooks/useAuth";
 import { useReducer } from "spacetimedb/react";
 import { reducers } from "./module_bindings/index.ts";
+import { useTranslation } from 'react-i18next';
 
 import { LoginScreen } from "./pages/LoginScreen";
 import { VenuesListScreen } from "./pages/VenuesListScreen";
 import { VenueChannelsScreen } from "./pages/VenueChannelsScreen";
 import { ChannelScreen } from "./pages/ChannelScreen";
-import { DesktopMessengerSyncScreen } from "./pages/DesktopMessengerSyncScreen";
+import { DesktopDisplaySyncScreen } from "./pages/DesktopDisplaySyncScreen";
 import { NewVenueScreen } from "./pages/NewVenueScreen";
 import { NewChannelScreen } from "./pages/NewChannelScreen";
 import { AddNodeScreen } from "./pages/AddNodeScreen";
@@ -25,13 +26,14 @@ import { SendMessageScreen } from "./pages/SendMessageScreen";
 import { ProfileScreen } from "./pages/ProfileScreen";
 
 function ProtectedRoute() {
+  const { t } = useTranslation();
   const { isReady, isLoggedIn } = useAuth();
   const location = useLocation();
 
   if (!isReady) {
     return (
       <div className="app-container empty-state" style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center' }}>
-        <h2>Loading Profile...</h2>
+        <h2>{t('common.loading_profile', { defaultValue: 'Loading Profile...' })}</h2>
         <div style={{ marginTop: '16px', borderTop: '2px solid var(--accent-color)', width: '40px', borderRadius: '2px', animation: 'spin 1s linear infinite' }}></div>
       </div>
     );
@@ -45,6 +47,7 @@ function ProtectedRoute() {
 }
 
 function App() {
+  const { t } = useTranslation();
   const { isActive: connected, connectionError: error } = useSpacetimeDB();
   const { isLoggedIn } = useAuth();
   const extendSession = useReducer(reducers.extendSession);
@@ -60,8 +63,8 @@ function App() {
   if (error) {
     return (
       <div className="app-container empty-state">
-        <h2 style={{color: "var(--error-color)"}}>Connection Error</h2>
-        <p style={{ marginTop: '12px' }}>{error.message}</p>
+        <h2 style={{color: "var(--error-color)"}}>{t('common.connection_error', { defaultValue: 'Connection Error' })}</h2>
+        <p style={{ marginTop: '12px' }}>{t(error.message)}</p>
       </div>
     );
   }
@@ -69,7 +72,7 @@ function App() {
   if (!connected) {
     return (
       <div className="app-container empty-state" style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center' }}>
-        <h2>Connecting to Space...</h2>
+        <h2>{t('common.connecting', { defaultValue: 'Connecting to Space...' })}</h2>
         <div style={{ marginTop: '16px', borderTop: '2px solid var(--accent-color)', width: '40px', borderRadius: '2px', animation: 'spin 1s linear infinite' }}></div>
       </div>
     );
@@ -95,7 +98,7 @@ function App() {
           <Route path="/venues/:venueLink/channels/:channelId/settings" element={<ChannelSettingsScreen />} />
           <Route path="/venues/:venueLink/channels/:channelId/templates" element={<ChannelTemplatesScreen />} />
           <Route path="/venues/:venueLink/channels/:channelId/templates/:templateId" element={<ChannelTemplateEditScreen />} />
-          <Route path="/venues/:venueLink/desktop-displays" element={<DesktopMessengerSyncScreen />} />
+          <Route path="/venues/:venueLink/desktop-displays" element={<DesktopDisplaySyncScreen />} />
           <Route path="/venues/:venueLink/desktop-displays/new" element={<AddNodeScreen />} />
           <Route path="/join/:venueLink/:token" element={<JoinVenueScreen />} />
           <Route path="*" element={<Navigate to="/venues" replace />} />

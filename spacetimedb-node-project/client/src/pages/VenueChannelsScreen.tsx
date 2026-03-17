@@ -6,8 +6,10 @@ import { MoreVertical, Plus, Monitor, Settings, Shield, UserPlus, Bell, LogOut, 
 import { useReadyTable } from '../hooks/useReadyTable';
 import { useAuth } from '../hooks/useAuth';
 import QRCode from "react-qr-code";
+import { useTranslation, Trans } from 'react-i18next';
 
 export const VenueChannelsScreen = () => {
+  const { t } = useTranslation();
   const { venueLink } = useParams<{ venueLink: string }>();
   const navigate = useNavigate();
 
@@ -91,7 +93,7 @@ export const VenueChannelsScreen = () => {
   if (!venuesReady || !membersReady) {
     return (
       <div className="app-container empty-state">
-        <h2>Loading...</h2>
+        <h2>{t('common.loading')}</h2>
       </div>
     );
   }
@@ -99,8 +101,8 @@ export const VenueChannelsScreen = () => {
   if (!venue) {
     return (
       <div className="app-container empty-state">
-        <h2>Venue not found</h2>
-        <button onClick={() => navigate('/venues')} style={{ marginTop: '16px' }}>Go back</button>
+        <h2>{t('venue_channels.venue_not_found')}</h2>
+        <button onClick={() => navigate('/venues')} style={{ marginTop: '16px' }}>{t('common.back')}</button>
       </div>
     );
   }
@@ -108,9 +110,9 @@ export const VenueChannelsScreen = () => {
   if (!isMember) {
     return (
       <div className="app-container empty-state">
-        <h2>Access Denied</h2>
-        <p style={{ marginTop: '8px', color: 'var(--text-secondary)' }}>You are not a member of this venue.</p>
-        <button onClick={() => navigate('/venues')} style={{ marginTop: '16px' }}>Go back</button>
+        <h2>{t('venue_channels.access_denied')}</h2>
+        <p style={{ marginTop: '8px', color: 'var(--text-secondary)' }}>{t('venue_channels.not_member')}</p>
+        <button onClick={() => navigate('/venues')} style={{ marginTop: '16px' }}>{t('common.back')}</button>
       </div>
     );
   }
@@ -144,22 +146,22 @@ export const VenueChannelsScreen = () => {
     if (navigator.share) {
       try {
         await navigator.share({
-          title: `Join ${venue?.name}`,
-          text: `You've been invited to join ${venue?.name} on Courier Notifications!`,
+          title: t('venue.invite_title', { name: venue?.name, defaultValue: `Join ${venue?.name}` }),
+          text: t('venue.invite_text', { name: venue?.name, defaultValue: `You've been invited to join ${venue?.name} on Canal4!` }),
           url: joinUrl,
         });
       } catch (err) {
         console.error('Error sharing:', err);
       }
     } else {
-      alert("Sharing is not supported directly on this browser or the connection is unsecured. Please copy the URL manually.");
+      alert(t('venue_channels.share_error'));
     }
   };
 
   const handleLeaveVenueClick = () => {
     setShowMenu(false);
     if (isOwner) {
-      alert('You cannot leave a venue you own. Please delete the venue settings, or promote another member to owner first (not yet implemented).');
+      alert(t('venue_channels.owner_leave_error'));
       return;
     }
     setShowLeaveConfirm(true);
@@ -174,7 +176,7 @@ export const VenueChannelsScreen = () => {
       navigate('/venues', { replace: true });
     } catch (err: unknown) {
       const message = err instanceof Error ? err.message : String(err);
-      setLeaveErrorText(message || 'Failed to leave venue. Please try again.');
+      setLeaveErrorText(message || t('venue_channels.leave_failed'));
       setLeaveLoading(false);
     }
   };
@@ -188,7 +190,7 @@ export const VenueChannelsScreen = () => {
               style={{ fontSize: '0.9rem', color: 'var(--accent-color)', cursor: 'pointer', fontWeight: 500, display: 'inline-flex', alignItems: 'center', gap: '4px' }}
               onClick={() => navigate('/venues')}
             >
-              <ArrowLeft size={16} /> Back to Venues
+              <ArrowLeft size={16} /> {t('venue_channels.back_to_venues')}
             </span>
             <h2>{venue.name}</h2>
           </div>
@@ -203,34 +205,34 @@ export const VenueChannelsScreen = () => {
               <div className="dropdown-menu glass-panel" style={{ position: 'absolute', right: 0, top: '48px', zIndex: 100, minWidth: '200px', display: 'flex', flexDirection: 'column' }}>
                 {isOwner && (
                   <button className="dropdown-item" onClick={() => { setShowMenu(false); navigate(`/venues/${venue.link}/channels/new`); }}>
-                    <Plus size={16} /> New Channel
+                    <Plus size={16} /> {t('venue_channels.menu.new_channel')}
                   </button>
                 )}
                 {canManageDisplays && (
                   <button className="dropdown-item" onClick={() => { setShowMenu(false); navigate(`/venues/${venue.link}/desktop-displays`); }}>
-                    <Monitor size={16} /> Display Nodes
+                    <Monitor size={16} /> {t('venue_channels.menu.display_nodes')}
                   </button>
                 )}
                 {isOwner && (
                   <button className="dropdown-item" onClick={() => { setShowMenu(false); navigate(`/venues/${venue.link}/settings`); }}>
-                    <Settings size={16} /> Venue Settings
+                    <Settings size={16} /> {t('venue_channels.menu.venue_settings')}
                   </button>
                 )}
                 {canManageDisplays && (
                   <button className="dropdown-item" onClick={() => { setShowMenu(false); navigate(`/venues/${venue.link}/permissions`); }}>
-                    <Shield size={16} /> Permissions
+                    <Shield size={16} /> {t('venue_channels.menu.permissions')}
                   </button>
                 )}
                 <div className="dropdown-divider" />
                 <button className="dropdown-item" onClick={handleOpenInvite}>
-                  <UserPlus size={16} /> Invite
+                  <UserPlus size={16} /> {t('venue_channels.menu.invite')}
                 </button>
-                <button className="dropdown-item" onClick={() => { setShowMenu(false); alert('Notifications (Not yet implemented)'); }}>
-                  <Bell size={16} /> Notifications
+                <button className="dropdown-item" onClick={() => { setShowMenu(false); alert(t('venue_channels.menu.notifications_not_impl')); }}>
+                  <Bell size={16} /> {t('venue_channels.menu.notifications')}
                 </button>
                 <div className="dropdown-divider" />
                 <button className="dropdown-item danger" onClick={handleLeaveVenueClick}>
-                  <LogOut size={16} /> Leave Venue
+                  <LogOut size={16} /> {t('venue_channels.menu.leave_venue')}
                 </button>
               </div>
             )}
@@ -240,8 +242,8 @@ export const VenueChannelsScreen = () => {
         <div className="flex-col" style={{ marginTop: '16px' }}>
           {visibleChannels.length === 0 ? (
             <div className="empty-state glass-panel">
-              <h3 style={{ color: 'var(--text-primary)'}}>No channels to display</h3>
-              <p style={{ marginTop: '8px' }}>Create a channel from the menu to configure notifications.</p>
+              <h3 style={{ color: 'var(--text-primary)'}}>{t('venue_channels.no_channels')}</h3>
+              <p style={{ marginTop: '8px' }}>{t('venue_channels.create_channel_helper')}</p>
             </div>
           ) : (
             visibleChannels.map(channel => {
@@ -266,12 +268,12 @@ export const VenueChannelsScreen = () => {
                           fontSize: '0.75rem',
                           fontWeight: 600,
                         }}>
-                          {channel.minimumRoleToView.tag.charAt(0).toUpperCase() + channel.minimumRoleToView.tag.slice(1).toLowerCase()}
+                          {t(`roles.${minRole}`)}
                         </span>
                       )}
                     </h3>
                     <p style={{ margin: '4px 0 0 0', color: 'var(--text-secondary)', fontSize: '0.9rem' }}>
-                      {channel.description || 'No description provided.'}
+                      {channel.description || t('venue_channels.no_description')}
                     </p>
                   </div>
                 </div>
@@ -295,7 +297,7 @@ export const VenueChannelsScreen = () => {
         >
           <div className="glass-panel" style={{ padding: '32px', width: '100%', maxWidth: '440px' }}>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px' }}>
-              <h3 style={{ fontSize: '1.3rem' }}>Invite to {venue.name}</h3>
+              <h3 style={{ fontSize: '1.3rem' }}>{t('venue_channels.invite_title', { name: venue.name })}</h3>
               <button className="icon-button" onClick={() => setShowInvite(false)}>
                 <X size={18} />
               </button>
@@ -308,7 +310,7 @@ export const VenueChannelsScreen = () => {
             </div>
 
             <p style={{ color: 'var(--text-secondary)', fontSize: '0.9rem', marginBottom: '20px', lineHeight: 1.6, textAlign: 'center' }}>
-              Scan the QR code to join this venue, or share the link below.
+              {t('venue_channels.invite_helper')}
             </p>
             <div style={{
               display: 'flex',
@@ -345,7 +347,7 @@ export const VenueChannelsScreen = () => {
                   transition: 'all 0.2s ease',
                 }}
               >
-                {copied ? <><Check size={14} /> Copied!</> : <><Copy size={14} /> Copy</>}
+                {copied ? <><Check size={14} /> {t('venue_channels.copied')}</> : <><Copy size={14} /> {t('venue_channels.copy')}</>}
               </button>
               <button
                 onClick={handleShare}
@@ -362,7 +364,7 @@ export const VenueChannelsScreen = () => {
                   transition: 'all 0.2s ease',
                 }}
               >
-                <Share size={14} /> Share
+                <Share size={14} /> {t('venue_channels.share')}
               </button>
             </div>
           </div>
@@ -383,13 +385,15 @@ export const VenueChannelsScreen = () => {
         >
           <div className="glass-panel" style={{ padding: '32px', width: '100%', maxWidth: '400px' }}>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px' }}>
-              <h3 style={{ fontSize: '1.3rem', color: 'var(--error-color)' }}>Leave Venue?</h3>
+              <h3 style={{ fontSize: '1.3rem', color: 'var(--error-color)' }}>{t('venue_channels.leave_modal.title')}</h3>
               <button className="icon-button" onClick={() => setShowLeaveConfirm(false)} disabled={leaveLoading}>
                 <X size={18} />
               </button>
             </div>
             <p style={{ color: 'var(--text-secondary)', fontSize: '0.9rem', marginBottom: '24px', lineHeight: 1.6 }}>
-              Are you sure you want to leave <strong>{venue.name}</strong>? You will lose access to all channels and messages.
+              <Trans i18nKey="venue_channels.leave_modal.confirm_text" values={{ name: venue.name }}>
+                Are you sure you want to leave <strong>{venue.name}</strong>? You will lose access to all channels and messages.
+              </Trans>
             </p>
 
             {leaveErrorText && (
@@ -416,7 +420,7 @@ export const VenueChannelsScreen = () => {
                 disabled={leaveLoading}
                 style={{ flex: 1 }}
               >
-                Cancel
+                {t('common.cancel')}
               </button>
               <button 
                 className="danger" 
@@ -424,7 +428,7 @@ export const VenueChannelsScreen = () => {
                 disabled={leaveLoading}
                 style={{ flex: 1 }}
               >
-                {leaveLoading ? 'Leaving...' : 'Yes, Leave'}
+                {leaveLoading ? t('venue_channels.leave_modal.leaving') : t('venue_channels.leave_modal.yes_leave')}
               </button>
             </div>
           </div>

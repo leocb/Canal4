@@ -5,8 +5,10 @@ import { tables, reducers } from '../module_bindings/index.ts';
 import { useReadyTable } from '../hooks/useReadyTable';
 import { useAuth } from '../hooks/useAuth';
 import { MoreVertical, Settings, Send, History, LayoutTemplate, Repeat, Trash2, UserX, Clock, Play, CheckCircle2, AlertCircle, WifiOff, Monitor, XCircle, ArrowLeft } from 'lucide-react';
+import { useTranslation } from 'react-i18next';
 
 export const ChannelScreen = () => {
+  const { t } = useTranslation();
   const { venueLink, channelId } = useParams<{ venueLink: string, channelId: string }>();
   const navigate = useNavigate();
   const { user } = useAuth();
@@ -97,14 +99,14 @@ export const ChannelScreen = () => {
   ) : undefined;
 
   if (!venuesReady || !membersReady) {
-    return <div className="app-container empty-state"><h2>Loading...</h2></div>;
+    return <div className="app-container empty-state"><h2>{t('login.loading')}</h2></div>;
   }
   if (!channel || !venue) {
     return (
       <div className="app-container empty-state">
-        <h2>Channel not found</h2>
+        <h2>{t('channel.not_found')}</h2>
         <button onClick={() => navigate(-1)} style={{ marginTop: '16px', display: 'flex', alignItems: 'center', gap: '8px' }}>
-          <ArrowLeft size={16} /> Go back
+          <ArrowLeft size={16} /> {t('common.back')}
         </button>
       </div>
     );
@@ -112,10 +114,10 @@ export const ChannelScreen = () => {
   if (!membership) {
     return (
       <div className="app-container empty-state">
-        <h2>Access Denied</h2>
-        <p style={{ marginTop: '8px', color: 'var(--text-secondary)' }}>You are not a member of this venue.</p>
+        <h2>{t('venue_channels.access_denied')}</h2>
+        <p style={{ marginTop: '8px', color: 'var(--text-secondary)' }}>{t('channel.not_member')}</p>
         <button onClick={() => navigate('/venues')} style={{ marginTop: '16px', display: 'flex', alignItems: 'center', gap: '8px' }}>
-          <ArrowLeft size={16} /> Go back
+          <ArrowLeft size={16} /> {t('common.back')}
         </button>
       </div>
     );
@@ -123,10 +125,10 @@ export const ChannelScreen = () => {
   if (membership.isBlocked) {
     return (
       <div className="app-container empty-state">
-        <h2>Access Denied</h2>
-        <p style={{ marginTop: '8px', color: 'var(--text-secondary)' }}>You have been blocked in this venue.</p>
+        <h2>{t('venue_channels.access_denied')}</h2>
+        <p style={{ marginTop: '8px', color: 'var(--text-secondary)' }}>{t('channel.blocked_in_venue')}</p>
         <button onClick={() => navigate('/venues')} style={{ marginTop: '16px', display: 'flex', alignItems: 'center', gap: '8px' }}>
-          <ArrowLeft size={16} /> Go back
+          <ArrowLeft size={16} /> {t('common.back')}
         </button>
       </div>
     );
@@ -136,7 +138,7 @@ export const ChannelScreen = () => {
 
   const getUserName = (userId: bigint) => {
     const u = (users as any[]).find(u => u.userId === userId);
-    return u?.name || `[deleted user]`;
+    return u?.name || t('channel.deleted_user');
   };
 
   // Messenger devices connected to this venue
@@ -216,27 +218,27 @@ export const ChannelScreen = () => {
   const StatusIcon = ({ status, isConnected, deviceName }: { status: string | undefined, isConnected: boolean, deviceName: string }) => {
     if (!isConnected) {
       return (
-        <span title={`${deviceName}: Offline`}>
+        <span title={`${deviceName}: ${t('node_status.offline')}`}>
           <WifiOff size={14} style={{ color: 'var(--text-secondary)', opacity: 0.5 }} />
         </span>
       );
     }
 
     if (!status) {
-      return <span title={`Unknown`}><Clock size={14} style={{ color: 'rgba(255,255,255,0.1)' }} /></span>;
+      return <span title={t('node_status.unknown')}><Clock size={14} style={{ color: 'rgba(255,255,255,0.1)' }} /></span>;
     }
 
     switch (status) {
       case 'Queued':
-        return <span title={`${deviceName}: Waiting`}><Clock size={14} style={{ color: '#94A3B8' }} /></span>;
+        return <span title={`${deviceName}: ${t('node_status.waiting')}`}><Clock size={14} style={{ color: '#94A3B8' }} /></span>;
       case 'InProgress':
-        return <span title={`${deviceName}: In Progress`}><Play size={14} style={{ color: '#3B82F6' }} /></span>;
+        return <span title={`${deviceName}: ${t('node_status.in_progress')}`}><Play size={14} style={{ color: '#3B82F6' }} /></span>;
       case 'Shown':
-        return <span title={`${deviceName}: Shown`}><CheckCircle2 size={14} style={{ color: '#10B981' }} /></span>;
+        return <span title={`${deviceName}: ${t('node_status.shown')}`}><CheckCircle2 size={14} style={{ color: '#10B981' }} /></span>;
       case 'Unavailable':
-        return <span title={`${deviceName}: Unavailable`}><AlertCircle size={14} style={{ color: '#F59E0B' }} /></span>;
+        return <span title={`${deviceName}: ${t('node_status.unavailable')}`}><AlertCircle size={14} style={{ color: '#F59E0B' }} /></span>;
       case 'Cancelled':
-        return <span title={`${deviceName}: Deleted`}><XCircle size={14} style={{ color: '#EF4444' }} /></span>;
+        return <span title={`${deviceName}: ${t('node_status.deleted')}`}><XCircle size={14} style={{ color: '#EF4444' }} /></span>;
       default:
         return <span title={`${deviceName}: ${status}`}><Clock size={14} style={{ color: 'rgba(255,255,255,0.2)' }} /></span>;
     }
@@ -256,7 +258,7 @@ export const ChannelScreen = () => {
       .some(isNodeConnected);
 
     if (!hasActiveDevices) {
-      if (!window.confirm("No display node is currently connected to this venue. Repeat anyway?")) {
+      if (!window.confirm(t('channel.repeat_no_node_confirm'))) {
         return;
       }
     }
@@ -264,7 +266,7 @@ export const ChannelScreen = () => {
   };
 
   const handleDeleteAndBlock = async (msg: any) => {
-    if (!window.confirm('Are you sure you want to delete this message and block the user?')) return;
+    if (!window.confirm(t('channel.delete_block_confirm'))) return;
     setContextMsg(null);
     try {
       await deleteMessage({ messageId: msg.messageId });
@@ -299,16 +301,16 @@ export const ChannelScreen = () => {
                 {isOwner && (
                   <>
                     <button className="dropdown-item" onClick={() => { setShowMenu(false); navigate(`/venues/${venue.link}/channels/${channel.channelId}/settings`); }}>
-                      <Settings size={16} /> Channel Settings
+                      <Settings size={16} /> {t('channel.settings_button')}
                     </button>
                     <button className="dropdown-item" onClick={() => { setShowMenu(false); navigate(`/venues/${venue.link}/channels/${channel.channelId}/templates`); }}>
-                      <LayoutTemplate size={16} /> Templates
+                      <LayoutTemplate size={16} /> {t('channel.templates_button')}
                     </button>
                   </>
                 )}
                 {!isOwner && (
                   <div style={{ padding: '12px 16px', color: 'var(--text-secondary)', fontSize: '0.85rem' }}>
-                    No actions available
+                    {t('channel.no_actions')}
                   </div>
                 )}
               </div>
@@ -325,7 +327,7 @@ export const ChannelScreen = () => {
                 type="button"
                 onClick={() => navigate(`/venues/${venue.link}/channels/${channel.channelId}/send`)}
                 style={{ width: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px', padding: '12px 16px', borderRadius: '8px' }}>
-                <Send size={18} style={{ transform: 'translateY(1px)' }} /> Send New Broadcast
+                <Send size={18} style={{ transform: 'translateY(1px)' }} /> {t('channel.send_broadcast')}
               </button>
             </div>
           </div>
@@ -335,7 +337,7 @@ export const ChannelScreen = () => {
         {isModerator && hasDevices && (
           <div style={{ padding: '24px 24px 0' }}>
             <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '12px', color: 'var(--text-secondary)', fontSize: '0.8rem', fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.05em' }}>
-              <Monitor size={14} /> Display Nodes
+              <Monitor size={14} /> {t('channel.display_nodes')}
             </div>
             <div style={{ display: 'flex', gap: '12px', overflowX: 'auto', paddingBottom: '8px' }}>
               {connectedDevices.map((d: any) => {
@@ -359,7 +361,7 @@ export const ChannelScreen = () => {
                       <div>
                         <div style={{ fontSize: '0.85rem', fontWeight: 600 }}>{d.name}</div>
                         <div style={{ fontSize: '0.7rem', color: 'var(--text-secondary)' }}>
-                          {connected ? 'Connected' : 'Offline'}
+                          {connected ? t('channel.connected') : t('channel.offline')}
                         </div>
                       </div>
                     </div>
@@ -375,9 +377,9 @@ export const ChannelScreen = () => {
           {channelMessages.length === 0 ? (
             <div className="empty-state glass-panel">
               <History size={48} style={{ opacity: 0.2, marginBottom: '16px' }} />
-              <h3 style={{ color: 'var(--text-primary)' }}>No recent notifications</h3>
+              <h3 style={{ color: 'var(--text-primary)' }}>{t('channel.no_notifications_title')}</h3>
               <p style={{ marginTop: '8px' }}>
-                {isModerator ? 'Use the form above to send the first broadcast.' : 'Notifications from moderators will appear here.'}
+                {isModerator ? t('channel.no_notifications_moderator') : t('channel.no_notifications_member')}
               </p>
             </div>
           ) : (
@@ -469,7 +471,7 @@ export const ChannelScreen = () => {
                   {new Date(Number(contextMsg.sentAt.microsSinceUnixEpoch / 1000n)).toLocaleString()}
                 </div>
                 <div style={{ fontSize: '0.75rem', color: 'var(--text-secondary)' }}>
-                  By: {contextMsg.senderId === user?.userId ? 'You' : getUserName(contextMsg.senderId)}
+                  {contextMsg.senderId === user?.userId ? t('channel.by_you') : t('channel.by_user', { name: getUserName(contextMsg.senderId) })}
                 </div>
               </div>
               <div style={{ fontSize: '0.95rem', color: 'var(--text-primary)', lineHeight: 1.4, wordBreak: 'break-word', padding: '0px', borderRadius: '8px' }}>
@@ -477,18 +479,18 @@ export const ChannelScreen = () => {
               </div>
             </div>
             <button className="dropdown-item" onClick={() => handleRepeat(contextMsg)} style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-              <Repeat size={16} /> Display Again
+              <Repeat size={16} /> {t('channel.display_again')}
             </button>
             <button className="dropdown-item danger" onClick={() => handleDelete(contextMsg)} style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-              <Trash2 size={16} /> Delete
+              <Trash2 size={16} /> {t('channel.delete_button')}
             </button>
             {isAdmin && contextMsg.senderId !== user?.userId && (
               <button className="dropdown-item danger" onClick={() => handleDeleteAndBlock(contextMsg)} style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                <UserX size={16} /> Delete & Block
+                <UserX size={16} /> {t('channel.delete_block_button')}
               </button>
             )}
             <button className="dropdown-item" style={{ color: 'var(--text-secondary)', display: 'flex', alignItems: 'center', gap: '8px', marginTop: '4px' }} onClick={() => setContextMsg(null)}>
-              Close
+              {t('channel.close_button')}
             </button>
           </div>
         </div>

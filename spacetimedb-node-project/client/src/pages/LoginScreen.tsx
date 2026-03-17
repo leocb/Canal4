@@ -4,8 +4,10 @@ import { useNavigate, useLocation } from 'react-router-dom';
 import { reducers, tables } from '../module_bindings/index.ts';
 import { useReducer, useTable } from 'spacetimedb/react';
 import { useAuth } from '../hooks/useAuth';
+import { useTranslation } from 'react-i18next';
 
 export const LoginScreen = () => {
+  const { t, i18n } = useTranslation();
   const navigate = useNavigate();
   const location = useLocation();
   const redirect = new URLSearchParams(location.search).get('redirect') || '/venues';
@@ -59,7 +61,7 @@ export const LoginScreen = () => {
 
       setView('pin');
     } catch (err: any) {
-      setErrorText(err.message || 'Error requesting PIN');
+      setErrorText(t(err.message) || t('login.error_request_pin', { defaultValue: 'Error requesting PIN' }));
     } finally {
       setLoading(false);
     }
@@ -101,7 +103,7 @@ export const LoginScreen = () => {
       const lockout = lockouts.find(l => l.email === normalizedEmail);
       if (lockout) {
         setLoading(false);
-        setErrorText("Too many failed attempts.\nAccount locked for 10 minutes.");
+        setErrorText(t('login.error_lockout'));
         return;
       }
 
@@ -110,15 +112,15 @@ export const LoginScreen = () => {
       if (currentPin) {
         const remaining = 10 - currentPin.attempts;
         setLoading(false);
-        setErrorText(`Invalid PIN. ${remaining} attempts remaining.`);
+        setErrorText(t('login.error_invalid_pin', { remaining }));
       } else {
         // PIN might have been deleted but no lockout found (rare sync issue)
         setLoading(false);
-        setErrorText("Invalid PIN. Please try requesting a new one.");
+        setErrorText(t('login.error_pin_generic'));
       }
     } catch (err: any) {
       setLoading(false);
-      setErrorText(err.message || 'Error during login');
+      setErrorText(t(err.message) || t('login.error_login'));
     }
   };
 
@@ -138,14 +140,14 @@ export const LoginScreen = () => {
       setLoading(false);
     } catch (err: any) {
       setLoading(false);
-      setErrorText(err.message || 'Error updating name');
+      setErrorText(t(err.message) || t('login.error_update_name'));
     }
   };
 
   return (
     <div className="app-container" style={{ alignItems: 'center', justifyContent: 'center' }}>
       <div className="glass-panel" style={{ padding: '40px', textAlign: 'center', width: '100%', maxWidth: '400px' }}>
-        <h2 style={{ marginBottom: '24px', fontSize: '1.8rem' }}>Courier Notifications</h2>
+        <h2 style={{ marginBottom: '24px', fontSize: '1.8rem' }}>{t('login.title')}</h2>
 
         {errorText && view !== 'email' && (
             <div style={{
@@ -168,11 +170,11 @@ export const LoginScreen = () => {
 
         {view === 'email' && (
           <form onSubmit={handleEmailSubmit} className="flex-col">
-            <h3 style={{ marginBottom: '16px' }}>Sign-in via email</h3>
+            <h3 style={{ marginBottom: '16px' }}>{t('login.signin_email')}</h3>
 
             <input
               type="email"
-              placeholder="Your email address"
+              placeholder={t('login.email_placeholder')}
               value={email}
               onChange={(e) => {
                 setEmail(e.target.value);
@@ -188,22 +190,22 @@ export const LoginScreen = () => {
               disabled={loading || !connected || !validateEmail(email)} 
               style={{ marginTop: '16px' }}
             >
-              {loading ? 'Connecting...' : 'Continue'}
+              {loading ? t('login.connecting') : t('login.continue')}
             </button>
           </form>
         )}
 
         {view === 'pin' && (
           <form onSubmit={handlePinSubmit} className="flex-col">
-            <h3 style={{ marginBottom: '8px' }}>Enter PIN</h3>
+            <h3 style={{ marginBottom: '8px' }}>{t('login.enter_pin')}</h3>
             <p style={{ fontSize: '0.9rem', color: 'var(--text-secondary)', marginBottom: '16px' }}>
-              We've sent a 6-digit code to <strong>{email}</strong>
+              {t('login.pin_sent', { email: email })}
             </p>
 
 
             <input
               type="text"
-              placeholder="000000"
+              placeholder={t('login.pin_placeholder')}
               value={pin}
               onChange={(e) => setPin(e.target.value.replace(/\D/g, '').slice(0, 6))}
               required
@@ -213,7 +215,7 @@ export const LoginScreen = () => {
             />
 
             <button type="submit" disabled={loading || !connected || pin.length < 6} style={{ marginTop: '16px' }}>
-              {loading ? 'Verifying...' : 'Login'}
+              {loading ? t('login.verifying') : t('login.verify_login')}
             </button>
 
             <div style={{ marginTop: '16px' }}>
@@ -223,7 +225,7 @@ export const LoginScreen = () => {
                 setPin(''); 
                 setErrorText('');
               }}>
-                Use a different email
+                {t('login.use_different_email')}
               </a>
             </div>
           </form>
@@ -231,14 +233,14 @@ export const LoginScreen = () => {
 
         {view === 'name' && (
           <form onSubmit={handleNameSubmit} className="flex-col">
-            <h3 style={{ marginBottom: '16px' }}>What should we call you?</h3>
+            <h3 style={{ marginBottom: '16px' }}>{t('login.name_prompt')}</h3>
             <p style={{ fontSize: '0.9rem', color: 'var(--text-secondary)', marginBottom: '16px' }}>
-              We'll use this name for your profile and notifications.
+              {t('login.name_helper')}
             </p>
 
             <input
               type="text"
-              placeholder="Your Full Name"
+              placeholder={t('login.name_placeholder')}
               value={fullName}
               onChange={(e) => setFullName(e.target.value)}
               required
@@ -247,10 +249,27 @@ export const LoginScreen = () => {
             />
 
             <button type="submit" disabled={loading || !fullName.trim()} style={{ marginTop: '16px' }}>
-              {loading ? 'Saving...' : 'Complete Sign-up'}
+              {loading ? t('login.saving') : t('login.complete_signup')}
             </button>
           </form>
         )}
+      </div>
+
+      <div style={{ display: 'flex', justifyContent: 'center', gap: '8px', marginTop: '24px' }}>
+        <button 
+          className="secondary" 
+          onClick={() => i18n.changeLanguage('en')}
+          style={{ padding: '4px 8px', fontSize: '0.8rem', opacity: i18n.language === 'en' ? 1 : 0.5 }}
+        >
+          EN
+        </button>
+        <button 
+          className="secondary" 
+          onClick={() => i18n.changeLanguage('pt-BR')}
+          style={{ padding: '4px 8px', fontSize: '0.8rem', opacity: i18n.language === 'pt-BR' ? 1 : 0.5 }}
+        >
+          PT-BR
+        </button>
       </div>
 
       <div style={{ marginTop: '32px', fontSize: '0.8rem', color: 'var(--text-secondary)' }}>

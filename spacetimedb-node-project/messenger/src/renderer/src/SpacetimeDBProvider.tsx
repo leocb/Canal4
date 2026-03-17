@@ -4,14 +4,14 @@ import { DbConnection } from "./module_bindings/index";
 
 const ErrorContext = createContext<{ lastError: Error | null; setLastError: (e: Error | null) => void }>({
   lastError: null,
-  setLastError: () => {}
+  setLastError: () => { }
 });
 
 export const useSpacetimeError = () => useContext(ErrorContext);
 
 export const SpacetimeDBProvider = ({ children }: { children: ReactNode }) => {
   const [lastError, setLastError] = useState<Error | null>(null);
-  
+
   const getSanitized = (key: string) => {
     const val = localStorage.getItem(key);
     if (!val || val === 'undefined' || val === 'null' || val === '') return undefined;
@@ -23,11 +23,11 @@ export const SpacetimeDBProvider = ({ children }: { children: ReactNode }) => {
 
   // Unified settings source
   const stUri = getSanitized("spacetime_uri") || "ws://localhost:3000";
-  const stDb = getSanitized("spacetime_db") || "spacetimedb-node-project-gybhi";
+  const stDb = getSanitized("spacetime_db") || "spacetimedb-node-name";
 
   useEffect(() => {
     console.log("[SpacetimeDBProvider] Initial Mount. Local token:", activeToken ? "present" : "absent");
-    
+
     // Pull token from Main as the source of truth
     // @ts-ignore
     if (window.api?.getToken) {
@@ -35,9 +35,9 @@ export const SpacetimeDBProvider = ({ children }: { children: ReactNode }) => {
       window.api.getToken().then(mainToken => {
         const sanitizedMain = (mainToken === 'undefined' || mainToken === 'null' || !mainToken) ? undefined : mainToken;
         const currentLocal = getSanitized("auth_token");
-        
+
         console.log("[SpacetimeDBProvider] Source of truth check. Main:", sanitizedMain ? "present" : "absent", "Local:", currentLocal ? "present" : "absent");
-        
+
         if (sanitizedMain !== currentLocal) {
           console.log("[SpacetimeDBProvider] Updating local token to match Main process storage.");
           if (sanitizedMain) localStorage.setItem("auth_token", sanitizedMain);
@@ -56,13 +56,13 @@ export const SpacetimeDBProvider = ({ children }: { children: ReactNode }) => {
       window.api.onTokenUpdated((newToken: string) => {
         const sanitizedNew = (newToken === 'undefined' || newToken === 'null' || !newToken) ? undefined : newToken;
         setActiveToken(prev => {
-           if (sanitizedNew !== prev) {
-             console.log("[SpacetimeDBProvider] Token refreshed from background update.");
-             if (sanitizedNew) localStorage.setItem("auth_token", sanitizedNew);
-             else localStorage.removeItem("auth_token");
-             return sanitizedNew;
-           }
-           return prev;
+          if (sanitizedNew !== prev) {
+            console.log("[SpacetimeDBProvider] Token refreshed from background update.");
+            if (sanitizedNew) localStorage.setItem("auth_token", sanitizedNew);
+            else localStorage.removeItem("auth_token");
+            return sanitizedNew;
+          }
+          return prev;
         });
       });
     }
@@ -71,8 +71,8 @@ export const SpacetimeDBProvider = ({ children }: { children: ReactNode }) => {
   const builder = useMemo(() => {
     // Postpone until we've at least tried to sync with main process file
     if (isSyncingMain) {
-        console.log("[SpacetimeDBProvider] Postponing connection until main process sync finishes...");
-        return null;
+      console.log("[SpacetimeDBProvider] Postponing connection until main process sync finishes...");
+      return null;
     }
 
     console.log("[SpacetimeDBProvider] BUILDING connection:", { uri: stUri, db: stDb, token: activeToken ? activeToken.slice(0, 10) + "..." : "none" });
@@ -83,20 +83,20 @@ export const SpacetimeDBProvider = ({ children }: { children: ReactNode }) => {
       .withToken(activeToken)
       .onConnect((connection, identity, token) => {
         const currentLocal = localStorage.getItem("auth_token");
-        console.log("[SpacetimeDBProvider] Connected!", { 
-          identity: identity.toHexString().slice(0, 10) + "...", 
+        console.log("[SpacetimeDBProvider] Connected!", {
+          identity: identity.toHexString().slice(0, 10) + "...",
           tokenReceived: token ? "yes" : "no",
           matchesLocal: token === currentLocal
         });
-        
+
         setLastError(null);
-        
+
         // Only trigger a persistence/broadcast if it's actually new
         if (token && token !== currentLocal) {
-            console.log("[SpacetimeDBProvider] Persisting new token to Main.");
-            localStorage.setItem("auth_token", token);
-            // @ts-ignore
-            if (window.api?.setToken) window.api.setToken(token);
+          console.log("[SpacetimeDBProvider] Persisting new token to Main.");
+          localStorage.setItem("auth_token", token);
+          // @ts-ignore
+          if (window.api?.setToken) window.api.setToken(token);
         }
 
         const sub = connection.subscriptionBuilder();
@@ -120,9 +120,9 @@ export const SpacetimeDBProvider = ({ children }: { children: ReactNode }) => {
         const errorStr = String(err);
         console.error("[SpacetimeDBProvider] Connection Fail:", errorStr);
         setLastError(err);
-        
+
         const isAuthError = errorStr.includes('403') || errorStr.includes('401') || (err?.message && (err.message.includes('403') || err.message.includes('401')));
-        
+
         if (activeToken && isAuthError) {
           console.warn("[SpacetimeDBProvider] Invalid Token Detected. Clearing Identity.");
           localStorage.removeItem("auth_token");

@@ -68,7 +68,7 @@ function createSettingsWindow(tab: 'logs' | 'settings' | 'pairing' = 'pairing'):
     width: 800,
     height: 800,
     show: false,
-    title: "Courier Node Settings",
+    title: "Canal4 Display node Settings",
     autoHideMenuBar: true,
     ...(process.platform === 'linux' ? { icon } : {}),
     webPreferences: {
@@ -102,14 +102,14 @@ function createTray() {
     { label: 'Log', click: () => createSettingsWindow('logs') },
     { label: 'Settings', click: () => createSettingsWindow('settings') },
     { type: 'separator' },
-    { label: 'Quit Courier', click: () => { app.quit() } }
+    { label: 'Quit Canal4', click: () => { app.quit() } }
   ])
-  tray.setToolTip('Courier Notifications')
+  tray.setToolTip('Canal4 Display node')
   tray.setContextMenu(contextMenu)
 }
 
 app.whenReady().then(() => {
-  electronApp.setAppUserModelId('com.courier.messenger')
+  electronApp.setAppUserModelId('org.canal4.displaynode')
 
   // Hide from macOS Dock — this is a background tray-only app
   if (process.platform === 'darwin') {

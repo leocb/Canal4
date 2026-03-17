@@ -1,9 +1,10 @@
-import { useState, useEffect, useMemo, useRef } from 'react';
+import React, { useState, useEffect, useMemo, useRef } from 'react';
 import { X, ArrowRight } from 'lucide-react';
 import { useTable, useReducer, useSpacetimeDB } from 'spacetimedb/react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { tables, reducers } from '../module_bindings';
 import { useSpacetimeError } from '../SpacetimeDBProvider';
+import { useTranslation } from 'react-i18next';
 
 
 type Tab = 'logs' | 'pairing' | 'settings';
@@ -121,6 +122,7 @@ function hexAlphaToRgba(hex: string, alpha: number): string {
 
 // --- Component ---
 export const SettingsScreen = () => {
+  const { t, i18n } = useTranslation();
   const { isActive: connected, connectionError } = useSpacetimeDB();
   const { lastError } = useSpacetimeError();
   const [messages] = useTable(tables.Message);
@@ -205,7 +207,7 @@ export const SettingsScreen = () => {
 
   const getVenueName = (id: bigint) => venues.find(v => v.venueId === id)?.name ?? `Venue #${id}`;
   const getTemplateName = (id?: bigint | null) =>
-    id ? (templates.find(t => t.templateId === id)?.name ?? `Template #${id}`) : 'Manual';
+    id ? (templates.find(t => t.templateId === id)?.name ?? `Template #${id}`) : t('settings.logs.manual');
   const getUserName = (id: bigint) => users.find(u => u.userId === id)?.name ?? `User #${id}`;
   const getStatus = (messageId: any, deviceId: any) => {
     const mid = BigInt(messageId);
@@ -262,7 +264,7 @@ export const SettingsScreen = () => {
       // A new device was just added — find the venue name
       const newDevice = myDevices.find(d => newIds.includes(d.messengerId.toString()));
       const venueName = newDevice ? getVenueName(newDevice.venueId) : 'a venue';
-      setNewPairingToast(`Paired with "${venueName}" as "${newDevice?.name}"`);
+      setNewPairingToast(t('settings.pairing.toast_success', { venue: venueName, name: newDevice?.name }));
       // Auto-dismiss after 6s
       setTimeout(() => setNewPairingToast(null), 6000);
     }
@@ -307,9 +309,9 @@ export const SettingsScreen = () => {
   };
 
   const TAB_CONFIG: { id: Tab; label: string; icon: React.ReactNode }[] = [
-    { id: 'pairing', label: 'Pairing', icon: <IconLink /> },
-    { id: 'logs', label: 'Log', icon: <IconList /> },
-    { id: 'settings', label: 'Settings', icon: <IconSettings /> },
+    { id: 'pairing', label: t('settings.tabs.pairing'), icon: <IconLink /> },
+    { id: 'logs', label: t('settings.tabs.logs'), icon: <IconList /> },
+    { id: 'settings', label: t('settings.tabs.settings'), icon: <IconSettings /> },
   ];
 
   return (
@@ -318,13 +320,13 @@ export const SettingsScreen = () => {
       {/* Header */}
       <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '14px 24px', borderBottom: '1px solid rgba(255,255,255,0.08)', background: 'rgba(255,255,255,0.02)', flexShrink: 0 }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
-          <span style={{ fontSize: '1.1rem', fontWeight: 700, letterSpacing: '-0.02em' }}>Courier Display</span>
+          <span style={{ fontSize: '1.1rem', fontWeight: 700, letterSpacing: '-0.02em' }}>{t('app.desktop_name')}</span>
 
           {/* DB connection status — independent */}
           <div style={{ display: 'flex', alignItems: 'center', gap: '6px', background: 'rgba(255,255,255,0.05)', border: `1px solid ${connected ? 'rgba(16,185,129,0.3)' : 'rgba(239,68,68,0.3)'}`, borderRadius: '20px', padding: '3px 10px 3px 8px' }}>
             <div style={{ width: '6px', height: '6px', borderRadius: '50%', background: connected ? '#10B981' : '#EF4444', boxShadow: `0 0 5px ${connected ? '#10B981' : '#EF4444'}`, flexShrink: 0 }} />
             <span style={{ fontSize: '0.72rem', fontWeight: 600, color: connected ? '#10B981' : '#EF4444' }}>
-              {connected ? 'DB Connected' : 'DB Offline'}
+              {connected ? t('settings.connection.status_connected') : t('settings.connection.status_offline')}
             </span>
           </div>
 
@@ -333,7 +335,7 @@ export const SettingsScreen = () => {
             <div style={{ display: 'flex', alignItems: 'center', gap: '6px', background: 'rgba(255,255,255,0.05)', border: `1px solid ${hasPairedVenues ? 'rgba(99,102,241,0.3)' : 'rgba(255,255,255,0.1)'}`, borderRadius: '20px', padding: '3px 10px 3px 8px' }}>
               <div style={{ width: '6px', height: '6px', borderRadius: '50%', background: hasPairedVenues ? '#818CF8' : '#475569', flexShrink: 0 }} />
               <span style={{ fontSize: '0.72rem', fontWeight: 600, color: hasPairedVenues ? '#818CF8' : '#64748B' }}>
-                {hasPairedVenues ? `${myDevices.length} venue${myDevices.length !== 1 ? 's' : ''} paired` : 'No venues'}
+                {hasPairedVenues ? t('settings.pairing.paired_venues_count', { count: myDevices.length, defaultValue: `${myDevices.length} venues paired` }) : t('settings.pairing.no_venues')}
               </span>
             </div>
           )}
@@ -361,6 +363,21 @@ export const SettingsScreen = () => {
               {label}
             </button>
           ))}
+        </div>
+
+        <div style={{ display: 'flex', gap: '4px', marginLeft: '12px' }}>
+          <button 
+            onClick={() => i18n.changeLanguage('en')}
+            style={{ padding: '4px 8px', fontSize: '0.75rem', background: i18n.language === 'en' ? 'rgba(255,255,255,0.2)' : 'transparent', border: '1px solid rgba(255,255,255,0.1)', borderRadius: '4px', color: '#fff', cursor: 'pointer' }}
+          >
+            EN
+          </button>
+          <button 
+            onClick={() => i18n.changeLanguage('pt-BR')}
+            style={{ padding: '4px 8px', fontSize: '0.75rem', background: i18n.language === 'pt-BR' ? 'rgba(255,255,255,0.2)' : 'transparent', border: '1px solid rgba(255,255,255,0.1)', borderRadius: '4px', color: '#fff', cursor: 'pointer' }}
+          >
+            PT
+          </button>
         </div>
       </div>
 
@@ -393,22 +410,22 @@ export const SettingsScreen = () => {
             {/* Connected Venues */}
             {myDevices.length > 0 && (
               <div style={{ background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.08)', borderRadius: '16px', padding: '20px' }}>
-                <h3 style={{ fontSize: '1rem', marginBottom: '12px', margin: '0 0 12px' }}>Paired Venues</h3>
+                <h3 style={{ fontSize: '1rem', marginBottom: '12px', margin: '0 0 12px' }}>{t('settings.pairing.paired_venues')}</h3>
                 <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
                   {myDevices.map(device => (
                     <div key={device.messengerId.toString()} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '10px 14px', background: 'rgba(255,255,255,0.03)', borderRadius: '10px', border: '1px solid rgba(255,255,255,0.06)' }}>
                       <div>
                         <div style={{ fontWeight: 500, fontSize: '0.95rem' }}>{getVenueName(device.venueId)}</div>
-                        <div style={{ fontSize: '0.75rem', color: '#64748b', marginTop: '2px' }}>as "{device.name}"</div>
+                        <div style={{ fontSize: '0.75rem', color: '#64748b', marginTop: '2px' }}>{t('settings.pairing.as_name', { name: device.name })}</div>
                       </div>
                       <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
                         <button
                           onClick={() => {
-                            if (window.confirm(`Unpair from "${getVenueName(device.venueId)}"? This device will stop receiving messages from this venue.`)) {
+                            if (window.confirm(t('settings.pairing.unpair_confirm', { name: getVenueName(device.venueId) }))) {
                               unpair({ messengerId: device.messengerId });
                             }
                           }}
-                          title="Unpair Node"
+                          title={t('settings.display.delete_node')}
                           style={{
                             background: 'rgba(239, 68, 68, 0.1)',
                             color: '#EF4444',
@@ -441,17 +458,22 @@ export const SettingsScreen = () => {
 
             {/* Pair New Venue */}
             <div style={{ background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.08)', borderRadius: '16px', padding: '20px' }}>
-              <h3 style={{ fontSize: '1rem', marginBottom: '8px', margin: '0 0 8px' }}>Register with a New Venue</h3>
+              <h3 style={{ fontSize: '1rem', marginBottom: '8px', margin: '0 0 8px' }}>{t('settings.pairing.register_new')}</h3>
               <p style={{ fontSize: '0.85rem', color: '#94A3B8', marginBottom: '20px', lineHeight: 1.5, margin: '0 0 20px' }}>
-                Generate a 6-digit PIN, then enter it in the Web Dashboard under{' '}
+                {t('settings.pairing.register_helper')}{' '}
                 <strong style={{ color: '#F8FAFC', display: 'flex', alignItems: 'center', gap: '4px' }}>
-                  Venue <ArrowRight size={12} style={{ transform: 'translateY(1px)' }} /> Desktop Displays <ArrowRight size={12} style={{ transform: 'translateY(1px)' }} /> Add Node
+                  {t('settings.pairing.register_path').split('>').map((part, i, arr) => (
+                    <React.Fragment key={i}>
+                      {part.trim()}
+                      {i < arr.length - 1 && <ArrowRight size={12} style={{ transform: 'translateY(1px)' }} />}
+                    </React.Fragment>
+                  ))}
                 </strong>.
               </p>
 
               {activePin ? (
                 <div style={{ textAlign: 'center', padding: '24px', background: 'rgba(59,130,246,0.08)', borderRadius: '12px', border: '1px solid rgba(59,130,246,0.2)' }}>
-                  <div style={{ fontSize: '0.85rem', color: '#94A3B8', marginBottom: '8px' }}>Enter this PIN in the Web Dashboard:</div>
+                  <div style={{ fontSize: '0.85rem', color: '#94A3B8', marginBottom: '8px' }}>{t('settings.pairing.enter_pin_helper')}</div>
                   <div style={{ fontSize: '3rem', letterSpacing: '12px', fontWeight: 700, fontFamily: 'monospace', color: '#3B82F6' }}>
                     {activePin.pin}
                   </div>
@@ -463,8 +485,8 @@ export const SettingsScreen = () => {
                     </svg>
                     <span style={{ fontSize: '0.8rem', color: pinSecondsLeft < 60 ? '#F59E0B' : '#64748b', fontWeight: 600, fontFamily: 'monospace' }}>
                       {pinSecondsLeft > 0
-                        ? `${Math.floor(pinSecondsLeft / 60)}:${String(pinSecondsLeft % 60).padStart(2, '0')} remaining`
-                        : 'PIN expired — generate a new one'}
+                        ? t('settings.pairing.pin_remaining', { time: `${Math.floor(pinSecondsLeft / 60)}:${String(pinSecondsLeft % 60).padStart(2, '0')}` })
+                        : t('settings.pairing.pin_expired')}
                     </span>
                   </div>
                 </div>
@@ -477,7 +499,7 @@ export const SettingsScreen = () => {
                         <line x1="12" y1="8" x2="12" y2="12" />
                         <line x1="12" y1="16" x2="12.01" y2="16" />
                       </svg>
-                      <span style={{ fontSize: '0.8rem', color: '#EF4444' }}>Not connected to database — check Settings → SpacetimeDB Connection</span>
+                      <span style={{ fontSize: '0.8rem', color: '#EF4444' }}>{t('settings.pairing.not_connected_error')}</span>
                     </div>
                   )}
                   {connected && (!machineUid || machineUid === 'Loading...') && (
@@ -485,7 +507,7 @@ export const SettingsScreen = () => {
                       <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#94A3B8" strokeWidth="2.5">
                         <path d="M21 12a9 9 0 1 1-6.219-8.56" />
                       </svg>
-                      <span style={{ fontSize: '0.8rem', color: '#94A3B8' }}>Waiting for device ID…</span>
+                      <span style={{ fontSize: '0.8rem', color: '#94A3B8' }}>{t('settings.connection.waiting_device_id')}</span>
                     </div>
                   )}
                   <button
@@ -501,7 +523,7 @@ export const SettingsScreen = () => {
                     disabled={!machineUid || machineUid === 'Loading...' || !connected}
                     style={{ width: '100%', padding: '12px', background: '#3B82F6', color: '#fff', border: 'none', borderRadius: '10px', fontSize: '1rem', fontWeight: 600, cursor: (!machineUid || machineUid === 'Loading...' || !connected) ? 'not-allowed' : 'pointer', opacity: (!connected || !machineUid || machineUid === 'Loading...') ? 0.4 : 1, transition: 'opacity 0.2s' }}
                   >
-                    Generate Pairing PIN
+                    {t('settings.pairing.generate_pin')}
                   </button>
                 </div>
               )}
@@ -514,7 +536,7 @@ export const SettingsScreen = () => {
           <div style={{ display: 'flex', flexDirection: 'column', gap: '20px', maxWidth: '600px', margin: '0 auto' }}>
 
             {/* Message list */}
-            <h3 style={{ fontSize: '0.85rem', fontWeight: 600, color: '#475569', textTransform: 'uppercase', letterSpacing: '0.06em', margin: 0, borderBottom: '1px solid rgba(255,255,255,0.06)', paddingBottom: '10px' }}>Recent Messages</h3>
+            <h3 style={{ fontSize: '0.85rem', fontWeight: 600, color: '#475569', textTransform: 'uppercase', letterSpacing: '0.06em', margin: 0, borderBottom: '1px solid rgba(255,255,255,0.06)', paddingBottom: '10px' }}>{t('settings.logs.title')}</h3>
 
             <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
               {logList.length === 0 ? (
@@ -522,8 +544,8 @@ export const SettingsScreen = () => {
                   <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" style={{ display: 'block', margin: '0 auto 16px', opacity: 0.4 }}>
                     <path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z" /><polyline points="22,6 12,13 2,6" />
                   </svg>
-                  <h3 style={{ color: '#475569', margin: '0 0 8px' }}>No Messages Yet</h3>
-                  <p style={{ margin: 0, fontSize: '0.9rem' }}>Messages from paired venues will appear here.</p>
+                  <h3 style={{ color: '#475569', margin: '0 0 8px' }}>{t('settings.logs.no_messages')}</h3>
+                  <p style={{ margin: 0, fontSize: '0.9rem' }}>{t('settings.logs.no_messages_helper')}</p>
                 </div>
               ) : (
                 logList.map((msg, idx) => {
@@ -552,7 +574,7 @@ export const SettingsScreen = () => {
                           <span style={{ color: '#334155' }}>·</span>
                           <span>{getTemplateName(msg.templateId)}</span>
                           <span style={{ color: '#334155' }}>·</span>
-                          <span>by {getUserName(msg.senderId)}</span>
+                          <span>{t('settings.logs.by_user', { name: getUserName(msg.senderId) })}</span>
                         </div>
                         <div style={{ fontSize: '0.95rem', lineHeight: 1.4, color: '#F1F5F9', wordBreak: 'break-word' }}>
                           {msg.content}
@@ -572,11 +594,11 @@ export const SettingsScreen = () => {
                                         status === 'Unavailable' ? '#F59E0B' :
                                           status === 'Cancelled' ? '#EF4444' : '#334155';
                                 const statusLabel =
-                                  status === 'Shown' ? 'Shown' :
-                                    status === 'InProgress' ? 'In Progress' :
-                                      status === 'Queued' ? 'Queued' :
-                                        status === 'Unavailable' ? 'Unavailable' :
-                                          status === 'Cancelled' ? 'Deleted' : status;
+                                  status === 'Shown' ? t('settings.logs.status.shown') :
+                                    status === 'InProgress' ? t('settings.logs.status.in_progress') :
+                                      status === 'Queued' ? t('settings.logs.status.queued') :
+                                        status === 'Unavailable' ? t('settings.logs.status.unavailable') :
+                                          status === 'Cancelled' ? t('settings.logs.status.deleted') : status;
                                 return (
                                   <span key={d.messengerId.toString()} style={{ fontSize: '0.7rem', color: statusColor, display: 'flex', alignItems: 'center', gap: '4px' }}>
                                     <span style={{ width: '6px', height: '6px', borderRadius: '50%', background: statusColor, display: 'inline-block' }} />
@@ -602,16 +624,16 @@ export const SettingsScreen = () => {
             {/* SpacetimeDB Connection */}
             <section style={sectionStyle}>
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px' }}>
-                <h3 style={{ fontSize: '1rem', margin: 0 }}>SpacetimeDB Connection</h3>
+                <h3 style={{ fontSize: '1rem', margin: 0 }}>{t('settings.connection.title')}</h3>
                 <button
                   onClick={handleSaveSpacetimeSettings}
                   style={{ padding: '6px 14px', background: '#3B82F6', color: '#fff', border: 'none', borderRadius: '8px', fontSize: '0.82rem', fontWeight: 600, cursor: 'pointer' }}
                 >
-                  Save & Reload
+                  {t('settings.connection.save_reload')}
                 </button>
               </div>
 
-              <label style={labelStyle}>Host URI</label>
+              <label style={labelStyle}>{t('settings.connection.host_uri')}</label>
               <input
                 type="text"
                 value={stUri}
@@ -620,10 +642,10 @@ export const SettingsScreen = () => {
                 placeholder="ws://127.0.0.1:3000"
               />
               <p style={{ fontSize: '0.65rem', color: '#64748B', marginTop: '6px' }}>
-                Restart the app to apply URI changes.
+                {t('settings.connection.restart_helper')}
               </p>
 
-              <label style={{ ...labelStyle, marginTop: '16px' }}>Database Name</label>
+              <label style={{ ...labelStyle, marginTop: '16px' }}>{t('settings.connection.db_name')}</label>
               <input
                 type="text"
                 value={stDb}
@@ -633,20 +655,20 @@ export const SettingsScreen = () => {
               />
 
               <div style={{ marginTop: '20px', padding: '12px 16px', background: 'rgba(255,255,255,0.03)', borderRadius: '10px', border: '1px solid rgba(255,255,255,0.06)', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                <span style={{ fontSize: '0.75rem', fontWeight: 600, color: '#94A3B8' }}>Device ID</span>
+                <span style={{ fontSize: '0.75rem', fontWeight: 600, color: '#94A3B8' }}>{t('settings.connection.device_id')}</span>
                 <span style={{ fontSize: '0.75rem', fontFamily: 'monospace', color: '#64748b' }}>{machineUid}</span>
               </div>
 
               {/* Connection debug panel (moved from logs) */}
               {connectionError && (
                 <div style={{ marginTop: '12px', background: 'rgba(239,68,68,0.08)', border: '1px solid rgba(239,68,68,0.3)', borderRadius: '12px', padding: '14px 16px' }}>
-                  <div style={{ fontSize: '0.72rem', fontWeight: 700, color: '#EF4444', textTransform: 'uppercase', letterSpacing: '0.06em', marginBottom: '8px' }}>Connection Error</div>
+                  <div style={{ fontSize: '0.72rem', fontWeight: 700, color: '#EF4444', textTransform: 'uppercase', letterSpacing: '0.06em', marginBottom: '8px' }}>{t('settings.connection.error_title')}</div>
                   <div style={{ fontFamily: 'monospace', fontSize: '0.8rem', color: '#FCA5A5', wordBreak: 'break-all', lineHeight: 1.5 }}>
-                    {connectionError.message}
+                    {t(connectionError.message)}
                   </div>
                   {connectionError.stack && (
                     <details style={{ marginTop: '8px' }}>
-                      <summary style={{ fontSize: '0.72rem', color: '#EF4444', cursor: 'pointer', userSelect: 'none' }}>Stack trace</summary>
+                      <summary style={{ fontSize: '0.72rem', color: '#EF4444', cursor: 'pointer', userSelect: 'none' }}>{t('settings.connection.stack_trace')}</summary>
                       <pre style={{ fontSize: '0.7rem', color: '#7F1D1D', marginTop: '6px', whiteSpace: 'pre-wrap', wordBreak: 'break-all' }}>{connectionError.stack}</pre>
                     </details>
                   )}
@@ -662,7 +684,7 @@ export const SettingsScreen = () => {
                       }}
                       style={{ marginTop: '10px', padding: '6px 12px', background: '#EF4444', color: '#fff', border: 'none', borderRadius: '6px', fontSize: '0.75rem', fontWeight: 600, cursor: 'pointer' }}
                     >
-                      Fix: Replace localhost → 127.0.0.1 &amp; Reload
+                      {t('settings.connection.fix_localhost')}
                     </button>
                   )}
                 </div>
@@ -672,7 +694,7 @@ export const SettingsScreen = () => {
               {connectionError && localStorage.getItem('auth_token') && (
                 <button
                   onClick={() => {
-                    if (window.confirm("Reset authentication token and reload?")) {
+                    if (window.confirm(t('settings.connection.reset_confirm'))) {
                       localStorage.removeItem('auth_token');
                       window.location.reload();
                     }
@@ -689,16 +711,16 @@ export const SettingsScreen = () => {
                     e.currentTarget.style.borderColor = 'rgba(255,255,255,0.1)';
                   }}
                 >
-                  Reset Auth Token
+                  {t('settings.connection.reset_auth')}
                 </button>
               )}
             </section>
 
             {/* Display & Position */}
             <section style={sectionStyle}>
-              <h3 style={{ fontSize: '1rem', marginBottom: '16px', margin: '0 0 16px' }}>Display &amp; Position</h3>
+              <h3 style={{ fontSize: '1rem', marginBottom: '16px', margin: '0 0 16px' }}>{t('settings.display.screen_position')}</h3>
 
-              <label style={labelStyle}>Monitor</label>
+              <label style={labelStyle}>{t('settings.display.monitor')}</label>
               <select
                 value={selectedDisplay}
                 onChange={e => {
@@ -713,7 +735,7 @@ export const SettingsScreen = () => {
                 ))}
               </select>
 
-              <label style={{ ...labelStyle, marginTop: '14px' }}>Position on Screen</label>
+              <label style={{ ...labelStyle, marginTop: '14px' }}>{t('settings.display.screen_position')}</label>
               <div style={{ display: 'flex', gap: '8px' }}>
                 {(['bottom', 'top'] as const).map(pos => (
                   <button
@@ -730,7 +752,7 @@ export const SettingsScreen = () => {
                     }}
                   >
                     {pos === 'bottom' ? <IconArrowDown /> : <IconArrowUp />}
-                    {pos === 'bottom' ? 'Bottom' : 'Top'}
+                    {pos === 'bottom' ? t('settings.display.bottom') : t('settings.display.top')}
                   </button>
                 ))}
               </div>
@@ -738,9 +760,9 @@ export const SettingsScreen = () => {
 
             {/* Typography */}
             <section style={sectionStyle}>
-              <h3 style={{ fontSize: '1rem', marginBottom: '16px', margin: '0 0 16px' }}>Typography</h3>
+              <h3 style={{ fontSize: '1rem', marginBottom: '16px', margin: '0 0 16px' }}>{t('settings.display.typography')}</h3>
 
-              <label style={labelStyle}>Font Family</label>
+              <label style={labelStyle}>{t('settings.display.font')}</label>
               <select
                 value={tickerSettings.fontFamily}
                 onChange={e => updateTickerSetting('fontFamily', e.target.value)}
@@ -751,7 +773,7 @@ export const SettingsScreen = () => {
 
               <div style={{ display: 'flex', gap: '12px', marginTop: '14px' }}>
                 <div style={{ flex: 1 }}>
-                  <label style={labelStyle}>Font Size (px)</label>
+                  <label style={labelStyle}>{t('settings.display.font_size')}</label>
                   <input
                     type="number" min={12} max={80}
                     value={tickerSettings.fontSize}
@@ -760,15 +782,15 @@ export const SettingsScreen = () => {
                   />
                 </div>
                 <div style={{ flex: 1 }}>
-                  <label style={labelStyle}>Font Weight</label>
+                  <label style={labelStyle}>{t('settings.display.font_weight')}</label>
                   <select
                     value={tickerSettings.fontWeight}
                     onChange={e => updateTickerSetting('fontWeight', e.target.value as TickerSettings['fontWeight'])}
                     style={selectStyle}
                   >
-                    <option value="400">Regular</option>
-                    <option value="600">Semi-Bold</option>
-                    <option value="700">Bold</option>
+                    <option value="400">{t('settings.display.font_weight_regular', { defaultValue: 'Regular' })}</option>
+                    <option value="600">{t('settings.display.font_weight_semibold', { defaultValue: 'Semi-Bold' })}</option>
+                    <option value="700">{t('settings.display.font_weight_bold', { defaultValue: 'Bold' })}</option>
                   </select>
                 </div>
               </div>
@@ -776,12 +798,12 @@ export const SettingsScreen = () => {
 
             {/* Colors */}
             <section style={sectionStyle}>
-              <h3 style={{ fontSize: '1rem', margin: '0 0 16px' }}>Colors</h3>
+              <h3 style={{ fontSize: '1rem', margin: '0 0 16px' }}>{t('settings.display.colors')}</h3>
 
               <div style={{ display: 'flex', gap: '16px' }}>
                 {/* Text Color */}
                 <div style={{ flex: 1 }}>
-                  <label style={labelStyle}>Text Color</label>
+                  <label style={labelStyle}>{t('settings.display.fg_color')}</label>
                   <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
                     <label style={{
                       display: 'flex', alignItems: 'center', gap: '12px',
@@ -823,7 +845,7 @@ export const SettingsScreen = () => {
 
                 {/* Background Color */}
                 <div style={{ flex: 1 }}>
-                  <label style={labelStyle}>Background Color</label>
+                  <label style={labelStyle}>{t('settings.display.bg_color')}</label>
                   <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
                     <label style={{
                       display: 'flex', alignItems: 'center', gap: '12px',
@@ -871,22 +893,24 @@ export const SettingsScreen = () => {
 
             {/* Scroll & Repeat */}
             <section style={sectionStyle}>
-              <h3 style={{ fontSize: '1rem', margin: '0 0 16px' }}>Playback</h3>
+              <h3 style={{ fontSize: '1rem', margin: '0 0 16px' }}>{t('settings.display.motion')}</h3>
 
-              <label style={labelStyle}>Scroll Speed ({tickerSettings.scrollSpeed}px/s)</label>
-              <input
-                type="range" min={10} max={300} step={5}
-                value={tickerSettings.scrollSpeed}
-                onChange={e => updateTickerSetting('scrollSpeed', parseInt(e.target.value))}
-                style={{ width: '100%', accentColor: '#3B82F6', marginBottom: '4px' }}
-              />
-              <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.72rem', color: '#475569' }}>
-                <span>Slow (10px/s)</span><span>Fast (300px/s)</span>
-              </div>
+                <div style={{ flex: 1 }}>
+                  <label style={labelStyle}>{t('settings.display.scroll_speed')}</label>
+                  <input
+                    type="range" min={10} max={300} step={5}
+                    value={tickerSettings.scrollSpeed}
+                    onChange={e => updateTickerSetting('scrollSpeed', parseInt(e.target.value))}
+                    style={{ width: '100%', accentColor: '#3B82F6', marginBottom: '4px' }}
+                  />
+                  <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.72rem', color: '#475569' }}>
+                    <span>{t('settings.display.slow', { defaultValue: 'Slow' })} (10px/s)</span><span>{t('settings.display.fast', { defaultValue: 'Fast' })} (300px/s)</span>
+                  </div>
+                </div>
 
               <div style={{ marginTop: '16px', display: 'flex', alignItems: 'center', gap: '12px' }}>
                 <div style={{ flex: 1 }}>
-                  <label style={labelStyle}>Repeat Each Message</label>
+                  <label style={labelStyle}>{t('settings.display.repeat_count')}</label>
                   <input
                     type="number" min={1} max={10}
                     value={tickerSettings.repeatCount}
@@ -894,14 +918,14 @@ export const SettingsScreen = () => {
                     style={{ ...inputStyle, width: '100%' }}
                   />
                 </div>
-                <div style={{ fontSize: '0.8rem', color: '#64748b', paddingTop: '22px' }}>times</div>
+                <div style={{ fontSize: '0.8rem', color: '#64748b', paddingTop: '22px' }}>{t('common.times', { defaultValue: 'times' })}</div>
               </div>
             </section>
 
             {/* Preview */}
             <section style={sectionStyle}>
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px' }}>
-                <h3 style={{ fontSize: '1rem', margin: 0 }}>Preview</h3>
+                <h3 style={{ fontSize: '1rem', margin: 0 }}>{t('settings.display.preview')}</h3>
                 <button
                   onClick={handleShowSample}
                   style={{
@@ -915,7 +939,7 @@ export const SettingsScreen = () => {
                     <polyline points="23 4 23 10 17 10" />
                     <path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10" />
                   </svg>
-                  Display Test Message
+                  {t('settings.display.test_banner')}
                 </button>
               </div>
               <div style={{ borderRadius: '8px', overflow: 'hidden', height: '64px', display: 'flex', alignItems: 'center', background: tickerSettings.bgColor, border: '1px solid rgba(255,255,255,0.08)' }}>
@@ -930,7 +954,7 @@ export const SettingsScreen = () => {
                     color: tickerSettings.fgColor, 
                     whiteSpace: 'nowrap' 
                   }}>
-                  Sample: Welcome to Courier Notifications!
+                  {t('settings.display.sample_text', { defaultValue: 'Sample: Welcome to Canal4!' })}
                 </div>
               </div>
               <style>{`@keyframes marquee { 0% { transform: translateX(0) } 100% { transform: translateX(-100%) } }`}</style>
@@ -939,12 +963,12 @@ export const SettingsScreen = () => {
             {/* Display SpacetimeDB Error */}
             {lastError && (
               <section style={{ ...sectionStyle, borderColor: '#EF4444', background: 'rgba(239,68,68,0.1)' }}>
-                <h3 style={{ fontSize: '1rem', margin: '0 0 16px', color: '#EF4444' }}>SpacetimeDB Connection Error</h3>
+                <h3 style={{ fontSize: '1rem', margin: '0 0 16px', color: '#EF4444' }}>{t('settings.connection.error_title')}</h3>
                 <p style={{ fontSize: '0.85rem', color: '#FCA5A5', fontFamily: 'monospace', wordBreak: 'break-all' }}>
-                  {lastError.message}
+                  {t(lastError.message)}
                 </p>
                 <p style={{ fontSize: '0.75rem', color: '#FCA5A5', marginTop: '8px' }}>
-                  If you see a 403 error, your identity might be invalid. Resetting identity and data might help.
+                  {t('settings.connection.reset_helper')}
                 </p>
               </section>
             )}

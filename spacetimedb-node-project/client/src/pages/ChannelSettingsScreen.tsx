@@ -4,10 +4,12 @@ import { Trash2, ArrowLeft, AlertTriangle } from 'lucide-react';
 import { useAuth } from '../hooks/useAuth';
 import { useTable, useReducer } from 'spacetimedb/react';
 import { reducers, tables } from '../module_bindings/index.ts';
+import { useTranslation, Trans } from 'react-i18next';
 
 const ROLES = ['owner', 'admin', 'moderator', 'member'];
 
 export const ChannelSettingsScreen = () => {
+  const { t } = useTranslation();
   const { venueLink, channelId } = useParams<{ venueLink: string, channelId: string }>();
   const navigate = useNavigate();
   const { user, isLoggedIn, connected } = useAuth();
@@ -68,10 +70,10 @@ export const ChannelSettingsScreen = () => {
   if (!isChannelOwner) {
     return (
       <div className="app-container empty-state">
-        <h2>Access Denied</h2>
-        <p style={{ marginTop: '8px', color: 'var(--text-secondary)' }}>Only channel owners can access these settings.</p>
+        <h2>{t('venue_channels.access_denied')}</h2>
+        <p style={{ marginTop: '8px', color: 'var(--text-secondary)' }}>{t('channel_templates.only_owners')}</p>
         <button onClick={() => navigate(-1)} style={{ marginTop: '16px', display: 'flex', alignItems: 'center', gap: '8px' }}>
-          <ArrowLeft size={16} /> Go back
+          <ArrowLeft size={16} /> {t('common.back')}
         </button>
       </div>
     );
@@ -94,14 +96,14 @@ export const ChannelSettingsScreen = () => {
       });
       navigate(`/venues/${venue.link}/channels/${channel.channelId}`);
     } catch (err: unknown) {
-      setErrorText(err instanceof Error ? err.message : String(err));
+      setErrorText(t(err instanceof Error ? err.message : String(err)));
       setLoading(false);
     }
   };
 
   const handleDelete = async () => {
     if (deleteConfirmName !== channel.name) {
-      setErrorText("Confirmation name doesn't match");
+      setErrorText(t('api_errors.confirmation_channel_mismatch'));
       return;
     }
 
@@ -115,7 +117,7 @@ export const ChannelSettingsScreen = () => {
       });
       navigate(`/venues/${venue.link}`);
     } catch (err: unknown) {
-      setErrorText(err instanceof Error ? err.message : String(err));
+      setErrorText(t(err instanceof Error ? err.message : String(err)));
       setLoading(false);
       setShowDeleteConfirm(false);
     }
@@ -133,7 +135,7 @@ export const ChannelSettingsScreen = () => {
           >
             <ArrowLeft size={20} style={{ transform: 'translateY(1px)' }} />
           </button>
-          <h2>{channel.name} Settings</h2>
+          <h2>{t('channel_settings.title', { name: channel.name })}</h2>
         </div>
       </div>
 
@@ -157,32 +159,32 @@ export const ChannelSettingsScreen = () => {
           )}
 
           <div style={{ marginBottom: '16px' }}>
-            <label style={{ display: 'block', marginBottom: '8px', fontWeight: 500, fontSize: '0.9rem' }}>Channel Name</label>
+            <label style={{ display: 'block', marginBottom: '8px', fontWeight: 500, fontSize: '0.9rem' }}>{t('channel_settings.name_label')}</label>
             <input
               type="text"
               value={name}
               onChange={(e) => setName(e.target.value)}
               required
               disabled={loading}
-              placeholder="e.g., General Announcements"
+              placeholder={t('channel_settings.name_placeholder')}
               style={{ width: '100%' }}
             />
           </div>
 
           <div style={{ marginBottom: '16px' }}>
-            <label style={{ display: 'block', marginBottom: '8px', fontWeight: 500, fontSize: '0.9rem' }}>Description</label>
+            <label style={{ display: 'block', marginBottom: '8px', fontWeight: 500, fontSize: '0.9rem' }}>{t('channel_settings.desc_label')}</label>
             <input
               type="text"
               value={description}
               onChange={(e) => setDescription(e.target.value)}
               disabled={loading}
-              placeholder="e.g., Main channel for all members"
+              placeholder={t('channel_settings.desc_placeholder')}
               style={{ width: '100%' }}
             />
           </div>
 
           <div style={{ marginBottom: '16px' }}>
-            <label style={{ display: 'block', marginBottom: '8px', fontWeight: 500, fontSize: '0.9rem' }}>Minimum Role to View</label>
+            <label style={{ display: 'block', marginBottom: '8px', fontWeight: 500, fontSize: '0.9rem' }}>{t('channel_settings.min_role_label')}</label>
             <select
               value={minRole}
               onChange={(e) => setMinRole(e.target.value)}
@@ -191,14 +193,14 @@ export const ChannelSettingsScreen = () => {
             >
               {ROLES.map(r => (
                 <option key={r} value={r} style={{ background: '#1c1c1e' }}>
-                  {r.charAt(0).toUpperCase() + r.slice(1)}
+                  {t(`roles.${r.toLowerCase()}`)}
                 </option>
               ))}
             </select>
           </div>
 
           <div style={{ marginBottom: '24px' }}>
-            <label style={{ display: 'block', marginBottom: '8px', fontWeight: 500, fontSize: '0.9rem' }}>Members can only view messages of the last</label>
+            <label style={{ display: 'block', marginBottom: '8px', fontWeight: 500, fontSize: '0.9rem' }}>{t('channel_settings.max_age_label')}</label>
             <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
               <input
                 type="number"
@@ -210,23 +212,23 @@ export const ChannelSettingsScreen = () => {
                 disabled={loading}
                 style={{ width: '100px' }}
               />
-              <span style={{ color: 'var(--text-secondary)' }}>hours</span>
+              <span style={{ color: 'var(--text-secondary)' }}>{t('channel_settings.hours')}</span>
             </div>
           </div>
 
 
           <div style={{ display: 'flex', gap: '12px', marginTop: '8px' }}>
             <button type="button" className="secondary" style={{ flex: 1 }} onClick={() => navigate(-1)} disabled={loading}>
-              Cancel
+              {t('common.cancel')}
             </button>
             <button type="submit" disabled={loading || !name.trim()} style={{ flex: 1 }} >
-              {loading ? 'Saving...' : 'Confirm'}
+              {loading ? t('common.loading') : t('channel_settings.confirm_button')}
             </button>
           </div>
         </form>
 
         <div style={{ marginTop: '48px', paddingTop: '24px', borderTop: '1px solid var(--surface-border)', width: '100%' }}>
-          <h3 style={{ color: 'var(--error-color)' }}>Danger Zone</h3>
+          <h3 style={{ color: 'var(--error-color)' }}>{t('channel_settings.danger_zone.title')}</h3>
 
           {!showDeleteConfirm ? (
             <button
@@ -234,15 +236,19 @@ export const ChannelSettingsScreen = () => {
               style={{ marginTop: '16px', display: 'flex', alignItems: 'center', gap: '8px' }}
               onClick={() => setShowDeleteConfirm(true)}
             >
-              <Trash2 size={16} /> Delete Channel
+              <Trash2 size={16} /> {t('channel_settings.danger_zone.delete_button')}
             </button>
           ) : (
             <div className="glass-panel" style={{ marginTop: '16px', padding: '16px', borderColor: 'var(--error-color)' }}>
               <p style={{ marginBottom: '16px', color: 'var(--text-secondary)', fontSize: '0.9rem', lineHeight: 1.5 }}>
-                This action cannot be undone. This will permanently delete the <strong>{channel.name}</strong> channel and remove all associated templates, messages, and settings.
+                <Trans i18nKey="channel_settings.danger_zone.delete_confirm_text" values={{ name: channel.name }}>
+                  This action cannot be undone. This will permanently delete the <strong>{channel.name}</strong> channel and remove all associated templates, messages, and settings.
+                </Trans>
               </p>
               <p style={{ marginBottom: '8px', fontSize: '0.9rem' }}>
-                Please type <strong>{channel.name}</strong> to confirm.
+                <Trans i18nKey="channel_settings.danger_zone.type_confirm" values={{ name: channel.name }}>
+                  Please type <strong>{channel.name}</strong> to confirm.
+                </Trans>
               </p>
               <input
                 type="text"
@@ -259,7 +265,7 @@ export const ChannelSettingsScreen = () => {
                   disabled={loading}
                   style={{ flex: 1 }}
                 >
-                  Cancel
+                  {t('common.cancel')}
                 </button>
                 <button
                   className="danger"
@@ -267,7 +273,7 @@ export const ChannelSettingsScreen = () => {
                   disabled={loading || deleteConfirmName !== channel.name}
                   style={{ flex: 1 }}
                 >
-                  {loading ? 'Deleting...' : 'Delete'}
+                  {loading ? t('common.loading') : t('common.delete')}
                 </button>
               </div>
             </div>

@@ -4,6 +4,7 @@ import { useAuth } from '../hooks/useAuth';
 import { useTable, useReducer } from 'spacetimedb/react';
 import { reducers, tables } from '../module_bindings/index.ts';
 import { ArrowLeft, Plus, Trash2, ArrowUp, ArrowDown, Settings2, Code, FileText, Check, AlertTriangle } from 'lucide-react';
+import { useTranslation } from 'react-i18next';
 
 interface TemplateField {
   id: string; // Internal id for reordering
@@ -20,6 +21,7 @@ interface TemplateField {
 }
 
 export const ChannelTemplateEditScreen = () => {
+  const { t } = useTranslation();
   const { venueLink, channelId, templateId } = useParams<{ venueLink: string, channelId: string, templateId: string }>();
   const navigate = useNavigate();
   const { user, isLoggedIn, connected } = useAuth();
@@ -92,9 +94,9 @@ export const ChannelTemplateEditScreen = () => {
   if (!isChannelOwner) {
     return (
       <div className="app-container empty-state">
-        <h2>Access Denied</h2>
-        <p style={{ marginTop: '8px', color: 'var(--text-secondary)' }}>Only channel owners can edit templates.</p>
-        <button onClick={() => navigate(`/venues/${venue.link}/channels/${channel.channelId}/templates`)} style={{ marginTop: '16px' }}>Go back</button>
+        <h2>{t('venue_channels.access_denied')}</h2>
+        <p style={{ marginTop: '8px', color: 'var(--text-secondary)' }}>{t('template_edit.only_owners_edit')}</p>
+        <button onClick={() => navigate(`/venues/${venue.link}/channels/${channel.channelId}/templates`)} style={{ marginTop: '16px' }}>{t('common.back')}</button>
       </div>
     );
   }
@@ -140,7 +142,7 @@ export const ChannelTemplateEditScreen = () => {
   };
 
   const generatePreview = () => {
-    if (fields.length === 0) return "Message has no fields configurations.";
+    if (fields.length === 0) return t('template_edit.no_fields_preview');
     
     let result = '';
     fields.forEach((f, idx) => {
@@ -158,7 +160,7 @@ export const ChannelTemplateEditScreen = () => {
     
     // Quick validation filter
     if (fields.length === 0) {
-      setErrorText("Templates must have at least one field.");
+      setErrorText(t('template_edit.no_fields_error'));
       return;
     }
 
@@ -186,7 +188,7 @@ export const ChannelTemplateEditScreen = () => {
 
       navigate(`/venues/${venue.link}/channels/${channel.channelId}/templates`);
     } catch (err: unknown) {
-      setErrorText(err instanceof Error ? err.message : String(err));
+      setErrorText(t(err instanceof Error ? err.message : String(err)));
       setLoading(false);
     }
   };
@@ -198,7 +200,7 @@ export const ChannelTemplateEditScreen = () => {
       await deleteTemplate({ templateId: existingTemplate.templateId });
       navigate(`/venues/${venue.link}/channels/${channel.channelId}/templates`);
     } catch (err: unknown) {
-      setErrorText(err instanceof Error ? err.message : String(err));
+      setErrorText(t(err instanceof Error ? err.message : String(err)));
       setLoading(false);
       setShowDeleteConfirm(false);
     }
@@ -214,13 +216,13 @@ export const ChannelTemplateEditScreen = () => {
           >
             <ArrowLeft size={20} style={{ transform: 'translateY(1px)' }} />
           </button>
-          <h2>{isNew ? 'New Template' : 'Edit Template'}</h2>
+          <h2>{isNew ? t('template_edit.title_new') : t('template_edit.title_edit')}</h2>
         </div>
         {!isNew && (
           <button 
             className="icon-button danger"
             onClick={() => setShowDeleteConfirm(!showDeleteConfirm)}
-            title="Delete Template"
+            title={t('template_edit.danger_zone.delete_button')}
           >
             <Trash2 size={20} />
           </button>
@@ -247,29 +249,29 @@ export const ChannelTemplateEditScreen = () => {
           )}
 
           <div className="glass-panel" style={{ padding: '24px' }}>
-            <h3 style={{ marginBottom: '16px', color: 'var(--accent-color)' }}>Template Properties</h3>
+            <h3 style={{ marginBottom: '16px', color: 'var(--accent-color)' }}>{t('template_edit.fields_title')}</h3>
             
             <div style={{ marginBottom: '16px' }}>
-              <label style={{ display: 'block', marginBottom: '8px', fontWeight: 500, fontSize: '0.9rem' }}>Template Name</label>
+              <label style={{ display: 'block', marginBottom: '8px', fontWeight: 500, fontSize: '0.9rem' }}>{t('template_edit.name_label')}</label>
               <input 
                 type="text" 
                 value={name}
                 onChange={(e) => setName(e.target.value)}
                 required
                 disabled={loading}
-                placeholder="e.g., Emergency Alert"
+                placeholder={t('template_edit.name_placeholder')}
                 style={{ width: '100%' }}
               />
             </div>
 
             <div style={{ marginBottom: '16px' }}>
-              <label style={{ display: 'block', marginBottom: '8px', fontWeight: 500, fontSize: '0.9rem' }}>Description</label>
+              <label style={{ display: 'block', marginBottom: '8px', fontWeight: 500, fontSize: '0.9rem' }}>{t('template_edit.desc_label')}</label>
               <input 
                 type="text" 
                 value={description}
                 onChange={(e) => setDescription(e.target.value)}
                 disabled={loading}
-                placeholder="e.g., Use this to alert members of an immediate emergency."
+                placeholder={t('template_edit.desc_placeholder')}
                 style={{ width: '100%' }}
               />
             </div>
@@ -278,11 +280,11 @@ export const ChannelTemplateEditScreen = () => {
 
           <div className="flex-col" style={{ gap: '16px' }}>
              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-               <h3 style={{ color: 'var(--accent-color)', margin: 0 }}>Message Fields</h3>
+               <h3 style={{ color: 'var(--accent-color)', margin: 0 }}>{t('template_edit.fields_title')}</h3>
              </div>
              
              <p style={{ color: 'var(--text-secondary)', fontSize: '0.9rem', margin: 0 }}>
-               Setup the input fields for the user to type when sending a message using this template. Drag to reorder.
+               {t('template_edit.fields_helper', 'Setup the input fields for the user to type when sending a message using this template.')}
              </p>
 
              <div className="flex-col" style={{ gap: '16px' }}>
@@ -328,7 +330,7 @@ export const ChannelTemplateEditScreen = () => {
 
                    <div style={{ display: 'grid', gridTemplateColumns: '1fr', gap: '16px' }}>
                      <div>
-                       <label style={{ display: 'block', marginBottom: '8px', fontSize: '0.9rem', color: 'var(--text-secondary)' }}>Field Name (Label shown to user)</label>
+                       <label style={{ display: 'block', marginBottom: '8px', fontSize: '0.9rem', color: 'var(--text-secondary)' }}>{t('template_edit.field.name_label')}</label>
                        <input 
                          type="text" 
                          value={field.name}
@@ -340,7 +342,7 @@ export const ChannelTemplateEditScreen = () => {
 
                      <div style={{ display: 'flex', gap: '16px', flexWrap: 'wrap' }}>
                        <div style={{ flex: 1, minWidth: '150px' }}>
-                         <label style={{ display: 'block', marginBottom: '8px', fontSize: '0.9rem', color: 'var(--text-secondary)' }}>Auto-Prefix text</label>
+                         <label style={{ display: 'block', marginBottom: '8px', fontSize: '0.9rem', color: 'var(--text-secondary)' }}>{t('template_edit.field.prefix_label')}</label>
                          <input 
                            type="text" 
                            value={field.prefix}
@@ -351,7 +353,7 @@ export const ChannelTemplateEditScreen = () => {
                        </div>
                        
                        <div style={{ flex: 1, minWidth: '150px' }}>
-                         <label style={{ display: 'block', marginBottom: '8px', fontSize: '0.9rem', color: 'var(--text-secondary)' }}>Auto-Suffix text</label>
+                         <label style={{ display: 'block', marginBottom: '8px', fontSize: '0.9rem', color: 'var(--text-secondary)' }}>{t('template_edit.field.suffix_label')}</label>
                          <input 
                            type="text" 
                            value={field.suffix}
@@ -364,7 +366,7 @@ export const ChannelTemplateEditScreen = () => {
 
                      <div style={{ background: 'rgba(255,255,255,0.02)', padding: '16px', borderRadius: '8px', border: '1px solid rgba(255,255,255,0.05)' }}>
                        <h4 style={{ marginBottom: '12px', fontSize: '0.9rem', display: 'flex', alignItems: 'center', gap: '8px' }}>
-                         <Code size={16} /> Validation Rules
+                         <Code size={16} /> {t('template_edit.field.validation_title')}
                        </h4>
                        <div style={{ display: 'flex', gap: '16px', flexWrap: 'wrap', marginBottom: '16px' }}>
                           <label style={{ display: 'flex', alignItems: 'center', gap: '8px', cursor: 'pointer' }}>
@@ -373,7 +375,7 @@ export const ChannelTemplateEditScreen = () => {
                               checked={field.isNumericOnly}
                               onChange={(e) => handleChangeField(idx, 'isNumericOnly', e.target.checked)}
                             />
-                            <span style={{ fontSize: '0.9rem' }}>Numeric input only</span>
+                            <span style={{ fontSize: '0.9rem' }}>{t('template_edit.field.is_numeric')}</span>
                           </label>
                           <label style={{ display: 'flex', alignItems: 'center', gap: '8px', cursor: 'pointer' }}>
                             <input 
@@ -381,13 +383,13 @@ export const ChannelTemplateEditScreen = () => {
                               checked={field.isOptional}
                               onChange={(e) => handleChangeField(idx, 'isOptional', e.target.checked)}
                             />
-                            <span style={{ fontSize: '0.9rem' }}>Optional field</span>
+                            <span style={{ fontSize: '0.9rem' }}>{t('template_edit.field.is_optional')}</span>
                           </label>
                        </div>
                        
                        <div style={{ display: 'flex', gap: '16px', flexWrap: 'wrap' }}>
                          <div style={{ flex: 1, minWidth: '150px' }}>
-                           <label style={{ display: 'block', marginBottom: '8px', fontSize: '0.9rem', color: 'var(--text-secondary)' }}>Validation Regex (Javascript filter)</label>
+                           <label style={{ display: 'block', marginBottom: '8px', fontSize: '0.9rem', color: 'var(--text-secondary)' }}>{t('template_edit.field.regex_pattern')}</label>
                            <input 
                              type="text" 
                              value={field.regexPattern || ''}
@@ -397,7 +399,7 @@ export const ChannelTemplateEditScreen = () => {
                            />
                          </div>
                          <div style={{ flex: 1, minWidth: '150px' }}>
-                           <label style={{ display: 'block', marginBottom: '8px', fontSize: '0.9rem', color: 'var(--text-secondary)' }}>Regex Error Message</label>
+                           <label style={{ display: 'block', marginBottom: '8px', fontSize: '0.9rem', color: 'var(--text-secondary)' }}>{t('template_edit.field.regex_error')}</label>
                            <input 
                              type="text" 
                              value={field.regexErrorMsg || ''}
@@ -412,14 +414,14 @@ export const ChannelTemplateEditScreen = () => {
 
                      <div style={{ background: 'rgba(255,255,255,0.02)', padding: '16px', borderRadius: '8px', border: '1px solid rgba(255,255,255,0.05)' }}>
                        <h4 style={{ marginBottom: '12px', fontSize: '0.9rem', display: 'flex', alignItems: 'center', gap: '8px' }}>
-                         <Settings2 size={16} /> Alternate Prefix/Suffix System 
+                         <Settings2 size={16} /> {t('template_edit.field.secondary_title')} 
                        </h4>
                        <p style={{ fontSize: '0.85rem', color: 'var(--text-secondary)', marginBottom: '16px', lineHeight: 1.4 }}>
-                         When the user's input matches the Regex Trigger below, the Alternate Prefix and Suffix will be used instead of the standard ones.
+                         {t('template_edit.field.secondary_helper')}
                        </p>
                        <div style={{ display: 'flex', gap: '16px', flexWrap: 'wrap' }}>
                          <div style={{ flex: 1, minWidth: '100px' }}>
-                           <label style={{ display: 'block', marginBottom: '8px', fontSize: '0.9rem', color: 'var(--text-secondary)' }}>Regex Trigger</label>
+                           <label style={{ display: 'block', marginBottom: '8px', fontSize: '0.9rem', color: 'var(--text-secondary)' }}>{t('template_edit.field.secondary_regex')}</label>
                            <input 
                              type="text" 
                              value={field.secondaryRegexTrigger || ''}
@@ -430,7 +432,7 @@ export const ChannelTemplateEditScreen = () => {
                          </div>
                          <div style={{ flex: '1.5', display: 'flex', gap: '8px' }}>
                            <div style={{ flex: 1 }}>
-                             <label style={{ display: 'block', marginBottom: '8px', fontSize: '0.9rem', color: 'var(--text-secondary)' }}>Alt Prefix</label>
+                             <label style={{ display: 'block', marginBottom: '8px', fontSize: '0.9rem', color: 'var(--text-secondary)' }}>{t('template_edit.field.secondary_prefix')}</label>
                              <input 
                                type="text" 
                                value={field.secondaryPrefix || ''}
@@ -439,7 +441,7 @@ export const ChannelTemplateEditScreen = () => {
                              />
                            </div>
                            <div style={{ flex: 1 }}>
-                             <label style={{ display: 'block', marginBottom: '8px', fontSize: '0.9rem', color: 'var(--text-secondary)' }}>Alt Suffix</label>
+                             <label style={{ display: 'block', marginBottom: '8px', fontSize: '0.9rem', color: 'var(--text-secondary)' }}>{t('template_edit.field.secondary_suffix')}</label>
                              <input 
                                type="text" 
                                value={field.secondarySuffix || ''}
@@ -461,7 +463,7 @@ export const ChannelTemplateEditScreen = () => {
                  style={{ padding: '16px', border: 'dashed 2px rgba(255,255,255,0.2)', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px' }}
                  onClick={handleAddField}
                >
-                 <Plus size={18} /> Add message field
+                 <Plus size={18} /> {t('template_edit.add_field')}
                </button>
 
              </div>
@@ -470,10 +472,10 @@ export const ChannelTemplateEditScreen = () => {
 
           <div className="glass-panel" style={{ padding: '24px', marginTop: '8px' }}>
              <h3 style={{ marginBottom: '8px', display: 'flex', alignItems: 'center', gap: '8px' }}>
-               <FileText size={18} color="var(--accent-color)" /> Output Preview
+               <FileText size={18} color="var(--accent-color)" /> {t('template_edit.preview_title')}
              </h3>
              <p style={{ color: 'var(--text-secondary)', fontSize: '0.9rem', marginBottom: '12px' }}>
-               This is how your sent messages using this template will generally appear:
+               {t('template_edit.preview_helper', 'This is how your sent messages using this template will generally appear:')}
              </p>
              <div style={{ padding: '16px', background: '#111', borderRadius: '8px', border: '1px solid var(--surface-border)', fontFamily: 'monospace', wordBreak: 'break-word' }}>
                {generatePreview()}
@@ -482,10 +484,10 @@ export const ChannelTemplateEditScreen = () => {
 
           <div className="glass-panel" style={{ display: 'flex', gap: '12px', marginTop: '16px', position: 'sticky', bottom: '-16px', padding: '16px', zIndex: 10, margin: '0 -16px -16px -16px', borderLeft: 'none', borderRight: 'none', borderBottom: 'none', borderRadius: '0' }}>
             <button type="button" className="secondary" style={{ flex: 1 }} onClick={() => navigate(-1)} disabled={loading}>
-              Cancel
+              {t('common.cancel')}
             </button>
             <button type="submit" disabled={loading || !name.trim()} style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px' }} >
-              <Check size={18} /> {loading ? 'Saving...' : 'Save Template'}
+              <Check size={18} /> {loading ? t('template_edit.saving') : t('template_edit.save_template')}
             </button>
           </div>
 
@@ -501,9 +503,9 @@ export const ChannelTemplateEditScreen = () => {
           padding: '24px'
         }}>
           <div className="glass-panel flex-col" style={{ padding: '24px', maxWidth: '400px', width: '100%' }}>
-            <h3 style={{ marginBottom: '16px', color: 'var(--error-color)' }}>Delete Template</h3>
+            <h3 style={{ marginBottom: '16px', color: 'var(--error-color)' }}>{t('template_edit.danger_zone.confirm_title')}</h3>
             <p style={{ marginBottom: '16px', color: 'var(--text-secondary)', fontSize: '0.9rem', lineHeight: 1.5 }}>
-              Are you sure you want to delete this template? Any previous messages sent using it will still exist, but users will no longer be able to select it.
+              {t('template_edit.danger_zone.confirm_text')}
             </p>
             <div style={{ display: 'flex', gap: '12px', marginTop: '24px' }}>
               <button
@@ -512,7 +514,7 @@ export const ChannelTemplateEditScreen = () => {
                 onClick={() => setShowDeleteConfirm(false)}
                 disabled={loading}
               >
-                Cancel
+                {t('common.cancel')}
               </button>
               <button
                 className="danger"
@@ -520,7 +522,7 @@ export const ChannelTemplateEditScreen = () => {
                 onClick={handleDelete}
                 disabled={loading}
               >
-                {loading ? 'Deleting...' : 'Delete'}
+                {loading ? t('common.loading') : t('common.delete')}
               </button>
             </div>
           </div>

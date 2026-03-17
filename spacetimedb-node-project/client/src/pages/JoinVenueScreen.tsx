@@ -5,8 +5,10 @@ import { tables, reducers } from '../module_bindings/index.ts';
 import { useAuth } from '../hooks/useAuth';
 import { useReadyTable } from '../hooks/useReadyTable';
 import { Search, CheckCircle, Building2, AlertTriangle } from 'lucide-react';
+import { useTranslation, Trans } from 'react-i18next';
 
 export const JoinVenueScreen = () => {
+  const { t } = useTranslation();
   const { venueLink, token } = useParams<{ venueLink: string, token: string }>();
   const navigate = useNavigate();
   const { user, isLoggedIn } = useAuth();
@@ -36,8 +38,8 @@ export const JoinVenueScreen = () => {
     return (
       <div className="app-container" style={{ alignItems: 'center', justifyContent: 'center' }}>
         <div className="glass-panel" style={{ padding: '48px', textAlign: 'center', maxWidth: '400px', width: '100%' }}>
-          <h2 style={{ marginBottom: '12px' }}>Loading invite...</h2>
-          <p style={{ color: 'var(--text-secondary)' }}>Connecting to server...</p>
+          <h2 style={{ marginBottom: '12px' }}>{t('join_venue.loading_invite')}</h2>
+          <p style={{ color: 'var(--text-secondary)' }}>{t('join_venue.connecting')}</p>
         </div>
       </div>
     );
@@ -57,12 +59,12 @@ export const JoinVenueScreen = () => {
           <div style={{ color: 'var(--text-secondary)', marginBottom: '16px' }}>
             <Search size={48} />
           </div>
-          <h2 style={{ marginBottom: '12px' }}>Invite Not Found</h2>
+          <h2 style={{ marginBottom: '12px' }}>{t('join_venue.not_found_title')}</h2>
           <p style={{ color: 'var(--text-secondary)', marginBottom: '24px' }}>
-            This invite link is invalid or the venue no longer exists.
+            {t('join_venue.not_found_text')}
           </p>
           <button onClick={() => navigate('/venues')} style={{ width: '100%' }}>
-            Go to My Venues
+            {t('join_venue.go_to_venues')}
           </button>
         </div>
       </div>
@@ -76,12 +78,14 @@ export const JoinVenueScreen = () => {
           <div style={{ color: 'var(--success-color)', marginBottom: '16px' }}>
             <CheckCircle size={48} />
           </div>
-          <h2 style={{ marginBottom: '12px' }}>Already a Member</h2>
+          <h2 style={{ marginBottom: '12px' }}>{t('join_venue.already_member_title')}</h2>
           <p style={{ color: 'var(--text-secondary)', marginBottom: '24px' }}>
-            You are already a member of <strong>{venue.name}</strong>.
+            <Trans i18nKey="join_venue.already_member_text" values={{ name: venue.name }}>
+              You are already a member of <strong>{venue.name}</strong>.
+            </Trans>
           </p>
           <button onClick={() => navigate(`/venues/${venue.link}`)} style={{ width: '100%' }}>
-            Open Venue
+            {t('join_venue.open_venue')}
           </button>
         </div>
       </div>
@@ -92,12 +96,12 @@ export const JoinVenueScreen = () => {
     setErrorText('');
     setLoading(true);
     try {
-      if (!token) throw new Error("Missing invitation token from link");
+      if (!token) throw new Error(t('join_venue.error_missing_token'));
       await joinVenue({ token });
       navigate(`/venues/${venue.link}`);
     } catch (err: unknown) {
       const message = err instanceof Error ? err.message : String(err);
-      setErrorText(message || 'Failed to join venue. Please try again.');
+      setErrorText(t(message) || t('join_venue.error_failed'));
       setLoading(false);
     }
   };
@@ -109,11 +113,13 @@ export const JoinVenueScreen = () => {
           <Building2 size={48} />
         </div>
         <p style={{ color: 'var(--text-secondary)', marginBottom: '8px', fontSize: '0.9rem' }}>
-          You've been invited to
+          {t('join_venue.invited_to')}
         </p>
         <h2 style={{ marginBottom: '8px', fontSize: '1.8rem' }}>{venue.name}</h2>
         <p style={{ color: 'var(--text-secondary)', marginBottom: '32px', fontSize: '0.85rem' }}>
-          Joining as <strong style={{ color: 'var(--text-primary)' }}>{user.name}</strong>
+          <Trans i18nKey="join_venue.joining_as" values={{ name: user.name }}>
+            Joining as <strong style={{ color: 'var(--text-primary)' }}>{user.name}</strong>
+          </Trans>
         </p>
 
         {errorText && (
@@ -136,10 +142,10 @@ export const JoinVenueScreen = () => {
 
         <div className="flex-col" style={{ gap: '12px' }}>
           <button onClick={handleJoin} disabled={loading} style={{ width: '100%' }}>
-            {loading ? 'Joining...' : 'Join Venue'}
+            {loading ? t('join_venue.joining') : t('join_venue.join_button')}
           </button>
           <button className="secondary" onClick={() => navigate('/venues')} style={{ width: '100%' }}>
-            Cancel
+            {t('common.cancel')}
           </button>
         </div>
       </div>

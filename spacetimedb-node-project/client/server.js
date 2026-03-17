@@ -35,7 +35,12 @@ app.post('/api/request-pin', async (req, res) => {
   const expiresAtMillis = Date.now() + 10 * 60 * 1000;
 
   const DB_NAME = process.env.VITE_SPACETIMEDB_NAME;
-  let URI = process.env.VITE_SPACETIMEDB_URI_DEV || 'http://localhost:3000';
+  let URI = process.env.VITE_SPACETIMEDB_URI_DEV;
+
+  if (!DB_NAME || !URI) {
+    console.error('Missing SpacetimeDB configuration (VITE_SPACETIMEDB_NAME or VITE_SPACETIMEDB_URI_DEV) in process.env');
+    return res.status(500).json({ error: 'Server configuration error' });
+  }
 
   // Convert ws:// to http:// for REST call
   const restUri = URI.replace('ws://', 'http://').replace('wss://', 'https://');

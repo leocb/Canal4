@@ -1,8 +1,10 @@
 import { useNavigate, useLocation } from 'react-router-dom';
 import { Bell, LogOut, Pencil } from 'lucide-react';
 import { useAuth } from '../hooks/useAuth';
+import { useTranslation } from 'react-i18next';
 
 const NavBar = () => {
+  const { t } = useTranslation();
   const navigate = useNavigate();
   const location = useLocation();
   const { user } = useAuth();
@@ -20,7 +22,7 @@ const NavBar = () => {
           <Bell size={18} color="white" />
         </div>
         <span style={{ fontWeight: 600, fontSize: '1.1rem', cursor: 'pointer' }} onClick={() => navigate('/')}>
-          Courier
+          {t('app.name')}
         </span>
       </div>
       
@@ -30,7 +32,7 @@ const NavBar = () => {
             style={{ display: 'flex', alignItems: 'center', gap: '6px', cursor: 'pointer', padding: '4px 8px', borderRadius: '8px' }} 
             className="hover-bg"
             onClick={() => navigate('/profile')}
-            title="Edit Profile"
+            title={t('nav.profile')}
           >
             <span style={{ fontSize: '0.9rem', color: 'var(--text-secondary)', fontWeight: 500 }}>
               {user.name}
@@ -43,7 +45,7 @@ const NavBar = () => {
           window.location.href = '/login';
         }}>
           <LogOut size={16} />
-          <span style={{ fontSize: '0.9rem' }}>Logout</span>
+          <span style={{ fontSize: '0.9rem' }}>{t('nav.logout')}</span>
         </button>
       </div>
     </nav>

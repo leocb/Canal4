@@ -5,8 +5,10 @@ import { reducers, tables } from "./module_bindings/index";
 import { SettingsScreen } from "./pages/SettingsScreen";
 import { TickerScreen } from "./pages/TickerScreen";
 import { ErrorBoundary } from "./ErrorBoundary";
+import { useTranslation } from 'react-i18next';
 
 function App() {
+  const { t } = useTranslation();
   const { isActive: connected, identity } = useSpacetimeDB();
   const messengerConnect = useReducer(reducers.messengerConnect);
   const loginOrCreateUser = useReducer(reducers.loginOrCreateUser);
@@ -42,8 +44,8 @@ function App() {
       console.log("[App] Identity not registered as User, auto-registering...");
       setHasAttemptedAutoRegister(true);
       loginOrCreateUser({
-        email: `messenger-${machineUid.slice(0, 12)}@courier.local`,
-        name: `Display Node (${machineUid.slice(0, 6)})`
+        email: `messenger-${machineUid.slice(0, 12)}@canal4.local`,
+        name: t('app.default_node_name', { id: machineUid.slice(0, 6) })
       }).catch(err => {
         console.error("[App] Auto-registration failed:", err);
         setHasAttemptedAutoRegister(false); // Allow retry on failure

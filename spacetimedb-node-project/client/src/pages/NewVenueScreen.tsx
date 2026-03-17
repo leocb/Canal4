@@ -4,6 +4,7 @@ import { useTable, useReducer } from 'spacetimedb/react';
 import { tables, reducers } from '../module_bindings/index.ts';
 import { useAuth } from '../hooks/useAuth';
 import { AlertTriangle, ArrowLeft } from 'lucide-react';
+import { useTranslation } from 'react-i18next';
 
 const ADJECTIVES = ['fast', 'happy', 'clever', 'brave', 'calm', 'eager', 'gentle', 'proud', 'witty', 'bold', 'kind', 'neat', 'wise', 'zesty', 'wild', 'super', 'lucky', 'swift', 'merry', 'light'];
 const NOUNS = ['bunny', 'tiger', 'eagle', 'dolphin', 'fox', 'bear', 'lion', 'wolf', 'hawk', 'owl', 'seal', 'deer', 'swan', 'dove', 'frog', 'duck', 'goose', 'pup', 'cub', 'kit'];
@@ -24,6 +25,7 @@ function generateUniqueLink(existingLinks: Set<string>): string {
 }
 
 export const NewVenueScreen = () => {
+  const { t } = useTranslation();
   const navigate = useNavigate();
   const { user, isLoggedIn } = useAuth();
 
@@ -53,7 +55,7 @@ export const NewVenueScreen = () => {
       navigate(`/venues/${venueLink}`);
     } catch (err: unknown) {
       const message = err instanceof Error ? err.message : String(err);
-      setErrorText(message || 'Failed to create venue. Please try again.');
+      setErrorText(t(message) || t('new_venue.error_failed'));
     } finally {
       setLoading(false);
     }
@@ -63,12 +65,12 @@ export const NewVenueScreen = () => {
     <div className="app-container" style={{ alignItems: 'center', justifyContent: 'flex-start' }}>
       <div className="screen-header" style={{ width: '100%', maxWidth: '400px' }}>
         <button className="secondary" onClick={() => navigate(-1)} style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-          <ArrowLeft size={16} style={{ transform: 'translateY(1px)' }} /> Back
+          <ArrowLeft size={16} style={{ transform: 'translateY(1px)' }} /> {t('common.back')}
         </button>
       </div>
 
       <form onSubmit={handleCreateVenue} className="glass-panel" style={{ padding: '40px', textAlign: 'center', width: '100%', maxWidth: '400px' }}>
-        <h2 style={{ marginBottom: '24px', fontSize: '1.8rem' }}>Create a New Venue</h2>
+        <h2 style={{ marginBottom: '24px', fontSize: '1.8rem' }}>{t('new_venue.title')}</h2>
 
         {errorText && (
           <div style={{
@@ -91,7 +93,7 @@ export const NewVenueScreen = () => {
         <div className="flex-col" style={{ gap: '16px' }}>
           <input
             type="text"
-            placeholder="Venue Name (e.g. Acme Corp)"
+            placeholder={t('new_venue.placeholder')}
             value={newVenueName}
             onChange={e => setNewVenueName(e.target.value)}
             style={{ width: '100%' }}
@@ -99,7 +101,7 @@ export const NewVenueScreen = () => {
             disabled={loading}
           />
           <button type="submit" disabled={loading || !newVenueName.trim()} style={{ width: '100%' }}>
-            {loading ? 'Creating...' : 'Create Venue'}
+            {loading ? t('new_venue.creating') : t('new_venue.create')}
           </button>
         </div>
       </form>

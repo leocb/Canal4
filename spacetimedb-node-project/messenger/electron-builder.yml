@@ -1,5 +1,5 @@
-appId: com.electron.app
-productName: messenger
+appId: org.canal4.displaynode
+productName: Canal4 Display node
 directories:
   buildResources: build
 files:
@@ -12,7 +12,7 @@ files:
 asarUnpack:
   - resources/**
 win:
-  executableName: messenger
+  executableName: canal4-display-node
 nsis:
   artifactName: ${name}-${version}-setup.${ext}
   shortcutName: ${productName}

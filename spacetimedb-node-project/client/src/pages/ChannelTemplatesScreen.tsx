@@ -4,8 +4,10 @@ import { ArrowLeft, Plus, ChevronRight } from 'lucide-react';
 import { useAuth } from '../hooks/useAuth';
 import { useTable } from 'spacetimedb/react';
 import { tables } from '../module_bindings/index.ts';
+import { useTranslation } from 'react-i18next';
 
 export const ChannelTemplatesScreen = () => {
+  const { t } = useTranslation();
   const { venueLink, channelId } = useParams<{ venueLink: string, channelId: string }>();
   const navigate = useNavigate();
   const { user, isLoggedIn, connected } = useAuth();
@@ -46,9 +48,9 @@ export const ChannelTemplatesScreen = () => {
   if (!isChannelOwner) {
     return (
       <div className="app-container empty-state">
-        <h2>Access Denied</h2>
-        <p style={{ marginTop: '8px', color: 'var(--text-secondary)' }}>Only channel owners can manage templates.</p>
-        <button onClick={() => navigate(`/venues/${venue.link}/channels/${channel.channelId}`)} style={{ marginTop: '16px' }}>Go back</button>
+        <h2>{t('venue_channels.access_denied')}</h2>
+        <p style={{ marginTop: '8px', color: 'var(--text-secondary)' }}>{t('channel_templates.only_owners')}</p>
+        <button onClick={() => navigate(`/venues/${venue.link}/channels/${channel.channelId}`)} style={{ marginTop: '16px' }}>{t('common.back')}</button>
       </div>
     );
   }
@@ -63,12 +65,12 @@ export const ChannelTemplatesScreen = () => {
           >
             <ArrowLeft size={20} />
           </button>
-          <h2>{channel.name} Templates</h2>
+          <h2>{t('channel_templates.title', { name: channel.name })}</h2>
         </div>
         <button 
           className="icon-button"
           onClick={() => navigate(`/venues/${venue.link}/channels/${channel.channelId}/templates/new`)}
-          title="New Template"
+          title={t('channel_templates.new_template_tooltip')}
         >
           <Plus size={20} />
         </button>
@@ -77,15 +79,15 @@ export const ChannelTemplatesScreen = () => {
       <div className="content-area" style={{ flex: 1, padding: '16px', overflowY: 'auto' }}>
         {channelTemplates.length === 0 ? (
           <div className="empty-state">
-            <h3 style={{ marginBottom: '8px' }}>No Templates</h3>
+            <h3 style={{ marginBottom: '8px' }}>{t('channel_templates.no_templates')}</h3>
             <p style={{ color: 'var(--text-secondary)', marginBottom: '16px' }}>
-              Create a template to start sending structured messages to this channel.
+              {t('channel_templates.empty_helper')}
             </p>
             <button 
               onClick={() => navigate(`/venues/${venue.link}/channels/${channel.channelId}/templates/new`)}
             >
               <Plus size={16} style={{ display: 'inline', verticalAlign: 'middle', marginRight: '4px' }} />
-              Create Template
+              {t('channel_templates.create_button')}
             </button>
           </div>
         ) : (

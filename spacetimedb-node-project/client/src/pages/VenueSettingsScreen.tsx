@@ -4,8 +4,10 @@ import { useTable, useReducer } from 'spacetimedb/react';
 import { tables, reducers } from '../module_bindings/index.ts';
 import { ArrowLeft, Trash2 } from 'lucide-react';
 import { useAuth } from '../hooks/useAuth';
+import { useTranslation, Trans } from 'react-i18next';
 
 export const VenueSettingsScreen = () => {
+  const { t } = useTranslation();
   const { venueLink } = useParams<{ venueLink: string }>();
   const navigate = useNavigate();
   const { user } = useAuth();
@@ -33,17 +35,17 @@ export const VenueSettingsScreen = () => {
 
   // Return if not found or not owner
   if (!venue) {
-    return <div className="app-container empty-state"><h2>Venue not found</h2></div>;
+    return <div className="app-container empty-state"><h2>{t('venue_channels.venue_not_found')}</h2></div>;
   }
   if (!isOwner) {
-    return <div className="app-container empty-state"><h2>Access Denied</h2></div>;
+    return <div className="app-container empty-state"><h2>{t('venue_channels.access_denied')}</h2></div>;
   }
 
   const handleUpdate = async (e: React.FormEvent) => {
     e.preventDefault();
     setErrorMsg('');
     if (!name.trim()) {
-      setErrorMsg('Name is required');
+      setErrorMsg(t('venue_settings.error_name_required'));
       return;
     }
     setLoading(true);
@@ -52,7 +54,7 @@ export const VenueSettingsScreen = () => {
       navigate(`/venues/${venue.link}`);
     } catch (err: unknown) {
       const msg = err instanceof Error ? err.message : String(err);
-      setErrorMsg(msg);
+      setErrorMsg(t(msg));
       setLoading(false);
     }
   };
@@ -60,7 +62,7 @@ export const VenueSettingsScreen = () => {
   const handleDelete = async () => {
     setErrorMsg('');
     if (deleteConfirmationName !== venue.name) {
-      setErrorMsg('Confirmation name does not match');
+      setErrorMsg(t('venue_settings.error_confirm_mismatch'));
       return;
     }
     setLoading(true);
@@ -69,7 +71,7 @@ export const VenueSettingsScreen = () => {
       navigate('/venues', { replace: true });
     } catch (err: unknown) {
       const msg = err instanceof Error ? err.message : String(err);
-      setErrorMsg(msg);
+      setErrorMsg(t(msg));
       setLoading(false);
     }
   };
@@ -82,9 +84,9 @@ export const VenueSettingsScreen = () => {
             style={{ fontSize: '0.9rem', color: 'var(--accent-color)', cursor: 'pointer', fontWeight: 500, display: 'flex', alignItems: 'center', gap: '4px' }}
             onClick={() => navigate(`/venues/${venue.link}`)}
           >
-            <ArrowLeft size={16} /> Back
+            <ArrowLeft size={16} /> {t('common.back')}
           </span>
-          <h2>{venue.name} Settings</h2>
+          <h2>{t('venue_settings.title', { name: venue.name })}</h2>
         </div>
       </div>
 
@@ -97,13 +99,13 @@ export const VenueSettingsScreen = () => {
       <form onSubmit={handleUpdate} className="glass-panel" style={{ padding: '24px', width: '100%', marginTop: '24px' }}>
         <div className="flex-col" style={{ gap: '16px', textAlign: 'left' }}>
           <label style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
-            <span style={{ fontWeight: 500 }}>Venue Name</span>
+            <span style={{ fontWeight: 500 }}>{t('venue_settings.venue_name_label')}</span>
             <input
               id="venueName"
               type="text"
               value={name}
               onChange={(e) => setName(e.target.value)}
-              placeholder="E.g. Engineering Team"
+              placeholder={t('venue_settings.venue_name_placeholder')}
               disabled={loading}
               style={{ width: '100%' }}
             />
@@ -111,17 +113,17 @@ export const VenueSettingsScreen = () => {
 
           <div style={{ display: 'flex', gap: '12px', marginTop: '8px' }}>
             <button type="button" className="secondary" onClick={() => navigate(-1)} disabled={loading} style={{ flex: 1 }}>
-              Cancel
+              {t('common.cancel')}
             </button>
             <button type="submit" disabled={loading || !name.trim()} style={{ flex: 1 }}>
-              {loading ? 'Saving...' : 'Confirm'}
+              {loading ? t('login.saving') : t('venue_settings.confirm_button', { defaultValue: 'Confirm' })}
             </button>
           </div>
         </div>
       </form>
 
       <div style={{ marginTop: '48px', paddingTop: '24px', borderTop: '1px solid var(--surface-border)', width: '100%' }}>
-        <h3 style={{ color: 'var(--error-color)' }}>Danger Zone</h3>
+        <h3 style={{ color: 'var(--error-color)' }}>{t('venue_settings.danger_zone.title')}</h3>
 
         {!showDeleteConfirm ? (
           <button
@@ -129,15 +131,19 @@ export const VenueSettingsScreen = () => {
             style={{ marginTop: '16px', display: 'flex', alignItems: 'center', gap: '8px' }}
             onClick={() => setShowDeleteConfirm(true)}
           >
-            <Trash2 size={16} /> Delete Venue
+            <Trash2 size={16} /> {t('venue_settings.danger_zone.delete_button')}
           </button>
         ) : (
           <div className="glass-panel" style={{ marginTop: '16px', padding: '16px', borderColor: 'var(--error-color)' }}>
             <p style={{ marginBottom: '16px', color: 'var(--text-secondary)', fontSize: '0.9rem', lineHeight: 1.5 }}>
-              This action cannot be undone. This will permanently delete the <strong>{venue.name}</strong> venue, disconnecting all members and deleting all channels and messages within it.
+              <Trans i18nKey="venue_settings.danger_zone.delete_confirm_text" values={{ name: venue.name }}>
+                This action cannot be undone. This will permanently delete the <strong>{venue.name}</strong> venue, disconnecting all members and deleting all channels and messages within it.
+              </Trans>
             </p>
             <p style={{ marginBottom: '8px', fontSize: '0.9rem' }}>
-              Please type <strong>{venue.name}</strong> to confirm.
+              <Trans i18nKey="venue_settings.danger_zone.delete_type_confirm" values={{ name: venue.name }}>
+                Please type <strong>{venue.name}</strong> to confirm.
+              </Trans>
             </p>
             <input
               type="text"
@@ -153,7 +159,7 @@ export const VenueSettingsScreen = () => {
                 disabled={loading}
                 style={{ flex: 1 }}
               >
-                Cancel
+                {t('common.cancel')}
               </button>
               <button
                 className="danger"
@@ -161,7 +167,7 @@ export const VenueSettingsScreen = () => {
                 disabled={loading || deleteConfirmationName !== venue.name}
                 style={{ flex: 1 }}
               >
-                Confirm Delete
+                {t('venue_settings.danger_zone.confirm_delete_button')}
               </button>
             </div>
           </div>

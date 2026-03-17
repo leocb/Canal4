@@ -4,8 +4,10 @@ import { useParams, useNavigate } from 'react-router-dom';
 import { useTable, useReducer } from 'spacetimedb/react';
 import { tables, reducers } from '../module_bindings/index.ts';
 import { useAuth } from '../hooks/useAuth';
+import { useTranslation } from 'react-i18next';
 
 export const AddNodeScreen = () => {
+  const { t } = useTranslation();
   const { venueLink } = useParams<{ venueLink: string }>();
   const navigate = useNavigate();
   const { user, isLoggedIn } = useAuth();
@@ -27,8 +29,8 @@ export const AddNodeScreen = () => {
   if (!venue) {
     return (
       <div className="app-container empty-state">
-        <h2>Venue not found</h2>
-        <button onClick={() => navigate('/venues')}>Go back</button>
+        <h2>{t('venue_channels.venue_not_found')}</h2>
+        <button onClick={() => navigate('/venues')}>{t('common.back')}</button>
       </div>
     );
   }
@@ -38,11 +40,11 @@ export const AddNodeScreen = () => {
     setErrorText('');
 
     if (pin.length !== 6 || !/^\d+$/.test(pin)) {
-      setErrorText('PIN must be exactly 6 digits.');
+      setErrorText(t('add_node.error_pin_digits'));
       return;
     }
     if (!nodeName.trim()) {
-      setErrorText('Please provide a name for this node.');
+      setErrorText(t('add_node.error_name_required'));
       return;
     }
 
@@ -57,7 +59,7 @@ export const AddNodeScreen = () => {
       navigate(`/venues/${venue.link}/desktop-displays`);
     } catch (err: unknown) {
       const message = err instanceof Error ? err.message : String(err);
-      setErrorText(message || 'Pairing failed — check the PIN and try again.');
+      setErrorText(t(message) || t('add_node.error_pairing_failed'));
     } finally {
       setLoading(false);
     }
@@ -67,13 +69,13 @@ export const AddNodeScreen = () => {
     <div className="app-container" style={{ alignItems: 'center', justifyContent: 'center' }}>
       <div className="screen-header" style={{ width: '100%', maxWidth: '400px' }}>
         <button className="secondary" onClick={() => navigate(-1)} style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-          <ArrowLeft size={16} /> Back
+          <ArrowLeft size={16} /> {t('common.back')}
         </button>
       </div>
 
       <form onSubmit={handlePairing} className="glass-panel" style={{ padding: '40px', textAlign: 'center', width: '100%', maxWidth: '400px', marginTop: '16px' }}>
-        <h2 style={{ marginBottom: '24px', fontSize: '1.8rem' }}>Add Desktop Display</h2>
-        <p style={{ marginBottom: '24px', color: 'var(--text-secondary)' }}>Pair a new messenger node by entering its 6-digit PIN.</p>
+        <h2 style={{ marginBottom: '24px', fontSize: '1.8rem' }}>{t('add_node.title')}</h2>
+        <p style={{ marginBottom: '24px', color: 'var(--text-secondary)' }}>{t('add_node.helper_text')}</p>
 
         {errorText && (
           <div style={{
@@ -96,7 +98,7 @@ export const AddNodeScreen = () => {
         <div className="flex-col" style={{ gap: '16px' }}>
           <input
             type="text"
-            placeholder="Node Name (e.g. Lobby TV)"
+            placeholder={t('add_node.name_placeholder')}
             value={nodeName}
             onChange={e => setNodeName(e.target.value)}
             style={{ width: '100%' }}
@@ -117,7 +119,7 @@ export const AddNodeScreen = () => {
             disabled={loading || !nodeName.trim() || pin.length !== 6}
             style={{ width: '100%' }}
           >
-            {loading ? 'Pairing...' : 'Pair Node'}
+            {loading ? t('add_node.pairing') : t('add_node.pair_button')}
           </button>
         </div>
       </form>

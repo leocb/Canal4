@@ -4,8 +4,10 @@ import { useTable, useReducer } from 'spacetimedb/react';
 import { tables, reducers } from '../module_bindings/index.ts';
 import { useAuth } from '../hooks/useAuth';
 import { Trash2, Edit2, ArrowLeft } from 'lucide-react';
+import { useTranslation } from 'react-i18next';
 
-export const DesktopMessengerSyncScreen = () => {
+export const DesktopDisplaySyncScreen = () => {
+  const { t } = useTranslation();
   const { venueLink } = useParams<{ venueLink: string }>();
   const navigate = useNavigate();
   const { user } = useAuth();
@@ -34,8 +36,8 @@ export const DesktopMessengerSyncScreen = () => {
   if (!venue) {
     return (
       <div className="app-container empty-state">
-        <h2>Venue not found</h2>
-        <button onClick={() => navigate('/venues')} style={{ marginTop: '16px' }}>Go back</button>
+        <h2>{t('venue_channels.venue_not_found')}</h2>
+        <button onClick={() => navigate('/venues')} style={{ marginTop: '16px' }}>{t('common.back')}</button>
       </div>
     );
   }
@@ -52,9 +54,9 @@ export const DesktopMessengerSyncScreen = () => {
   if (!canManageDisplays) {
     return (
       <div className="app-container empty-state">
-        <h2>Unauthorized</h2>
-        <p>Only Admins and Owners can manage desktop displays.</p>
-        <button onClick={() => navigate(`/venues/${venue.link}`)} style={{ marginTop: '16px' }}>Go back</button>
+        <h2>{t('display_nodes.unauthorized')}</h2>
+        <p>{t('display_nodes.unauthorized_helper')}</p>
+        <button onClick={() => navigate(`/venues/${venue.link}`)} style={{ marginTop: '16px' }}>{t('common.back')}</button>
       </div>
     );
   }
@@ -68,21 +70,21 @@ export const DesktopMessengerSyncScreen = () => {
   };
 
   const handleDelete = async (device: any) => {
-    if (!window.confirm(`Are you sure you want to remove the display node "${device.name}"? This cannot be undone.`)) return;
+    if (!window.confirm(t('display_nodes.confirm_delete', { name: device.name }))) return;
     try {
       await deleteDevice({ messengerId: device.messengerId });
     } catch (err: any) {
-      alert("Error deleting device: " + err.message);
+      alert(t('display_nodes.error_delete', { error: t(err.message) }));
     }
   };
 
   const handleEditName = async (device: any) => {
-    const newName = prompt("Enter new name for this display node:", device.name);
+    const newName = prompt(t('display_nodes.rename_prompt'), device.name);
     if (newName && newName.trim() && newName !== device.name) {
       try {
         await updateDeviceName({ messengerId: device.messengerId, newName: newName.trim() });
       } catch (err: any) {
-        alert("Error updating name: " + err.message);
+        alert(t('display_nodes.error_rename', { error: t(err.message) }));
       }
     }
   };
@@ -114,12 +116,12 @@ export const DesktopMessengerSyncScreen = () => {
             style={{ fontSize: '0.9rem', color: 'var(--accent-color)', cursor: 'pointer', fontWeight: 500, display: 'inline-flex', alignItems: 'center', gap: '4px' }}
             onClick={() => navigate(`/venues/${venue.link}`)}
           >
-            <ArrowLeft size={16} /> Back to Channel List
+            <ArrowLeft size={16} /> {t('display_nodes.back_to_channels')}
           </span>
-          <h2>{venue.name} Desktop Displays</h2>
+          <h2>{t('display_nodes.title', { name: venue.name })}</h2>
         </div>
         <button onClick={() => navigate(`/venues/${venue.link}/desktop-displays/new`)}>
-          Add Node
+          {t('display_nodes.add_button')}
         </button>
       </div>
 
@@ -127,8 +129,8 @@ export const DesktopMessengerSyncScreen = () => {
         <div className="flex-col">
           {venueDevices.length === 0 ? (
             <div className="empty-state glass-panel">
-              <h3 style={{ color: 'var(--text-primary)'}}>No displays registered</h3>
-              <p style={{ marginTop: '8px' }}>Pair a new desktop messenger below to see it here.</p>
+              <h3 style={{ color: 'var(--text-primary)'}}>{t('display_nodes.no_displays')}</h3>
+              <p style={{ marginTop: '8px' }}>{t('display_nodes.no_displays_helper')}</p>
             </div>
           ) : (
             venueDevices.map(device => {
@@ -154,11 +156,11 @@ export const DesktopMessengerSyncScreen = () => {
                           textTransform: 'uppercase',
                           letterSpacing: '0.02em'
                         }}>
-                          {connected ? 'Connected' : 'Offline'}
+                          {connected ? t('channel.connected') : t('channel.offline')}
                         </span>
                         <span style={{ fontSize: '0.75rem', color: 'rgba(255,255,255,0.1)' }}>|</span>
                         <span style={{ fontSize: '0.8rem', color: 'var(--text-secondary)' }}>
-                          Last seen: {new Date(Number(device.lastConnectedAt.microsSinceUnixEpoch / 1000n)).toLocaleString()}
+                          {t('display_nodes.last_seen', { date: new Date(Number(device.lastConnectedAt.microsSinceUnixEpoch / 1000n)).toLocaleString() })}
                         </span>
                       </div>
                     </div>
@@ -168,7 +170,7 @@ export const DesktopMessengerSyncScreen = () => {
                     <button 
                       className="icon-button" 
                       onClick={() => handleEditName(device)}
-                      title="Rename display node"
+                      title={t('display_nodes.rename_tooltip')}
                       style={{ 
                         padding: '8px', 
                         background: 'rgba(255,255,255,0.05)', 
@@ -185,7 +187,7 @@ export const DesktopMessengerSyncScreen = () => {
                     <button 
                       className="icon-button danger" 
                       onClick={() => handleDelete(device)}
-                      title="Delete Display Node"
+                      title={t('display_nodes.delete_tooltip')}
                       style={{ 
                         padding: '8px',
                         background: 'rgba(239, 68, 68, 0.1)', 

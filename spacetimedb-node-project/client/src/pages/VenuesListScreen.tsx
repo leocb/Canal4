@@ -2,8 +2,10 @@ import { useNavigate } from 'react-router-dom';
 import { useTable } from 'spacetimedb/react';
 import { tables } from '../module_bindings/index.ts';
 import { useAuth } from '../hooks/useAuth';
+import { useTranslation } from 'react-i18next';
 
 export const VenuesListScreen = () => {
+  const { t } = useTranslation();
   const navigate = useNavigate();
   const { user, isLoggedIn } = useAuth();
   const [venues] = useTable(tables.Venue);
@@ -13,8 +15,8 @@ export const VenuesListScreen = () => {
   if (!isLoggedIn || !user) {
     return (
       <div className="app-container empty-state">
-        <h2>Please log in to view venues.</h2>
-        <button onClick={() => navigate('/login')} style={{ marginTop: '16px' }}>Go to Login</button>
+        <h2>{t('venues_list.login_required')}</h2>
+        <button onClick={() => navigate('/login')} style={{ marginTop: '16px' }}>{t('venues_list.go_to_login')}</button>
       </div>
     );
   }
@@ -31,17 +33,17 @@ export const VenuesListScreen = () => {
   return (
     <div className="app-container">
       <div className="screen-header">
-        <h2>Your Venues</h2>
+        <h2>{t('venues_list.title')}</h2>
         <button onClick={() => navigate('/venues/new')}>
-          New Venue
+          {t('venues_list.new_venue')}
         </button>
       </div>
 
       <div className="flex-col">
         {myVenues.length === 0 ? (
           <div className="empty-state glass-panel">
-            <h3 style={{ color: 'var(--text-primary)'}}>No venues found</h3>
-            <p style={{ marginTop: '8px' }}>Create a new venue or ask for an invite code.</p>
+            <h3 style={{ color: 'var(--text-primary)'}}>{t('venues_list.no_venues')}</h3>
+            <p style={{ marginTop: '8px' }}>{t('venues_list.empty_helper')}</p>
           </div>
         ) : (
           myVenues.map(venue => (

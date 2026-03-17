@@ -5,8 +5,10 @@ import { tables } from '../module_bindings/index.ts';
 import { ArrowLeft, User as UserIcon } from 'lucide-react';
 import { useAuth } from '../hooks/useAuth';
 import { useReadyTable } from '../hooks/useReadyTable';
+import { useTranslation } from 'react-i18next';
 
 export const VenuePermissionsScreen = () => {
+  const { t } = useTranslation();
   const { venueLink } = useParams<{ venueLink: string }>();
   const navigate = useNavigate();
   const { user } = useAuth();
@@ -32,15 +34,15 @@ export const VenuePermissionsScreen = () => {
   const isAdmin = userRolesInVenue.some((r) => r.role.tag === 'Admin' || r.role.tag === 'Owner');
   
   if (!venuesReady || !membersReady || !usersReady) {
-    return <div className="app-container empty-state"><h2>Loading...</h2></div>;
+    return <div className="app-container empty-state"><h2>{t('login.loading')}</h2></div>;
   }
   
   if (!venue) {
-    return <div className="app-container empty-state"><h2>Venue not found</h2></div>;
+    return <div className="app-container empty-state"><h2>{t('venue_channels.venue_not_found')}</h2></div>;
   }
   
   if (!isOwner && !isAdmin) {
-    return <div className="app-container empty-state"><h2>Access Denied</h2></div>;
+    return <div className="app-container empty-state"><h2>{t('venue_channels.access_denied')}</h2></div>;
   }
 
   // Get all members of the venue
@@ -82,7 +84,7 @@ export const VenuePermissionsScreen = () => {
     const { level, name } = getHighestRole(m.userId);
     return {
       userId: m.userId,
-      name: userRow?.name || 'Unknown User',
+      name: userRow?.name || t('venue_permissions.unknown_user'),
       isBlocked: m.isBlocked,
       roleLevel: level,
       highestRole: name,
@@ -120,16 +122,16 @@ export const VenuePermissionsScreen = () => {
             style={{ fontSize: '0.9rem', color: 'var(--accent-color)', cursor: 'pointer', fontWeight: 500, display: 'flex', alignItems: 'center', gap: '4px' }}
             onClick={() => navigate(`/venues/${venue.link}`)}
           >
-            <ArrowLeft size={16} /> Back
+            <ArrowLeft size={16} /> {t('common.back')}
           </span>
-          <h2>{venue.name} Permissions</h2>
+          <h2>{t('venue_permissions.title', { name: venue.name })}</h2>
         </div>
       </div>
 
       <div className="flex-row" style={{ marginTop: '16px', gap: '12px' }}>
         <input 
           type="text" 
-          placeholder="Search members..." 
+          placeholder={t('venue_permissions.search_placeholder')}
           value={searchTerm} 
           onChange={(e) => setSearchTerm(e.target.value)}
           style={{ flex: 1, padding: '10px 14px', borderRadius: '8px', border: '1px solid var(--surface-border)', background: 'var(--surface-color)' }}
@@ -139,12 +141,12 @@ export const VenuePermissionsScreen = () => {
           onChange={(e) => setRoleFilter(e.target.value)}
           style={{ padding: '10px 14px', borderRadius: '8px', border: '1px solid var(--surface-border)', background: 'var(--surface-color)' }}
         >
-          <option value="">All Roles</option>
-          <option value="Owner">Owner</option>
-          <option value="Admin">Admin</option>
-          <option value="Moderator">Moderator</option>
-          <option value="Member">Member</option>
-          <option value="Blocked">Blocked</option>
+          <option value="">{t('venue_permissions.filters.all_roles')}</option>
+          <option value="Owner">{t('roles.owner')}</option>
+          <option value="Admin">{t('roles.admin')}</option>
+          <option value="Moderator">{t('roles.moderator')}</option>
+          <option value="Member">{t('roles.member')}</option>
+          <option value="Blocked">{t('roles.blocked')}</option>
         </select>
       </div>
 
@@ -168,7 +170,7 @@ export const VenuePermissionsScreen = () => {
                   <UserIcon size={20} color="var(--text-secondary)" />
                 </div>
                 <div>
-                  <h3 style={{ margin: 0, fontSize: '1.1rem' }}>{member.name} {member.isBlocked && '(Blocked)'}</h3>
+                  <h3 style={{ margin: 0, fontSize: '1.1rem' }}>{member.name} {member.isBlocked && t('venue_permissions.blocked_suffix')}</h3>
                 </div>
               </div>
               <span style={{
@@ -179,13 +181,13 @@ export const VenuePermissionsScreen = () => {
                 fontSize: '0.8rem',
                 fontWeight: 600,
               }}>
-                {member.isBlocked ? 'Blocked' : member.highestRole}
+                {member.isBlocked ? t('roles.blocked') : t(`roles.${member.highestRole.toLowerCase()}`)}
               </span>
             </div>
           );
         })}
         {filteredMembers.length === 0 && (
-           <p style={{ textAlign: 'center', color: 'var(--text-secondary)', padding: '24px' }}>No members found.</p>
+           <p style={{ textAlign: 'center', color: 'var(--text-secondary)', padding: '24px' }}>{t('venue_permissions.no_members')}</p>
         )}
       </div>
     </div>
