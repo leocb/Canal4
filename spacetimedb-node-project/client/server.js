@@ -34,11 +34,11 @@ app.post('/api/request-pin', async (req, res) => {
   // Valid for 10 minutes
   const expiresAtMillis = Date.now() + 10 * 60 * 1000;
 
-  const DB_NAME = process.env.VITE_SPACETIMEDB_NAME;
-  let URI = process.env.VITE_SPACETIMEDB_URI_DEV;
+  const DB_NAME = process.env.SPACETIMEDB_NAME;
+  let URI = process.env.SPACETIMEDB_URI;
 
   if (!DB_NAME || !URI) {
-    console.error('Missing SpacetimeDB configuration (VITE_SPACETIMEDB_NAME or VITE_SPACETIMEDB_URI_DEV) in process.env');
+    console.error('Missing SpacetimeDB configuration (SPACETIMEDB_NAME or SPACETIMEDB_URI) in process.env');
     return res.status(500).json({ error: 'Server configuration error' });
   }
 
@@ -102,6 +102,19 @@ app.post('/api/request-pin', async (req, res) => {
     console.error('API Error:', error);
     res.status(500).json({ error: error.message });
   }
+});
+
+// ─── Runtime env config ───────────────────────────────────────────────────────
+// Exposes selected env vars as window.__ENV__ at request time.
+// This allows the same Docker image to run in any environment without rebuilding.
+app.get('/env-config.js', (_req, res) => {
+  const config = {
+    SPACETIMEDB_NAME: process.env.SPACETIMEDB_NAME || '',
+    SPACETIMEDB_URI:  process.env.SPACETIMEDB_URI  || '',
+  };
+  res.setHeader('Content-Type', 'application/javascript');
+  res.setHeader('Cache-Control', 'no-store');
+  res.send(`window.__ENV__ = ${JSON.stringify(config)};`);
 });
 
 // Serve static files from the build directory

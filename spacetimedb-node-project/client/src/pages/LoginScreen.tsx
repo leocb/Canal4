@@ -61,7 +61,7 @@ export const LoginScreen = () => {
 
       setView('pin');
     } catch (err: any) {
-      setErrorText(t(err.message) || t('login.error_request_pin', { defaultValue: 'Error requesting PIN' }));
+      setErrorText(t(err.message) || t('login.error_request_pin'));
     } finally {
       setLoading(false);
     }
@@ -269,8 +269,8 @@ export const LoginScreen = () => {
               cursor: 'pointer'
             }}
           >
-            <option value="en" style={{ background: '#1e1e2e' }}>English</option>
-            <option value="pt-BR" style={{ background: '#1e1e2e' }}>Português (Brasil)</option>
+            <option value="en" style={{ background: '#1e1e2e' }}>{t('languages.en')}</option>
+            <option value="pt-BR" style={{ background: '#1e1e2e' }}>{t('languages.pt-BR')}</option>
           </select>
         </div>
       </div>

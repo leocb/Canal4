@@ -25,7 +25,8 @@
     "error_invalid_pin": "PIN inválido. {{remaining}} tentativas restantes.",
     "error_pin_generic": "PIN inválido. Por favor, tente solicitar um novo.",
     "error_login": "Erro durante o login",
-    "error_update_name": "Erro ao atualizar nome"
+    "error_update_name": "Erro ao atualizar nome",
+    "error_request_pin": "Erro ao solicitar PIN"
   },
   "nav": {
     "venues": "Locais",
@@ -33,6 +34,7 @@
     "logout": "Sair"
   },
   "venue": {
+    "invite_title": "Entrar em {{name}}",
     "invite_text": "Você foi convidado para participar de {{name}} no Canal4!",
     "back_to_venues": "Voltar para Locais"
   },
@@ -46,7 +48,10 @@
     "delete": "Excluir",
     "move_up": "Mover para cima",
     "move_down": "Mover para baixo",
-    "language": "Idioma"
+    "language": "Idioma",
+    "loading_profile": "Carregando Perfil...",
+    "connection_error": "Erro de Conexão",
+    "connecting": "Conectando ao Canal4..."
   },
   "languages": {
     "en": "English",
@@ -116,6 +121,7 @@
     "error_confirm_mismatch": "O nome de confirmação não coincide",
     "venue_name_label": "Nome do Local",
     "venue_name_placeholder": "Ex: Equipe de Engenharia",
+    "confirm_button": "Confirmar",
     "danger_zone": {
       "title": "Zona de Perigo",
       "delete_button": "Excluir Local",

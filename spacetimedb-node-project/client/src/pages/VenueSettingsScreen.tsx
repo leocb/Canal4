@@ -116,7 +116,7 @@ export const VenueSettingsScreen = () => {
               {t('common.cancel')}
             </button>
             <button type="submit" disabled={loading || !name.trim()} style={{ flex: 1 }}>
-              {loading ? t('login.saving') : t('venue_settings.confirm_button', { defaultValue: 'Confirm' })}
+              {loading ? t('login.saving') : t('venue_settings.confirm_button')}
             </button>
           </div>
         </div>

@@ -146,8 +146,8 @@ export const VenueChannelsScreen = () => {
     if (navigator.share) {
       try {
         await navigator.share({
-          title: t('venue.invite_title', { name: venue?.name, defaultValue: `Join ${venue?.name}` }),
-          text: t('venue.invite_text', { name: venue?.name, defaultValue: `You've been invited to join ${venue?.name} on Canal4!` }),
+          title: t('venue.invite_title', { name: venue?.name }),
+          text: t('venue.invite_text', { name: venue?.name }),
           url: joinUrl,
         });
       } catch (err) {

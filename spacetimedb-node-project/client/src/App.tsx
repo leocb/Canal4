@@ -33,7 +33,7 @@ function ProtectedRoute() {
   if (!isReady) {
     return (
       <div className="app-container empty-state" style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center' }}>
-        <h2>{t('common.loading_profile', { defaultValue: 'Loading Profile...' })}</h2>
+        <h2>{t('common.loading_profile')}</h2>
         <div style={{ marginTop: '16px', borderTop: '2px solid var(--accent-color)', width: '40px', borderRadius: '2px', animation: 'spin 1s linear infinite' }}></div>
       </div>
     );
@@ -63,7 +63,7 @@ function App() {
   if (error) {
     return (
       <div className="app-container empty-state">
-        <h2 style={{color: "var(--error-color)"}}>{t('common.connection_error', { defaultValue: 'Connection Error' })}</h2>
+        <h2 style={{color: "var(--error-color)"}}>{t('common.connection_error')}</h2>
         <p style={{ marginTop: '12px' }}>{t(error.message)}</p>
       </div>
     );
@@ -72,7 +72,7 @@ function App() {
   if (!connected) {
     return (
       <div className="app-container empty-state" style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center' }}>
-        <h2>{t('common.connecting', { defaultValue: 'Connecting to Space...' })}</h2>
+        <h2>{t('common.connecting')}</h2>
         <div style={{ marginTop: '16px', borderTop: '2px solid var(--accent-color)', width: '40px', borderRadius: '2px', animation: 'spin 1s linear infinite' }}></div>
       </div>
     );

@@ -4,29 +4,32 @@ import { DbConnection } from "./module_bindings/index.ts";
 
 export const SpacetimeDBProvider = ({ children }: { children: ReactNode }) => {
   const token = localStorage.getItem("auth_token") || undefined;
-  
-  const DB_NAME = import.meta.env.VITE_SPACETIMEDB_NAME;
-  let URI_DEV = import.meta.env.VITE_SPACETIMEDB_URI_DEV;
-  const URI_PROD = import.meta.env.VITE_SPACETIMEDB_URI_PROD;
+
+  // window.__ENV__ is injected at request time by Express (/env-config.js).
+  // import.meta.env.* are Vite build-time values used as a fallback for
+  // `npm run dev` (where the Express server isn't serving the HTML).
+  const env = (window as any).__ENV__ ?? {};
+  const DB_NAME: string = env.SPACETIMEDB_NAME || import.meta.env.VITE_SPACETIMEDB_NAME;
+  const SPACETIMEDB_URI: string = env.SPACETIMEDB_URI || import.meta.env.VITE_SPACETIMEDB_URI_DEV;
 
   if (!DB_NAME) {
-    throw new Error("Missing VITE_SPACETIMEDB_NAME in environment configuration. Please check your .env file.");
+    throw new Error("Missing SPACETIMEDB_NAME in environment configuration. Please check your .env file.");
   }
-
-  // If accessed from a phone/other device on LAN, convert localhost to the actual IP.
-  if (URI_DEV && (URI_DEV.includes('localhost') || URI_DEV.includes('127.0.0.1')) && window.location.hostname !== 'localhost' && window.location.hostname !== '127.0.0.1') {
-    URI_DEV = URI_DEV.replace(/(localhost|127\.0\.0\.1)/, window.location.hostname);
-  }
-
-  const SPACETIMEDB_URI = import.meta.env.DEV ? URI_DEV : URI_PROD;
 
   if (!SPACETIMEDB_URI) {
-    throw new Error(`Missing SpacetimeDB URI for ${import.meta.env.DEV ? 'development' : 'production'} mode. Please check your .env file.`);
+    throw new Error("Missing SPACETIMEDB_URI in environment configuration. Please check your .env file.");
   }
+
+  // If accessed from a phone/other device on LAN in dev, swap localhost for the actual IP
+  const resolvedUri = (SPACETIMEDB_URI.includes('localhost') || SPACETIMEDB_URI.includes('127.0.0.1')) &&
+    window.location.hostname !== 'localhost' &&
+    window.location.hostname !== '127.0.0.1'
+      ? SPACETIMEDB_URI.replace(/(localhost|127\.0\.0\.1)/, window.location.hostname)
+      : SPACETIMEDB_URI;
 
   const builder = useMemo(() => {
     return DbConnection.builder()
-      .withUri(SPACETIMEDB_URI)
+      .withUri(resolvedUri)
       .withDatabaseName(DB_NAME)
       .withToken(token)
       .onConnect((connection, _identity, token) => {

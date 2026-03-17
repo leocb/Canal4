@@ -25,7 +25,8 @@
     "error_invalid_pin": "Invalid PIN. {{remaining}} attempts remaining.",
     "error_pin_generic": "Invalid PIN. Please try requesting a new one.",
     "error_login": "Error during login",
-    "error_update_name": "Error updating name"
+    "error_update_name": "Error updating name",
+    "error_request_pin": "Error requesting PIN"
   },
   "nav": {
     "venues": "Venues",
@@ -33,6 +34,7 @@
     "logout": "Logout"
   },
   "venue": {
+    "invite_title": "Join {{name}}",
     "invite_text": "You've been invited to join {{name}} on Canal4!",
     "back_to_venues": "Back to Venues"
   },
@@ -46,7 +48,10 @@
     "move_up": "Move Up",
     "move_down": "Move Down",
     "language": "Language",
-    "quit": "Quit Canal4"
+    "quit": "Quit Canal4",
+    "loading_profile": "Loading Profile...",
+    "connection_error": "Connection Error",
+    "connecting": "Connecting to Canal4..."
   },
   "languages": {
     "en": "English",
@@ -116,6 +121,7 @@
     "error_confirm_mismatch": "Confirmation name does not match",
     "venue_name_label": "Venue Name",
     "venue_name_placeholder": "E.g. Engineering Team",
+    "confirm_button": "Confirm",
     "danger_zone": {
       "title": "Danger Zone",
       "delete_button": "Delete Venue",
