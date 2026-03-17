@@ -10,7 +10,7 @@ Built on [SpacetimeDB](https://spacetimedb.com) for real-time, low-latency synch
 
 ```
 ┌─────────────────────────────────┐
-│   Web Dashboard (Canal4 client) │   ← Venue staff send broadcasts here
+│   Web Dashboard (Canal4 webapp) │   ← Venue staff send broadcasts here
 │   React + Express · Port 3001   │
 └────────────────┬────────────────┘
                  │ WebSocket (SpacetimeDB protocol)
@@ -44,8 +44,8 @@ Built on [SpacetimeDB](https://spacetimedb.com) for real-time, low-latency synch
 
 ```
 spacetimedb-node-project/
-├── client/             # Web dashboard (React + Vite SPA + Express API server)
-├── messenger/          # Desktop display node (Electron + React)
+├── webapp/             # Web dashboard (React + Vite SPA + Express API server)
+├── display/          # Desktop display node (Electron + React)
 ├── spacetimedb/        # SpacetimeDB module (TypeScript reducers & schema)
 ├── docker-compose.yml  # Production deployment
 └── .env.example        # Environment variable template
@@ -57,7 +57,7 @@ spacetimedb-node-project/
 
 | Tool | Version | Purpose |
 |---|---|---|
-| [Node.js](https://nodejs.org) | ≥ 22 | Web app & messenger |
+| [Node.js](https://nodejs.org) | ≥ 22 | Web app & display node |
 | [SpacetimeDB CLI](https://spacetimedb.com/install) | ≥ 1.0 | Local development & module publishing |
 | [Docker + Compose](https://docs.docker.com/get-docker/) | ≥ 24 | Production deployment |
 
@@ -84,7 +84,7 @@ cd ..
 ### 3. Run the web dashboard
 
 ```bash
-cd client
+cd webapp
 npm install
 cp .env.example .env   # edit with your local values
 npm run dev            # starts Vite dev server + Express API on :3001
@@ -95,7 +95,7 @@ Open [http://localhost:5173](http://localhost:5173).
 ### 4. Run the desktop display node
 
 ```bash
-cd messenger
+cd display
 npm install
 npm run dev            # starts Electron app
 ```
@@ -179,7 +179,7 @@ Pre-built installers are published on each [GitHub Release](https://github.com/l
 ### Building installers locally
 
 ```bash
-cd messenger
+cd display
 npm install
 
 npm run build:mac        # both Intel + Apple Silicon DMGs
@@ -188,20 +188,14 @@ npm run build:mac:silicon # Apple Silicon only
 npm run build:win        # Windows NSIS installer
 ```
 
-Output goes to `messenger/dist/`.
+Output goes to `display/dist/`.
 
 ---
 
 ## Internationalization
 
-The UI is fully internationalized. Locale files live in:
-
-- `client/src/locales/en.json` — English
-- `client/src/locales/pt-BR.json` — Português (Brasil)
-- `messenger/src/renderer/src/locales/en.json`
-- `messenger/src/renderer/src/locales/pt-BR.json`
-
-To add a new language, copy `en.json`, translate the values, and register the new locale in `client/src/i18n.ts` and `messenger/src/renderer/src/i18n.ts`.
+The UI is fully internationalized. Use the Crowdin platform to translate the application.
+If the language you want to translate is not available on Crowdin, open an issue requesting it.
 
 ---
 
