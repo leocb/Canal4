@@ -365,19 +365,22 @@ export const SettingsScreen = () => {
           ))}
         </div>
 
-        <div style={{ display: 'flex', gap: '4px', marginLeft: '12px' }}>
-          <button 
-            onClick={() => i18n.changeLanguage('en')}
-            style={{ padding: '4px 8px', fontSize: '0.75rem', background: i18n.language === 'en' ? 'rgba(255,255,255,0.2)' : 'transparent', border: '1px solid rgba(255,255,255,0.1)', borderRadius: '4px', color: '#fff', cursor: 'pointer' }}
+        <div style={{ display: 'flex', alignItems: 'center', gap: '8px', background: 'rgba(255,255,255,0.05)', padding: '4px 8px', borderRadius: '8px', border: '1px solid rgba(255,255,255,0.1)', marginLeft: '12px' }}>
+          <select 
+            value={i18n.language} 
+            onChange={(e) => i18n.changeLanguage(e.target.value)}
+            style={{ 
+              background: 'transparent', 
+              color: '#F8FAFC', 
+              border: 'none', 
+              fontSize: '0.75rem', 
+              outline: 'none',
+              cursor: 'pointer'
+            }}
           >
-            EN
-          </button>
-          <button 
-            onClick={() => i18n.changeLanguage('pt-BR')}
-            style={{ padding: '4px 8px', fontSize: '0.75rem', background: i18n.language === 'pt-BR' ? 'rgba(255,255,255,0.2)' : 'transparent', border: '1px solid rgba(255,255,255,0.1)', borderRadius: '4px', color: '#fff', cursor: 'pointer' }}
-          >
-            PT
-          </button>
+            <option value="en" style={{ background: '#1e1e2e' }}>English</option>
+            <option value="pt-BR" style={{ background: '#1e1e2e' }}>Português (Brasil)</option>
+          </select>
         </div>
       </div>
 
@@ -619,7 +622,22 @@ export const SettingsScreen = () => {
 
         {/* === SETTINGS TAB === */}
         {activeTab === 'settings' && (
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '20px', maxWidth: '560px', margin: '0 auto' }}>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '24px', maxWidth: '560px', margin: '0 auto', paddingBottom: '40px' }}>
+            
+            {/* General Settings */}
+            <section style={sectionStyle}>
+              <h3 style={{ fontSize: '1rem', marginBottom: '16px', margin: '0 0 16px' }}>{t('settings.tabs.general')}</h3>
+              
+              <label style={labelStyle}>{t('common.language')}</label>
+              <select
+                value={i18n.language}
+                onChange={e => i18n.changeLanguage(e.target.value)}
+                style={selectStyle}
+              >
+                <option value="en">{t('languages.en')}</option>
+                <option value="pt-BR">{t('languages.pt-BR')}</option>
+              </select>
+            </section>
 
             {/* SpacetimeDB Connection */}
             <section style={sectionStyle}>

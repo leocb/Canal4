@@ -44,7 +44,13 @@
     "cancel": "Cancel",
     "delete": "Delete",
     "move_up": "Move Up",
-    "move_down": "Move Down"
+    "move_down": "Move Down",
+    "language": "Language",
+    "quit": "Quit Canal4"
+  },
+  "languages": {
+    "en": "English",
+    "pt-BR": "Português (Brasil)"
   },
   "node_status": {
     "offline": "Offline",

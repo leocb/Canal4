@@ -256,20 +256,23 @@ export const LoginScreen = () => {
       </div>
 
       <div style={{ display: 'flex', justifyContent: 'center', gap: '8px', marginTop: '24px' }}>
-        <button 
-          className="secondary" 
-          onClick={() => i18n.changeLanguage('en')}
-          style={{ padding: '4px 8px', fontSize: '0.8rem', opacity: i18n.language === 'en' ? 1 : 0.5 }}
-        >
-          EN
-        </button>
-        <button 
-          className="secondary" 
-          onClick={() => i18n.changeLanguage('pt-BR')}
-          style={{ padding: '4px 8px', fontSize: '0.8rem', opacity: i18n.language === 'pt-BR' ? 1 : 0.5 }}
-        >
-          PT-BR
-        </button>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '8px', background: 'rgba(255,255,255,0.05)', padding: '4px 10px', borderRadius: '8px', border: '1px solid rgba(255,255,255,0.1)' }}>
+          <select 
+            value={i18n.language} 
+            onChange={(e) => i18n.changeLanguage(e.target.value)}
+            style={{ 
+              background: 'transparent', 
+              color: 'var(--text-primary)', 
+              border: 'none', 
+              fontSize: '0.85rem', 
+              outline: 'none',
+              cursor: 'pointer'
+            }}
+          >
+            <option value="en" style={{ background: '#1e1e2e' }}>English</option>
+            <option value="pt-BR" style={{ background: '#1e1e2e' }}>Português (Brasil)</option>
+          </select>
+        </div>
       </div>
 
       <div style={{ marginTop: '32px', fontSize: '0.8rem', color: 'var(--text-secondary)' }}>

@@ -7,13 +7,19 @@
   "settings": {
     "title": "Configurações do Nó de Display Canal4",
     "tabs": {
-      "logs": "Logs de Atividade",
-      "pairing": "Emparelhamento",
-      "settings": "Configurações de Exibição"
+      "logs": "Activity Logs",
+      "pairing": "Pairing",
+      "settings": "Display Settings",
+      "general": "Geral"
     },
     "common": {
       "quit": "Sair do Canal4",
-      "back": "Voltar"
+      "back": "Voltar",
+      "language": "Idioma"
+    },
+    "languages": {
+      "en": "English",
+      "pt-BR": "Português (Brasil)"
     },
     "logs": {
       "title": "Mensagens Recentes",

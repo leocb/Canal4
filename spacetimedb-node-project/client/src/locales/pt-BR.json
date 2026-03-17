@@ -37,6 +37,7 @@
     "back_to_venues": "Voltar para Locais"
   },
   "common": {
+    "quit": "Sair",
     "back": "Voltar",
     "loading": "Carregando...",
     "error": "Erro",
@@ -44,7 +45,12 @@
     "cancel": "Cancelar",
     "delete": "Excluir",
     "move_up": "Mover para cima",
-    "move_down": "Mover para baixo"
+    "move_down": "Mover para baixo",
+    "language": "Idioma"
+  },
+  "languages": {
+    "en": "English",
+    "pt-BR": "Português (Brasil)"
   },
   "node_status": {
     "offline": "Offline",

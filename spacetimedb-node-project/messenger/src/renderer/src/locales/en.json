@@ -9,11 +9,17 @@
     "tabs": {
       "logs": "Activity Logs",
       "pairing": "Pairing",
-      "settings": "Display Settings"
+      "settings": "Display Settings",
+      "general": "General"
     },
     "common": {
       "quit": "Quit Canal4",
-      "back": "Back"
+      "back": "Back",
+      "language": "Language"
+    },
+    "languages": {
+      "en": "English",
+      "pt-BR": "Português (Brasil)"
     },
     "logs": {
       "title": "Recent Messages",
