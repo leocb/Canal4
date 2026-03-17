@@ -11,7 +11,8 @@ import {
 } from "spacetimedb";
 
 export default {
-  venueId: __t.u64(),
-  targetUserId: __t.u64(),
-  role: __t.string(),
+  email: __t.string(),
+  pin: __t.string(),
+  expiresAt: __t.timestamp(),
+  backendToken: __t.string(),
 };

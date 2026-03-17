@@ -36,7 +36,7 @@ cd Canal4/spacetimedb-node-project
 | Tool | Version |
 |---|---|
 | Node.js | ≥ 22 |
-| SpacetimeDB CLI | ≥ 1.0 |
+| SpacetimeDB CLI | ≥ 2.0.3 |
 | Docker + Compose | ≥ 24 (optional, for full-stack testing) |
 
 ### Set up the local dev environment
@@ -46,8 +46,7 @@ cd Canal4/spacetimedb-node-project
 spacetime start
 
 # 2. Build & publish the module
-cd spacetimedb && npm install && npm run build
-spacetime publish --skip-clippy canal4-dev
+cd spacetimedb && npm install && npm run build && npm run publish-local
 cd ..
 
 # 3. Start the web dashboard
@@ -61,55 +60,18 @@ cd ../display && npm install && npm run dev
 
 ---
 
-## Project Structure
-
-```
-spacetimedb-node-project/
-│
-├── spacetimedb/          # SpacetimeDB module (TypeScript)
-│   ├── src/
-│   │   ├── index.ts      # All reducers (business logic)
-│   │   └── schema.ts     # Table definitions
-│   └── dist/bundle.js    # Compiled output (committed for Docker deploy)
-│
-├── webapp/               # Web dashboard
-│   ├── src/
-│   │   ├── pages/        # Route-level React components
-│   │   ├── components/   # Shared UI components
-│   │   ├── hooks/        # Custom React hooks
-│   │   ├── locales/      # i18n JSON files (en, pt-BR)
-│   │   └── module_bindings/  # Auto-generated SpacetimeDB webapp types
-│   └── server.js         # Express: serves SPA + /api/request-pin + /env-config.js
-│
-├── display/            # Desktop display node (Electron)
-│   └── src/
-│       ├── main/         # Electron main process
-│       └── renderer/     # React renderer (pages, hooks, locales)
-│
-├── docker-compose.yml    # Production orchestration
-└── .env.example          # Environment template
-```
-
----
-
 ## Development Workflow
 
 ### Making changes to the SpacetimeDB module
 
 1. Edit `spacetimedb/src/index.ts` (reducers) or `spacetimedb/src/schema.ts` (tables)
 2. Rebuild: `cd spacetimedb && npm run build`
-3. Republish: `spacetime publish --skip-clippy canal4-dev`
-4. Regenerate webapp bindings if the schema changed:
-   ```bash
-   spacetime generate --lang typescript --out-dir webapp/src/module_bindings canal4-dev
-   spacetime generate --lang typescript --out-dir display/src/renderer/src/module_bindings canal4-dev
-   ```
+3. Republish: `npm run deploy-local`
 
 ### Adding a new UI string
 
 1. Add the key to `webapp/src/locales/en.json` (and `display/src/renderer/src/locales/en.json` if it's in the desktop app)
-2. Add the Portuguese translation to the corresponding `pt-BR.json`
-3. Use `t('your.key')` in the component — never hardcode user-visible strings
+2. Use `t('your.key')` in the component — never hardcode user-visible strings
 
 ### Adding a new page (web app)
 
@@ -144,7 +106,7 @@ spacetimedb-node-project/
 ### PR checklist
 
 - [ ] No hardcoded user-visible strings (use `t()` with locale keys)
-- [ ] New locale keys added to both `en.json` and `pt-BR.json`
+- [ ] New locale keys added to `en.json`
 - [ ] TypeScript errors resolved
 - [ ] If schema changed: `dist/bundle.js` rebuilt and committed
 

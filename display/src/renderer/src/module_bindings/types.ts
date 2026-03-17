@@ -51,6 +51,39 @@ export const DeliveryStatus = __t.enum("DeliveryStatus", {
 });
 export type DeliveryStatus = __Infer<typeof DeliveryStatus>;
 
+export const DisplayDevice = __t.object("DisplayDevice", {
+  displayId: __t.u64(),
+  uid: __t.string(),
+  identity: __t.identity(),
+  venueId: __t.u64(),
+  name: __t.string(),
+  registeredAt: __t.timestamp(),
+  lastConnectedAt: __t.timestamp(),
+});
+export type DisplayDevice = __Infer<typeof DisplayDevice>;
+
+export const DisplayPairingPin = __t.object("DisplayPairingPin", {
+  pin: __t.string(),
+  displayUid: __t.string(),
+  identity: __t.identity(),
+  expiresAt: __t.timestamp(),
+});
+export type DisplayPairingPin = __Infer<typeof DisplayPairingPin>;
+
+export const EmailLoginPin = __t.object("EmailLoginPin", {
+  email: __t.string(),
+  pin: __t.string(),
+  attempts: __t.u32(),
+  expiresAt: __t.timestamp(),
+});
+export type EmailLoginPin = __Infer<typeof EmailLoginPin>;
+
+export const LoginLockout = __t.object("LoginLockout", {
+  email: __t.string(),
+  lockedUntil: __t.timestamp(),
+});
+export type LoginLockout = __Infer<typeof LoginLockout>;
+
 export const Message = __t.object("Message", {
   messageId: __t.u64(),
   channelId: __t.u64(),
@@ -81,25 +114,6 @@ export const MessageTemplate = __t.object("MessageTemplate", {
 });
 export type MessageTemplate = __Infer<typeof MessageTemplate>;
 
-export const DisplayDevice = __t.object("DisplayDevice", {
-  displayId: __t.u64(),
-  uid: __t.string(),
-  identity: __t.identity(),
-  venueId: __t.u64(),
-  name: __t.string(),
-  registeredAt: __t.timestamp(),
-  lastConnectedAt: __t.timestamp(),
-});
-export type DisplayDevice = __Infer<typeof DisplayDevice>;
-
-export const DisplayPairingPin = __t.object("DisplayPairingPin", {
-  pin: __t.string(),
-  displayUid: __t.string(),
-  identity: __t.identity(),
-  expiresAt: __t.timestamp(),
-});
-export type DisplayPairingPin = __Infer<typeof DisplayPairingPin>;
-
 export const NotificationFilter = __t.object("NotificationFilter", {
   channelId: __t.u64(),
   userId: __t.u64(),
@@ -118,6 +132,12 @@ export const NotificationFilterType = __t.enum("NotificationFilterType", {
 });
 export type NotificationFilterType = __Infer<typeof NotificationFilterType>;
 
+export const ServerConfig = __t.object("ServerConfig", {
+  id: __t.u32(),
+  serverToken: __t.string(),
+});
+export type ServerConfig = __Infer<typeof ServerConfig>;
+
 export const User = __t.object("User", {
   userId: __t.u64(),
   email: __t.option(__t.string()),
@@ -131,6 +151,7 @@ export type User = __Infer<typeof User>;
 export const UserIdentity = __t.object("UserIdentity", {
   identity: __t.identity(),
   userId: __t.u64(),
+  lastLogin: __t.timestamp(),
 });
 export type UserIdentity = __Infer<typeof UserIdentity>;
 

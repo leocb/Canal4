@@ -13,4 +13,5 @@ import {
 export default __t.row({
   identity: __t.identity().primaryKey(),
   userId: __t.u64().name("user_id"),
+  lastLogin: __t.timestamp().name("last_login"),
 });

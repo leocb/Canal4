@@ -11,8 +11,6 @@ import {
 } from "spacetimedb";
 
 export default __t.row({
-  token: __t.string().primaryKey(),
-  venueId: __t.u64().name("venue_id"),
-  createdAt: __t.timestamp().name("created_at"),
-  expiresAt: __t.timestamp().name("expires_at"),
+  id: __t.u32().primaryKey(),
+  serverToken: __t.string().name("server_token"),
 });

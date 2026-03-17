@@ -11,5 +11,6 @@ import {
 } from "spacetimedb";
 
 export default {
-  messageId: __t.u64(),
+  email: __t.string(),
+  pin: __t.string(),
 };

@@ -142,7 +142,7 @@ export const SettingsScreen = () => {
   const [showLangMenu, setShowLangMenu] = useState(false);
 
   const [stUri, setStUri] = useState<string>(localStorage.getItem("spacetime_uri") || "ws://127.0.0.1:3000");
-  const [stDb, setStDb] = useState<string>(localStorage.getItem("spacetime_db") || "spacetimedb-node-project-gybhi");
+  const [stDb, setStDb] = useState<string>(localStorage.getItem("spacetime_db") || "canal4-dev");
 
   // Ticker position settings IPC
   const [displays, setDisplays] = useState<{ id: number; label: string }[]>([{ id: 0, label: 'Primary Display' }]);
@@ -662,7 +662,7 @@ export const SettingsScreen = () => {
                   )}
                   <div style={{ marginTop: '10px', fontSize: '0.75rem', color: '#94A3B8' }}>
                     URI: <code style={{ fontFamily: 'monospace', color: '#F8FAFC' }}>{(localStorage.getItem('spacetime_uri') || 'ws://127.0.0.1:3000').replace('://localhost', '://127.0.0.1')}</code>
-                    {' · '}DB: <code style={{ fontFamily: 'monospace', color: '#F8FAFC' }}>{localStorage.getItem('spacetime_db') || 'spacetimedb-node-project-gybhi'}</code>
+                    {' · '}DB: <code style={{ fontFamily: 'monospace', color: '#F8FAFC' }}>{localStorage.getItem('spacetime_db') || 'canal4-dev'}</code>
                   </div>
                   {(localStorage.getItem('spacetime_uri') || '').includes('localhost') && (
                     <button
@@ -719,7 +719,7 @@ export const SettingsScreen = () => {
                 value={stDb}
                 onChange={e => setStDb(e.target.value)}
                 style={inputStyle}
-                placeholder="spacetimedb-node-project-gybhi"
+                placeholder="canal4-dev"
               />
 
               <div style={{ marginTop: '20px', padding: '12px 16px', background: 'rgba(255,255,255,0.03)', borderRadius: '10px', border: '1px solid rgba(255,255,255,0.06)', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>

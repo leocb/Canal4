@@ -51,6 +51,25 @@ export const DeliveryStatus = __t.enum("DeliveryStatus", {
 });
 export type DeliveryStatus = __Infer<typeof DeliveryStatus>;
 
+export const DisplayDevice = __t.object("DisplayDevice", {
+  displayId: __t.u64(),
+  uid: __t.string(),
+  identity: __t.identity(),
+  venueId: __t.u64(),
+  name: __t.string(),
+  registeredAt: __t.timestamp(),
+  lastConnectedAt: __t.timestamp(),
+});
+export type DisplayDevice = __Infer<typeof DisplayDevice>;
+
+export const DisplayPairingPin = __t.object("DisplayPairingPin", {
+  pin: __t.string(),
+  displayUid: __t.string(),
+  identity: __t.identity(),
+  expiresAt: __t.timestamp(),
+});
+export type DisplayPairingPin = __Infer<typeof DisplayPairingPin>;
+
 export const EmailLoginPin = __t.object("EmailLoginPin", {
   email: __t.string(),
   pin: __t.string(),
@@ -94,25 +113,6 @@ export const MessageTemplate = __t.object("MessageTemplate", {
   fieldsJson: __t.string(),
 });
 export type MessageTemplate = __Infer<typeof MessageTemplate>;
-
-export const DisplayDevice = __t.object("DisplayDevice", {
-  displayId: __t.u64(),
-  uid: __t.string(),
-  identity: __t.identity(),
-  venueId: __t.u64(),
-  name: __t.string(),
-  registeredAt: __t.timestamp(),
-  lastConnectedAt: __t.timestamp(),
-});
-export type DisplayDevice = __Infer<typeof DisplayDevice>;
-
-export const DisplayPairingPin = __t.object("DisplayPairingPin", {
-  pin: __t.string(),
-  displayUid: __t.string(),
-  identity: __t.identity(),
-  expiresAt: __t.timestamp(),
-});
-export type DisplayPairingPin = __Infer<typeof DisplayPairingPin>;
 
 export const NotificationFilter = __t.object("NotificationFilter", {
   channelId: __t.u64(),

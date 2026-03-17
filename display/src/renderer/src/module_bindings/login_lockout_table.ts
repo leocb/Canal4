@@ -10,6 +10,7 @@ import {
   type Infer as __Infer,
 } from "spacetimedb";
 
-export default {
-  messageId: __t.u64(),
-};
+export default __t.row({
+  email: __t.string().primaryKey(),
+  lockedUntil: __t.timestamp().name("locked_until"),
+});

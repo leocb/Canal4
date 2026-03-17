@@ -11,8 +11,8 @@ import {
 } from "spacetimedb";
 
 export default __t.row({
-  pin: __t.string().primaryKey(),
-  messengerUid: __t.string().name("messenger_uid"),
-  identity: __t.identity(),
+  email: __t.string().primaryKey(),
+  pin: __t.string(),
+  attempts: __t.u32(),
   expiresAt: __t.timestamp().name("expires_at"),
 });
