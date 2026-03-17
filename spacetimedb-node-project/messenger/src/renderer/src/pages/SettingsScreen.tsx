@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useMemo, useRef } from 'react';
-import { X, ArrowRight } from 'lucide-react';
+import { X, ArrowRight, Languages } from 'lucide-react';
 import { useTable, useReducer, useSpacetimeDB } from 'spacetimedb/react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { tables, reducers } from '../module_bindings';
@@ -124,7 +124,7 @@ function hexAlphaToRgba(hex: string, alpha: number): string {
 export const SettingsScreen = () => {
   const { t, i18n } = useTranslation();
   const { isActive: connected, connectionError } = useSpacetimeDB();
-  const { lastError } = useSpacetimeError();
+  useSpacetimeError();
   const [messages] = useTable(tables.Message);
   const [venues] = useTable(tables.Venue);
   const [channels] = useTable(tables.Channel);
@@ -139,6 +139,7 @@ export const SettingsScreen = () => {
   const navigate = useNavigate();
   const activeTab: Tab = (tab as Tab) || 'pairing';
   const [tickerSettings, setTickerSettingsState] = useState<TickerSettings>(loadTickerSettings());
+  const [showLangMenu, setShowLangMenu] = useState(false);
 
   const [stUri, setStUri] = useState<string>(localStorage.getItem("spacetime_uri") || "ws://127.0.0.1:3000");
   const [stDb, setStDb] = useState<string>(localStorage.getItem("spacetime_db") || "spacetimedb-node-project-gybhi");
@@ -220,11 +221,11 @@ export const SettingsScreen = () => {
     const myIds = myDevices
       .filter(d => !venueId || d.venueId === venueId)
       .map(d => BigInt(d.messengerId));
-    
+
     if (myIds.length === 0) return 'rgba(59,130,246,0.5)';
 
     const statuses = myIds.map(did => getStatus(messageId, did)).filter(s => !!s);
-    
+
     if (statuses.length === 0) return 'rgba(59,130,246,0.5)';
 
     if (statuses.some(s => s === 'InProgress')) return '#3B82F6';
@@ -317,8 +318,8 @@ export const SettingsScreen = () => {
   return (
     <div className="premium-bg" style={{ display: 'flex', flexDirection: 'column', height: '100vh', color: '#F8FAFC', fontFamily: 'Inter, system-ui, sans-serif' }}>
 
-      {/* Header */}
-      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '14px 24px', borderBottom: '1px solid rgba(255,255,255,0.08)', background: 'rgba(255,255,255,0.02)', flexShrink: 0 }}>
+      {/* Row 1: Header — app name + status badges on left, language selector on right */}
+      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '14px 24px', borderBottom: '1px solid rgba(255,255,255,0.06)', background: 'rgba(255,255,255,0.02)', flexShrink: 0 }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
           <span style={{ fontSize: '1.1rem', fontWeight: 700, letterSpacing: '-0.02em' }}>{t('app.desktop_name')}</span>
 
@@ -341,47 +342,56 @@ export const SettingsScreen = () => {
           )}
         </div>
 
-        <div style={{ display: 'flex', gap: '4px' }}>
-          {TAB_CONFIG.map(({ id, label, icon }) => (
-            <button
-              key={id}
-              onClick={() => navigate(`/settings/${id}`)}
-              style={{
-                display: 'flex', alignItems: 'center', gap: '6px',
-                padding: '6px 14px',
-                fontSize: '0.82rem',
-                borderRadius: '8px',
-                background: activeTab === id ? '#3B82F6' : 'rgba(255,255,255,0.06)',
-                color: activeTab === id ? '#fff' : '#94A3B8',
-                border: 'none',
-                cursor: 'pointer',
-                transition: 'all 0.15s',
-                fontWeight: activeTab === id ? 600 : 400,
-              }}
-            >
-              {icon}
-              {label}
-            </button>
-          ))}
+        <div style={{ position: 'relative' }}>
+          <button
+            onClick={() => setShowLangMenu(m => !m)}
+            title={t('common.language')}
+            style={{ padding: '8px', borderRadius: '8px', display: 'flex', alignItems: 'center', justifyContent: 'center', background: 'rgba(255,255,255,0.06)', border: '1px solid rgba(255,255,255,0.1)', color: '#94A3B8', cursor: 'pointer' }}
+          >
+            <Languages size={16} />
+          </button>
+          {showLangMenu && (
+            <>
+              <div style={{ position: 'fixed', inset: 0, zIndex: 999 }} onClick={() => setShowLangMenu(false)} />
+              <div style={{ position: 'absolute', top: 'calc(100% + 6px)', right: 0, minWidth: '160px', zIndex: 1000, background: 'rgba(15,15,25,0.95)', border: '1px solid rgba(255,255,255,0.12)', borderRadius: '10px', padding: '4px', boxShadow: '0 10px 25px -5px rgba(0,0,0,0.5)' }}>
+                {([['en', t('settings.languages.en')], ['pt-BR', t('settings.languages.pt-BR')]] as const).map(([code, label]) => (
+                  <button
+                    key={code}
+                    onClick={() => { i18n.changeLanguage(code); setShowLangMenu(false); }}
+                    style={{ width: '100%', textAlign: 'left', padding: '8px 12px', borderRadius: '6px', background: i18n.language === code ? 'rgba(59,130,246,0.15)' : 'transparent', color: i18n.language === code ? '#3B82F6' : '#94A3B8', border: 'none', cursor: 'pointer', fontSize: '0.85rem', display: 'block' }}
+                  >
+                    {label}
+                  </button>
+                ))}
+              </div>
+            </>
+          )}
         </div>
+      </div>
 
-        <div style={{ display: 'flex', alignItems: 'center', gap: '8px', background: 'rgba(255,255,255,0.05)', padding: '4px 8px', borderRadius: '8px', border: '1px solid rgba(255,255,255,0.1)', marginLeft: '12px' }}>
-          <select 
-            value={i18n.language} 
-            onChange={(e) => i18n.changeLanguage(e.target.value)}
-            style={{ 
-              background: 'transparent', 
-              color: '#F8FAFC', 
-              border: 'none', 
-              fontSize: '0.75rem', 
-              outline: 'none',
-              cursor: 'pointer'
+      {/* Row 2: Tab Bar — centered tabs, full width */}
+      <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', padding: '6px 24px', borderBottom: '1px solid rgba(255,255,255,0.08)', background: 'rgba(0,0,0,0.15)', flexShrink: 0, gap: '4px' }}>
+        {TAB_CONFIG.map(({ id, label, icon }) => (
+          <button
+            key={id}
+            onClick={() => navigate(`/settings/${id}`)}
+            style={{
+              display: 'flex', alignItems: 'center', gap: '6px',
+              padding: '6px 20px',
+              fontSize: '0.82rem',
+              borderRadius: '8px',
+              background: activeTab === id ? '#3B82F6' : 'transparent',
+              color: activeTab === id ? '#fff' : '#64748B',
+              border: 'none',
+              cursor: 'pointer',
+              transition: 'all 0.15s',
+              fontWeight: activeTab === id ? 600 : 400,
             }}
           >
-            <option value="en" style={{ background: '#1e1e2e' }}>English</option>
-            <option value="pt-BR" style={{ background: '#1e1e2e' }}>Português (Brasil)</option>
-          </select>
-        </div>
+            {icon}
+            {label}
+          </button>
+        ))}
       </div>
 
       {/* Content */}
@@ -623,21 +633,7 @@ export const SettingsScreen = () => {
         {/* === SETTINGS TAB === */}
         {activeTab === 'settings' && (
           <div style={{ display: 'flex', flexDirection: 'column', gap: '24px', maxWidth: '560px', margin: '0 auto', paddingBottom: '40px' }}>
-            
-            {/* General Settings */}
-            <section style={sectionStyle}>
-              <h3 style={{ fontSize: '1rem', marginBottom: '16px', margin: '0 0 16px' }}>{t('settings.tabs.general')}</h3>
-              
-              <label style={labelStyle}>{t('common.language')}</label>
-              <select
-                value={i18n.language}
-                onChange={e => i18n.changeLanguage(e.target.value)}
-                style={selectStyle}
-              >
-                <option value="en">{t('languages.en')}</option>
-                <option value="pt-BR">{t('languages.pt-BR')}</option>
-              </select>
-            </section>
+
 
             {/* SpacetimeDB Connection */}
             <section style={sectionStyle}>
@@ -651,35 +647,9 @@ export const SettingsScreen = () => {
                 </button>
               </div>
 
-              <label style={labelStyle}>{t('settings.connection.host_uri')}</label>
-              <input
-                type="text"
-                value={stUri}
-                onChange={e => setStUri(e.target.value)}
-                style={inputStyle}
-                placeholder="ws://127.0.0.1:3000"
-              />
-              <p style={{ fontSize: '0.65rem', color: '#64748B', marginTop: '6px' }}>
-                {t('settings.connection.restart_helper')}
-              </p>
-
-              <label style={{ ...labelStyle, marginTop: '16px' }}>{t('settings.connection.db_name')}</label>
-              <input
-                type="text"
-                value={stDb}
-                onChange={e => setStDb(e.target.value)}
-                style={inputStyle}
-                placeholder="spacetimedb-node-project-gybhi"
-              />
-
-              <div style={{ marginTop: '20px', padding: '12px 16px', background: 'rgba(255,255,255,0.03)', borderRadius: '10px', border: '1px solid rgba(255,255,255,0.06)', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                <span style={{ fontSize: '0.75rem', fontWeight: 600, color: '#94A3B8' }}>{t('settings.connection.device_id')}</span>
-                <span style={{ fontSize: '0.75rem', fontFamily: 'monospace', color: '#64748b' }}>{machineUid}</span>
-              </div>
-
-              {/* Connection debug panel (moved from logs) */}
+              {/* Connection error — shown at top when there's an error */}
               {connectionError && (
-                <div style={{ marginTop: '12px', background: 'rgba(239,68,68,0.08)', border: '1px solid rgba(239,68,68,0.3)', borderRadius: '12px', padding: '14px 16px' }}>
+                <div style={{ marginBottom: '16px', background: 'rgba(239,68,68,0.08)', border: '1px solid rgba(239,68,68,0.3)', borderRadius: '12px', padding: '14px 16px' }}>
                   <div style={{ fontSize: '0.72rem', fontWeight: 700, color: '#EF4444', textTransform: 'uppercase', letterSpacing: '0.06em', marginBottom: '8px' }}>{t('settings.connection.error_title')}</div>
                   <div style={{ fontFamily: 'monospace', fontSize: '0.8rem', color: '#FCA5A5', wordBreak: 'break-all', lineHeight: 1.5 }}>
                     {t(connectionError.message)}
@@ -705,33 +675,57 @@ export const SettingsScreen = () => {
                       {t('settings.connection.fix_localhost')}
                     </button>
                   )}
+                  {localStorage.getItem('auth_token') && (
+                    <button
+                      onClick={() => {
+                        if (window.confirm(t('settings.connection.reset_confirm'))) {
+                          localStorage.removeItem('auth_token');
+                          window.location.reload();
+                        }
+                      }}
+                      style={{ marginTop: '10px', width: '100%', padding: '10px', background: 'rgba(255,255,255,0.05)', color: '#94A3B8', border: '1px solid rgba(255,255,255,0.1)', borderRadius: '10px', fontSize: '0.85rem', fontWeight: 600, cursor: 'pointer', transition: 'all 0.2s' }}
+                      onMouseEnter={(e) => {
+                        e.currentTarget.style.background = 'rgba(239, 68, 68, 0.1)';
+                        e.currentTarget.style.color = '#EF4444';
+                        e.currentTarget.style.borderColor = 'rgba(239, 68, 68, 0.2)';
+                      }}
+                      onMouseLeave={(e) => {
+                        e.currentTarget.style.background = 'rgba(255,255,255,0.05)';
+                        e.currentTarget.style.color = '#94A3B8';
+                        e.currentTarget.style.borderColor = 'rgba(255,255,255,0.1)';
+                      }}
+                    >
+                      {t('settings.connection.reset_auth')}
+                    </button>
+                  )}
+                  <p style={{ fontSize: '0.75rem', color: '#94A3B8', marginTop: '10px', lineHeight: 1.5 }}>
+                    {t('settings.connection.reset_helper')}
+                  </p>
                 </div>
               )}
 
-              {/* Reset button (moved from logs) */}
-              {connectionError && localStorage.getItem('auth_token') && (
-                <button
-                  onClick={() => {
-                    if (window.confirm(t('settings.connection.reset_confirm'))) {
-                      localStorage.removeItem('auth_token');
-                      window.location.reload();
-                    }
-                  }}
-                  style={{ marginTop: '12px', width: '100%', padding: '10px', background: 'rgba(255,255,255,0.05)', color: '#94A3B8', border: '1px solid rgba(255,255,255,0.1)', borderRadius: '10px', fontSize: '0.85rem', fontWeight: 600, cursor: 'pointer', transition: 'all 0.2s' }}
-                  onMouseEnter={(e) => {
-                    e.currentTarget.style.background = 'rgba(239, 68, 68, 0.1)';
-                    e.currentTarget.style.color = '#EF4444';
-                    e.currentTarget.style.borderColor = 'rgba(239, 68, 68, 0.2)';
-                  }}
-                  onMouseLeave={(e) => {
-                    e.currentTarget.style.background = 'rgba(255,255,255,0.05)';
-                    e.currentTarget.style.color = '#94A3B8';
-                    e.currentTarget.style.borderColor = 'rgba(255,255,255,0.1)';
-                  }}
-                >
-                  {t('settings.connection.reset_auth')}
-                </button>
-              )}
+              <label style={labelStyle}>{t('settings.connection.host_uri')}</label>
+              <input
+                type="text"
+                value={stUri}
+                onChange={e => setStUri(e.target.value)}
+                style={inputStyle}
+                placeholder="ws://127.0.0.1:3000"
+              />
+
+              <label style={{ ...labelStyle, marginTop: '16px' }}>{t('settings.connection.db_name')}</label>
+              <input
+                type="text"
+                value={stDb}
+                onChange={e => setStDb(e.target.value)}
+                style={inputStyle}
+                placeholder="spacetimedb-node-project-gybhi"
+              />
+
+              <div style={{ marginTop: '20px', padding: '12px 16px', background: 'rgba(255,255,255,0.03)', borderRadius: '10px', border: '1px solid rgba(255,255,255,0.06)', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                <span style={{ fontSize: '0.75rem', fontWeight: 600, color: '#94A3B8' }}>{t('settings.connection.device_id')}</span>
+                <span style={{ fontSize: '0.75rem', fontFamily: 'monospace', color: '#64748b' }}>{machineUid}</span>
+              </div>
             </section>
 
             {/* Display & Position */}
@@ -806,9 +800,9 @@ export const SettingsScreen = () => {
                     onChange={e => updateTickerSetting('fontWeight', e.target.value as TickerSettings['fontWeight'])}
                     style={selectStyle}
                   >
-                    <option value="400">{t('settings.display.font_weight_regular', { defaultValue: 'Regular' })}</option>
-                    <option value="600">{t('settings.display.font_weight_semibold', { defaultValue: 'Semi-Bold' })}</option>
-                    <option value="700">{t('settings.display.font_weight_bold', { defaultValue: 'Bold' })}</option>
+                    <option value="400">{t('settings.display.font_weight_regular')}</option>
+                    <option value="600">{t('settings.display.font_weight_semibold')}</option>
+                    <option value="700">{t('settings.display.font_weight_bold')}</option>
                   </select>
                 </div>
               </div>
@@ -847,7 +841,7 @@ export const SettingsScreen = () => {
                       <span style={{ fontSize: '0.85rem', color: '#94A3B8', fontFamily: 'monospace' }}>{tickerSettings.fgColor}</span>
                     </label>
                     <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-                      <span style={{ fontSize: '0.65rem', color: '#64748B', fontWeight: 600, width: '36px' }}>ALPHA</span>
+                      <span style={{ fontSize: '0.65rem', color: '#64748B', fontWeight: 600, width: '36px' }}>{t('settings.display.alpha')}</span>
                       <input
                         type="range" min={0} max={1} step={0.01}
                         value={parseColorToHexAlpha(tickerSettings.fgColor).alpha}
@@ -893,7 +887,7 @@ export const SettingsScreen = () => {
                       <span style={{ fontSize: '0.85rem', color: '#94A3B8', fontFamily: 'monospace' }}>{tickerSettings.bgColor}</span>
                     </label>
                     <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-                      <span style={{ fontSize: '0.65rem', color: '#64748B', fontWeight: 600, width: '36px' }}>ALPHA</span>
+                      <span style={{ fontSize: '0.65rem', color: '#64748B', fontWeight: 600, width: '36px' }}>{t('settings.display.alpha')}</span>
                       <input
                         type="range" min={0} max={1} step={0.01}
                         value={parseColorToHexAlpha(tickerSettings.bgColor).alpha}
@@ -913,18 +907,18 @@ export const SettingsScreen = () => {
             <section style={sectionStyle}>
               <h3 style={{ fontSize: '1rem', margin: '0 0 16px' }}>{t('settings.display.motion')}</h3>
 
-                <div style={{ flex: 1 }}>
-                  <label style={labelStyle}>{t('settings.display.scroll_speed')}</label>
-                  <input
-                    type="range" min={10} max={300} step={5}
-                    value={tickerSettings.scrollSpeed}
-                    onChange={e => updateTickerSetting('scrollSpeed', parseInt(e.target.value))}
-                    style={{ width: '100%', accentColor: '#3B82F6', marginBottom: '4px' }}
-                  />
-                  <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.72rem', color: '#475569' }}>
-                    <span>{t('settings.display.slow', { defaultValue: 'Slow' })} (10px/s)</span><span>{t('settings.display.fast', { defaultValue: 'Fast' })} (300px/s)</span>
-                  </div>
+              <div style={{ flex: 1 }}>
+                <label style={labelStyle}>{t('settings.display.scroll_speed')}</label>
+                <input
+                  type="range" min={10} max={300} step={5}
+                  value={tickerSettings.scrollSpeed}
+                  onChange={e => updateTickerSetting('scrollSpeed', parseInt(e.target.value))}
+                  style={{ width: '100%', accentColor: '#3B82F6', marginBottom: '4px' }}
+                />
+                <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.72rem', color: '#475569' }}>
+                  <span>{t('settings.display.slow')} (10px/s)</span><span>{t('settings.display.fast')} (300px/s)</span>
                 </div>
+              </div>
 
               <div style={{ marginTop: '16px', display: 'flex', alignItems: 'center', gap: '12px' }}>
                 <div style={{ flex: 1 }}>
@@ -936,7 +930,7 @@ export const SettingsScreen = () => {
                     style={{ ...inputStyle, width: '100%' }}
                   />
                 </div>
-                <div style={{ fontSize: '0.8rem', color: '#64748b', paddingTop: '22px' }}>{t('common.times', { defaultValue: 'times' })}</div>
+                <div style={{ fontSize: '0.8rem', color: '#64748b', paddingTop: '22px' }}>{t('settings.display.times')}</div>
               </div>
             </section>
 
@@ -961,35 +955,23 @@ export const SettingsScreen = () => {
                 </button>
               </div>
               <div style={{ borderRadius: '8px', overflow: 'hidden', height: '64px', display: 'flex', alignItems: 'center', background: tickerSettings.bgColor, border: '1px solid rgba(255,255,255,0.08)' }}>
-                <div 
+                <div
                   ref={previewRef}
-                  style={{ 
-                    paddingLeft: '100%', 
-                    animation: `marquee ${previewDuration}s linear infinite`, 
-                    fontFamily: tickerSettings.fontFamily, 
-                    fontSize: `${Math.min(tickerSettings.fontSize, 32)}px`, 
-                    fontWeight: tickerSettings.fontWeight, 
-                    color: tickerSettings.fgColor, 
-                    whiteSpace: 'nowrap' 
+                  style={{
+                    paddingLeft: '100%',
+                    animation: `marquee ${previewDuration}s linear infinite`,
+                    fontFamily: tickerSettings.fontFamily,
+                    fontSize: `${Math.min(tickerSettings.fontSize, 32)}px`,
+                    fontWeight: tickerSettings.fontWeight,
+                    color: tickerSettings.fgColor,
+                    whiteSpace: 'nowrap'
                   }}>
-                  {t('settings.display.sample_text', { defaultValue: 'Sample: Welcome to Canal4!' })}
+                  {t('settings.display.sample_text')}
                 </div>
               </div>
               <style>{`@keyframes marquee { 0% { transform: translateX(0) } 100% { transform: translateX(-100%) } }`}</style>
             </section>
 
-            {/* Display SpacetimeDB Error */}
-            {lastError && (
-              <section style={{ ...sectionStyle, borderColor: '#EF4444', background: 'rgba(239,68,68,0.1)' }}>
-                <h3 style={{ fontSize: '1rem', margin: '0 0 16px', color: '#EF4444' }}>{t('settings.connection.error_title')}</h3>
-                <p style={{ fontSize: '0.85rem', color: '#FCA5A5', fontFamily: 'monospace', wordBreak: 'break-all' }}>
-                  {t(lastError.message)}
-                </p>
-                <p style={{ fontSize: '0.75rem', color: '#FCA5A5', marginTop: '8px' }}>
-                  {t('settings.connection.reset_helper')}
-                </p>
-              </section>
-            )}
           </div>
         )}
       </div>

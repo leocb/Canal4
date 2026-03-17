@@ -1,7 +1,6 @@
 # Steps still to be executed in this project
 
 ## Must have
-- Move desktop app screen tabs to a row below the current navbar (where status badges and others are).
 - I have not tested it yet, but make sure the ticker can move between connected screen
 - Create the installer for the desktop app (mac (intel and apple silicon) & windows)
 - Create a docker container to deploy the web app

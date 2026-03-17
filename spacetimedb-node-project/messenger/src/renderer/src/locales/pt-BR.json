@@ -4,12 +4,15 @@
     "name": "Canal4",
     "desktop_name": "Nó de Display Canal4"
   },
+  "common": {
+    "times": "vezes"
+  },
   "settings": {
     "title": "Configurações do Nó de Display Canal4",
     "tabs": {
-      "logs": "Activity Logs",
-      "pairing": "Pairing",
-      "settings": "Display Settings",
+      "logs": "Registro de Atividades",
+      "pairing": "Emparelhamento",
+      "settings": "Configurações de Display",
       "general": "Geral"
     },
     "common": {
@@ -59,24 +62,34 @@
       "font": "Família da Fonte",
       "font_size": "Tamanho da Fonte",
       "font_weight": "Peso",
+      "font_weight_regular": "Regular",
+      "font_weight_semibold": "Semi-Negrito",
+      "font_weight_bold": "Negrito",
       "bg_color": "Cor de Fundo",
       "fg_color": "Cor do Texto",
+      "alpha": "ALFA",
       "opacity": "Opacidade",
       "motion": "Movimento",
       "scroll_speed": "Velocidade de Rolagem (px/s)",
+      "slow": "Lento",
+      "fast": "Rápido",
       "repeat_count": "Contagem de Repetição",
+      "times": "vezes",
       "test_banner": "Mostrar Banner de Teste",
       "save_settings": "Salvar Configurações",
       "monitor": "Monitor",
       "screen_position": "Posição na Tela",
       "typography": "Tipografia",
       "colors": "Cores",
+      "preview": "Visualização",
+      "sample_text": "Amostra: Bem-vindo ao Canal4!",
       "rename_node": "Renomear nó de exibição",
       "delete_node": "Excluir Nó de Exibição"
     },
     "pairing": {
       "toast_success": "Emparelhado com \"{{venue}}\" como \"{{name}}\"",
       "paired_venues": "Locais Emparelhados",
+      "paired_venues_count": "{{count}} local(is) emparelhado(s)",
       "as_name": "como \"{{name}}\"",
       "register_new": "Registrar em um Novo Local",
       "register_helper": "Gere um PIN de 6 dígitos e digite-o no Painel Web em",

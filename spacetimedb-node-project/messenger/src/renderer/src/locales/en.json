@@ -4,6 +4,9 @@
     "name": "Canal4",
     "desktop_name": "Canal4 Display node"
   },
+  "common": {
+    "times": "times"
+  },
   "settings": {
     "title": "Canal4 Display node Settings",
     "tabs": {
@@ -59,24 +62,34 @@
       "font": "Font Family",
       "font_size": "Font Size",
       "font_weight": "Weight",
+      "font_weight_regular": "Regular",
+      "font_weight_semibold": "Semi-Bold",
+      "font_weight_bold": "Bold",
       "bg_color": "Background Color",
       "fg_color": "Text Color",
+      "alpha": "ALPHA",
       "opacity": "Opacity",
       "motion": "Motion",
       "scroll_speed": "Scroll Speed (px/s)",
+      "slow": "Slow",
+      "fast": "Fast",
       "repeat_count": "Repeat Count",
+      "times": "times",
       "test_banner": "Show Sample Ticker",
       "save_settings": "Save Settings",
       "monitor": "Monitor",
       "screen_position": "Position on Screen",
       "typography": "Typography",
       "colors": "Colors",
+      "preview": "Preview",
+      "sample_text": "Sample: Welcome to Canal4!",
       "rename_node": "Rename display node",
       "delete_node": "Delete Display Node"
     },
     "pairing": {
       "toast_success": "Paired with \"{{venue}}\" as \"{{name}}\"",
       "paired_venues": "Paired Venues",
+      "paired_venues_count": "{{count}} venue(s) paired",
       "as_name": "as \"{{name}}\"",
       "register_new": "Register with a New Venue",
       "register_helper": "Generate a 6-digit PIN, then enter it in the Web Dashboard under",
