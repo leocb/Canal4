@@ -2,8 +2,6 @@
 
 ## Must have
 - I have not tested it yet, but make sure the ticker can move between connected screen
-- Create a docker container to deploy the web app
-- Create docker compose file to spin up the web app and the spacetime database
 
 ## Before making the project public
 - The permissions screen have some weird behavior and wrong button actions. review.
