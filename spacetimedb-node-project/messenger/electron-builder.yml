@@ -1,7 +1,10 @@
 appId: org.canal4.displaynode
 productName: Canal4 Display node
+copyright: Copyright © 2026 Canal4
 directories:
   buildResources: build
+  output: dist
+
 files:
   - '!**/.vscode/*'
   - '!src/*'
@@ -9,35 +12,73 @@ files:
   - '!{.eslintcache,eslint.config.mjs,.prettierignore,.prettierrc.yaml,dev-app-update.yml,CHANGELOG.md,README.md}'
   - '!{.env,.env.*,.npmrc,pnpm-lock.yaml}'
   - '!{tsconfig.json,tsconfig.node.json,tsconfig.web.json}'
+
 asarUnpack:
   - resources/**
-win:
-  executableName: canal4-display-node
-nsis:
-  artifactName: ${name}-${version}-setup.${ext}
-  shortcutName: ${productName}
-  uninstallDisplayName: ${productName}
-  createDesktopShortcut: always
+
+# ─── macOS ────────────────────────────────────────────────────────────────────
 mac:
   entitlementsInherit: build/entitlements.mac.plist
+  icon: build/icon.icns
+  category: public.app-category.utilities
   extendInfo:
     - NSCameraUsageDescription: Application requests access to the device's camera.
     - NSMicrophoneUsageDescription: Application requests access to the device's microphone.
     - NSDocumentsFolderUsageDescription: Application requests access to the user's Documents folder.
     - NSDownloadsFolderUsageDescription: Application requests access to the user's Downloads folder.
   notarize: false
+  target:
+    - target: dmg
+      arch:
+        - x64        # Intel
+        - arm64      # Apple Silicon
+
 dmg:
-  artifactName: ${name}-${version}.${ext}
+  artifactName: ${productName}-${version}-${arch}.${ext}
+  title: ${productName} ${version}
+  background: null
+  contents:
+    - x: 130
+      y: 220
+    - x: 410
+      y: 220
+      type: link
+      path: /Applications
+
+# ─── Windows ──────────────────────────────────────────────────────────────────
+win:
+  icon: build/icon.ico
+  executableName: canal4-display-node
+  target:
+    - target: nsis
+      arch:
+        - x64      # 64-bit (most common)
+        - ia32     # 32-bit (legacy support)
+
+nsis:
+  artifactName: ${productName}-${version}-windows-setup.${ext}
+  shortcutName: ${productName}
+  uninstallDisplayName: ${productName}
+  createDesktopShortcut: always
+  createStartMenuShortcut: true
+  oneClick: false          # Show installer wizard (allows choosing install dir)
+  allowToChangeInstallationDirectory: true
+  perMachine: false        # Per-user install by default (no admin required)
+
+# ─── Linux (kept for reference) ───────────────────────────────────────────────
 linux:
+  icon: build/icon.png
   target:
     - AppImage
-    - snap
     - deb
-  maintainer: electronjs.org
+  maintainer: Canal4
   category: Utility
+
 appImage:
-  artifactName: ${name}-${version}.${ext}
+  artifactName: ${productName}-${version}-${arch}.${ext}
+
 npmRebuild: false
+
 publish:
   provider: generic
   url: https://example.com/auto-updates

@@ -1,0 +1,124 @@
+name: Build Desktop Installers
+
+on:
+  # Run when a version tag is pushed (e.g. v1.0.0)
+  push:
+    tags:
+      - 'v*'
+  # Allow manual trigger from the Actions tab
+  workflow_dispatch:
+
+# Cancel any in-progress run for the same ref
+concurrency:
+  group: build-desktop-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  # ─── macOS ──────────────────────────────────────────────────────────────────
+  build-mac:
+    name: macOS (${{ matrix.arch }})
+    runs-on: macos-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        arch: [x64, arm64]
+
+    defaults:
+      run:
+        working-directory: spacetimedb-node-project/messenger
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: 'npm'
+          cache-dependency-path: spacetimedb-node-project/messenger/package-lock.json
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Build Vite bundle
+        run: npx electron-vite build
+
+      - name: Build macOS installer (${{ matrix.arch }})
+        run: npx electron-builder --mac --${{ matrix.arch }}
+        env:
+          # Set to 'true' and provide credentials to enable notarization
+          CSC_IDENTITY_AUTO_DISCOVERY: false
+
+      - name: Upload DMG artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: mac-${{ matrix.arch }}-dmg
+          path: spacetimedb-node-project/messenger/dist/*.dmg
+          if-no-files-found: error
+          retention-days: 7
+
+  # ─── Windows ────────────────────────────────────────────────────────────────
+  build-win:
+    name: Windows (x64 + ia32)
+    runs-on: windows-latest
+
+    defaults:
+      run:
+        working-directory: spacetimedb-node-project/messenger
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: 'npm'
+          cache-dependency-path: spacetimedb-node-project/messenger/package-lock.json
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Build Vite bundle
+        run: npx electron-vite build
+
+      - name: Build Windows installers (x64 + ia32)
+        run: npx electron-builder --win --x64 --ia32
+
+      - name: Upload Windows installer artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: windows-setup
+          path: spacetimedb-node-project/messenger/dist/*-setup.exe
+          if-no-files-found: error
+          retention-days: 7
+
+  # ─── Release ────────────────────────────────────────────────────────────────
+  release:
+    name: Create GitHub Release
+    needs: [build-mac, build-win]
+    runs-on: ubuntu-latest
+    # Only create a release when triggered by a tag push
+    if: startsWith(github.ref, 'refs/tags/')
+    permissions:
+      contents: write
+
+    steps:
+      - name: Download all build artifacts
+        uses: actions/download-artifact@v4
+        with:
+          path: release-artifacts
+          merge-multiple: true
+
+      - name: Display collected files
+        run: ls -lh release-artifacts/
+
+      - name: Create GitHub Release
+        uses: softprops/action-gh-release@v2
+        with:
+          name: Canal4 Display Node ${{ github.ref_name }}
+          draft: true
+          generate_release_notes: true
+          files: release-artifacts/*
