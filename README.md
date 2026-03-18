@@ -11,7 +11,7 @@ Built on [SpacetimeDB](https://spacetimedb.com) for real-time, low-latency synch
 ```
 ┌─────────────────────────────────┐
 │   Web Dashboard (Canal4 webapp) │   ← Venue staff send broadcasts here
-│   React + Express · Port 3001   │
+│   React SPA + Nginx             │   ← Passkey-only authentication
 └────────────────┬────────────────┘
                  │ WebSocket (SpacetimeDB protocol)
                  ▼
@@ -37,15 +37,16 @@ Built on [SpacetimeDB](https://spacetimedb.com) for real-time, low-latency synch
 | **Message Template** | A structured schema defining what fields a broadcast must include |
 | **Display Node** | An Electron desktop app paired to a venue, showing incoming messages as a scrolling ticker |
 | **Pairing PIN** | A 6-digit code the display node generates; entered in the web dashboard to link the two |
+| **Passkeys** | The primary and only authentication method (using WebAuthn) |
 
 ---
 
 ## Project Structure
 
 ```
-spacetimedb-node-project/
-├── webapp/             # Web dashboard (React + Vite SPA + Express API server)
-├── display/          # Desktop display node (Electron + React)
+Canal4/
+├── webapp/             # Web dashboard (React 19 + Vite SPA)
+├── display/            # Desktop display node (Electron + React)
 ├── spacetimedb/        # SpacetimeDB module (TypeScript reducers & schema)
 ├── docker-compose.yml  # Production deployment
 └── .env.example        # Environment variable template
@@ -57,7 +58,7 @@ spacetimedb-node-project/
 
 | Tool | Version | Purpose |
 |---|---|---|
-| [Node.js](https://nodejs.org) | ≥ 22 | Web app & display node |
+| [Node.js](https://nodejs.org) | ≥ 22 | Web app & display node development |
 | [SpacetimeDB CLI](https://spacetimedb.com/install) | ≥ 1.0 | Local development & module publishing |
 | [Docker + Compose](https://docs.docker.com/get-docker/) | ≥ 24 | Production deployment |
 
@@ -87,7 +88,7 @@ cd ..
 cd webapp
 npm install
 cp .env.example .env   # edit with your local values
-npm run dev            # starts Vite dev server + Express API on :3001
+npm run dev            # starts Vite dev server
 ```
 
 Open [http://localhost:5173](http://localhost:5173).
@@ -106,7 +107,7 @@ npm run dev            # starts Electron app
 
 ### 1. Build the SpacetimeDB module
 
-The compiled module must be built locally before first deploy (the module publisher runs as a one-shot Docker container):
+The compiled module must be built locally before first deploy:
 
 ```bash
 cd spacetimedb
@@ -121,14 +122,12 @@ cd ..
 cp .env.example .env
 ```
 
-Edit `.env` — the key values:
+Edit `.env` — only the following are required:
 
-| Variable | Description |
-|---|---|
-| `SPACETIMEDB_NAME` | Database name (e.g. `canal4`) |
-| `SPACETIMEDB_URI` | Public WebSocket URI browsers connect to (e.g. `wss://yourdomain.com`) |
-| `SPACETIMEDB_SERVER_PRIVATE_KEY` | Secret key for server-to-DB calls (generated on first publish) |
-| `SMTP_*` | Outgoing email for login PIN delivery |
+| Variable | Description | Default |
+|---|---|---|
+| `SPACETIMEDB_NAME` | Database name | `canal4-dev` |
+| `SPACETIMEDB_URI` | Public SpacetimeDB WebSocket URI | `wss://maincloud.spacetimedb.com` |
 
 ### 3. Start all services
 
@@ -139,7 +138,7 @@ docker compose up -d
 This starts:
 - **SpacetimeDB** on `localhost:3000` (data persisted in a Docker volume)
 - **module-init** — publishes `dist/bundle.js` into SpacetimeDB, then exits
-- **Canal4 web app** on `localhost:3001`
+- **Canal4 web webapp** on `http://localhost:3001` (Nginx serving SPA)
 
 ### 4. Re-deploy after schema changes
 
@@ -148,54 +147,24 @@ Whenever reducers or the schema are updated:
 ```bash
 cd spacetimedb && npm run build && cd ..
 docker compose run --rm module-init   # re-publishes the module
-docker compose restart webapp         # picks up any env changes
-```
-
-### Putting it behind a reverse proxy (HTTPS)
-
-Point Nginx/Caddy at `localhost:3001` for the web app and `localhost:3000` for the SpacetimeDB WebSocket. Update `SPACETIMEDB_URI` in `.env` to `wss://yourdomain.com` (no rebuild needed — it's injected at request time).
-
-Example minimal Caddy config:
-
-```
-yourdomain.com {
-    reverse_proxy /v1/* localhost:3000
-    reverse_proxy * localhost:3001
-}
+docker compose restart webapp         # restarts the webapp container
 ```
 
 ---
 
 ## Desktop Installers
 
-Pre-built installers are published on each [GitHub Release](https://github.com/leocb/Canal4/releases):
-
-| Platform | File |
-|---|---|
-| macOS (Apple Silicon) | `Canal4 Display node-*-arm64.dmg` |
-| macOS (Intel) | `Canal4 Display node-*-x64.dmg` |
-| Windows | `Canal4 Display node-*-windows-setup.exe` |
+Pre-built installers are published on each [GitHub Release](https://github.com/leocb/Canal4/releases).
 
 ### Building installers locally
 
 ```bash
 cd display
 npm install
-
-npm run build:mac        # both Intel + Apple Silicon DMGs
-npm run build:mac:intel  # Intel only
-npm run build:mac:silicon # Apple Silicon only
-npm run build:win        # Windows NSIS installer
+npm run build            # builds for your current OS
 ```
 
 Output goes to `display/dist/`.
-
----
-
-## Internationalization
-
-The UI is fully internationalized. Use the Crowdin platform to translate the application.
-If the language you want to translate is not available on Crowdin, open an issue requesting it.
 
 ---
 
@@ -205,18 +174,15 @@ If the language you want to translate is not available on Crowdin, open an issue
 |---|---|
 | Real-time DB | [SpacetimeDB](https://spacetimedb.com) (TypeScript module) |
 | Web frontend | React 19, Vite, react-router-dom, react-i18next |
-| Web backend | Node.js, Express (serves SPA + `/api/request-pin`) |
 | Desktop app | Electron 39, electron-vite, React |
+| Auth | WebAuthn (Passkeys) |
 | Styling | Vanilla CSS (glassmorphism design system) |
 | Icons | [Lucide React](https://lucide.dev) |
-| Installer | electron-builder (DMG + NSIS) |
-| CI/CD | GitHub Actions |
-| Container | Docker + Docker Compose |
+| CI/CD | GitHub Actions (Docker builds & Electron installers) |
+| Container | Docker + Nginx |
 
 ---
 
 ## License
 
 [GNU Affero General Public License v3.0](LICENSE) — see `LICENSE` for details.
-
-Canal4 is free software: you may use, study, modify, and distribute it under the terms of the AGPLv3. If you deploy a modified version as a network service, you must make the modified source available.
