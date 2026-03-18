@@ -23,12 +23,12 @@ export const LoginScreen = () => {
 
   // If already logged in and has a name, navigate away
   useEffect(() => {
-    if (isLoggedIn && user?.name && view !== 'name') {
+    if (isLoggedIn && user?.name) {
       navigate(redirect, { replace: true });
     } else if (isLoggedIn && !user?.name) {
       setView('name');
     }
-  }, [isLoggedIn, user, navigate, redirect, view]);
+  }, [isLoggedIn, user?.name, navigate, redirect]);
 
   const handleNewUser = async () => {
     setErrorText('');
