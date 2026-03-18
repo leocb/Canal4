@@ -680,6 +680,10 @@ export const SettingsScreen = () => {
                       onClick={() => {
                         if (window.confirm(t('settings.connection.reset_confirm'))) {
                           localStorage.removeItem('auth_token');
+                          // @ts-ignore
+                          if (window.api?.setToken) {
+                            window.api.setToken('');
+                          }
                           window.location.reload();
                         }
                       }}

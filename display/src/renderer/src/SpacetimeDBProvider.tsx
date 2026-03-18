@@ -121,14 +121,20 @@ export const SpacetimeDBProvider = ({ children }: { children: ReactNode }) => {
         console.error("[SpacetimeDBProvider] Connection Fail:", errorStr);
         setLastError(err);
 
-        const isAuthError = errorStr.includes('403') || errorStr.includes('401') || (err?.message && (err.message.includes('403') || err.message.includes('401')));
+        const isAuthError =
+          errorStr.includes('403') ||
+          errorStr.includes('401') ||
+          errorStr.includes('Unauthorized') ||
+          errorStr.includes('Failed to verify token');
 
         if (activeToken && isAuthError) {
-          console.warn("[SpacetimeDBProvider] Invalid Token Detected. Clearing Identity.");
+          console.warn("[SpacetimeDBProvider] Invalid or Unauthorized Token Detected. Clearing Identity.");
           localStorage.removeItem("auth_token");
           setActiveToken(undefined);
           // @ts-ignore
-          if (window.api?.setToken) window.api.setToken('');
+          if (window.api?.setToken) {
+            window.api.setToken('');
+          }
         }
       })
       .onDisconnect(() => {
