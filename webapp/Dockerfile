@@ -9,7 +9,7 @@ RUN npm ci
 
 # Copy source and build
 COPY . .
-RUN tsc -b && npx vite build
+RUN npm run build
 
 
 # ─── Stage 2: Production image ───────────────────────────────────────────────
