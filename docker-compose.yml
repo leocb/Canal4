@@ -46,27 +46,31 @@ services:
     depends_on:
       spacetimedb:
         condition: service_healthy
+    working_dir: /module
+    env_file: .env # Portainer: use "stack.env" instead
     environment:
       SPACETIMEDB_NAME: ${SPACETIMEDB_NAME}
       SPACETIMEDB_SERVER: ${SPACETIMEDB_SERVER:-http://spacetimedb:3000}
-      SPACETIMEDB_IDENTITY_TOKEN: ${SPACETIMEDB_IDENTITY_TOKEN} # Get token from `spacetime login show --token` on your machine.
-    entrypoint: >
-      sh -c "
-        # 1. Login if a token is provided (prevents anonymous/unauthorized publish)
-        if [ -n \"$${SPACETIMEDB_IDENTITY_TOKEN}\" ]; then
-          echo 'Importing publishing identity...'
-          spacetime login --token \"$${SPACETIMEDB_IDENTITY_TOKEN}\" --server-issued-login \"$${SPACETIMEDB_SERVER}\"
+      SPACETIMEDB_IDENTITY_TOKEN: ${SPACETIMEDB_IDENTITY_TOKEN}
+    entrypoint:
+      - sh
+      - -c
+      - |
+        # 1. Login if a token is provided (prevents anonymous/unauthorized updates)
+        if [ -n "$$SPACETIMEDB_IDENTITY_TOKEN" ]; then
+          echo "Setting up publishing identity..."
+          spacetime login --token "$$SPACETIMEDB_IDENTITY_TOKEN"
         fi
 
-        # 2. Publish the module
+        # 2. Publish the module using only URL servers or nicknames 
+        echo "Publishing $$SPACETIMEDB_NAME to $$SPACETIMEDB_SERVER..."
         spacetime publish \
-          --server \"$${SPACETIMEDB_SERVER}\" \
+          --server "$$SPACETIMEDB_SERVER" \
           --skip-clippy \
           --bundle /module/bundle.js \
-          \"$${SPACETIMEDB_NAME}\"
-        
-        echo 'Module published successfully.'
-      "
+          "$$SPACETIMEDB_NAME"
+
+        echo "Module published successfully."
     restart: "no"
 
   # ─── Web app ────────────────────────────────────────────────────────────────
