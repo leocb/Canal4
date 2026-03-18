@@ -13,7 +13,7 @@ jobs:
     if: github.repository_owner == 'leocb'
     strategy:
       matrix:
-        os: [macos-latest, ubuntu-latest, windows-latest]
+        os: [macos-latest, windows-latest]
 
     steps:
       - name: Checkout Code
@@ -37,8 +37,6 @@ jobs:
             npm run build:mac
           elif [ "${{ matrix.os }}" = "windows-latest" ]; then
             npm run build:win
-          else
-            npm run build:linux
           fi
         shell: bash
 
@@ -49,8 +47,6 @@ jobs:
           path: |
             display/dist/*.dmg
             display/dist/*.exe
-            display/dist/*.AppImage
-            display/dist/*.deb
             display/dist/*.zip
           if-no-files-found: error
 
@@ -74,8 +70,6 @@ jobs:
           files: |
             release-artifacts/*.dmg
             release-artifacts/*.exe
-            release-artifacts/*.AppImage
-            release-artifacts/*.deb
             release-artifacts/*.zip
           draft: false
           prerelease: false
