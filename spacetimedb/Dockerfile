@@ -4,10 +4,9 @@ FROM node:22-bookworm AS builder
 
 WORKDIR /app
 
-# Install `spacetime` CLI 
-RUN apt-get update && apt-get install -y curl && \
-    curl -L https://get.spacetimedb.com | sh && \
-    ln -s /root/.spacetime/bin/spacetime /usr/local/bin/spacetime
+# Copy the `spacetime` CLI binary from the official image
+# This is much more reliable than the install script in a container environment.
+COPY --from=clockworklabs/spacetime:latest /usr/local/bin/spacetime /usr/local/bin/spacetime
 
 # Install dependencies
 COPY package*.json ./
