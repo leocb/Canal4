@@ -10,6 +10,9 @@ jobs:
   build-and-push:
     runs-on: ubuntu-latest
     if: github.repository_owner == 'leocb' # Only run on main repo
+    permissions:
+      contents: read
+      packages: write
 
     steps:
       - name: Checkout
