@@ -16,11 +16,13 @@ export const usePasskeys = () => {
     const userID = new Uint8Array(16);
     window.crypto.getRandomValues(userID);
 
+    const rpId = window.location.hostname === 'localhost' ? 'localhost' : window.location.hostname;
+
     const createOptions: PublicKeyCredentialCreationOptions = {
       challenge,
       rp: {
         name: "Canal4",
-        id: window.location.hostname,
+        id: rpId,
       },
       user: {
         id: userID,
@@ -31,6 +33,11 @@ export const usePasskeys = () => {
         { alg: -7, type: "public-key" }, // ES256
         { alg: -257, type: "public-key" }, // RS256
       ],
+      authenticatorSelection: {
+        residentKey: "required",
+        requireResidentKey: true,
+        userVerification: "required",
+      },
       timeout: 60000,
       attestation: "none",
     };
@@ -55,9 +62,11 @@ export const usePasskeys = () => {
     const challenge = new Uint8Array(32);
     window.crypto.getRandomValues(challenge);
 
+    const rpId = window.location.hostname === 'localhost' ? 'localhost' : window.location.hostname;
+
     const getOptions: PublicKeyCredentialRequestOptions = {
       challenge,
-      rpId: window.location.hostname,
+      rpId: rpId,
       timeout: 60000,
       userVerification: "required",
     };
