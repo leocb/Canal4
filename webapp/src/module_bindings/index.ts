@@ -50,15 +50,13 @@ import DisplayConnectReducer from "./display_connect_reducer";
 import ExtendSessionReducer from "./extend_session_reducer";
 import JoinVenueReducer from "./join_venue_reducer";
 import LeaveVenueReducer from "./leave_venue_reducer";
-import LoginOrCreateUserReducer from "./login_or_create_user_reducer";
-import LoginWithEmailPinReducer from "./login_with_email_pin_reducer";
 import LoginWithPasskeyReducer from "./login_with_passkey_reducer";
 import RegisterDisplayToVenueReducer from "./register_display_to_venue_reducer";
+import RegisterNewUserWithPasskeyReducer from "./register_new_user_with_passkey_reducer";
 import RegisterPasskeyReducer from "./register_passkey_reducer";
 import RepeatMessageReducer from "./repeat_message_reducer";
 import SendMessageReducer from "./send_message_reducer";
 import SetChannelRoleReducer from "./set_channel_role_reducer";
-import SetEmailLoginPinReducer from "./set_email_login_pin_reducer";
 import SetVenueRoleReducer from "./set_venue_role_reducer";
 import UnblockUserReducer from "./unblock_user_reducer";
 import UnpairDisplayReducer from "./unpair_display_reducer";
@@ -77,13 +75,10 @@ import ChannelRow from "./channel_table";
 import ChannelMemberRoleRow from "./channel_member_role_table";
 import DisplayDeviceRow from "./display_device_table";
 import DisplayPairingPinRow from "./display_pairing_pin_table";
-import EmailLoginPinRow from "./email_login_pin_table";
-import LoginLockoutRow from "./login_lockout_table";
 import MessageRow from "./message_table";
 import MessageDeliveryStatusRow from "./message_delivery_status_table";
 import MessageTemplateRow from "./message_template_table";
 import NotificationFilterRow from "./notification_filter_table";
-import ServerConfigRow from "./server_config_table";
 import UserRow from "./user_table";
 import UserIdentityRow from "./user_identity_table";
 import VenueRow from "./venue_table";
@@ -149,28 +144,6 @@ const tablesSchema = __schema({
       { name: 'display_pairing_pin_pin_key', constraint: 'unique', columns: ['pin'] },
     ],
   }, DisplayPairingPinRow),
-  EmailLoginPin: __table({
-    name: 'email_login_pin',
-    indexes: [
-      { accessor: 'email', name: 'email_login_pin_email_idx_btree', algorithm: 'btree', columns: [
-        'email',
-      ] },
-    ],
-    constraints: [
-      { name: 'email_login_pin_email_key', constraint: 'unique', columns: ['email'] },
-    ],
-  }, EmailLoginPinRow),
-  LoginLockout: __table({
-    name: 'login_lockout',
-    indexes: [
-      { accessor: 'email', name: 'login_lockout_email_idx_btree', algorithm: 'btree', columns: [
-        'email',
-      ] },
-    ],
-    constraints: [
-      { name: 'login_lockout_email_key', constraint: 'unique', columns: ['email'] },
-    ],
-  }, LoginLockoutRow),
   Message: __table({
     name: 'message',
     indexes: [
@@ -229,17 +202,6 @@ const tablesSchema = __schema({
     constraints: [
     ],
   }, NotificationFilterRow),
-  ServerConfig: __table({
-    name: 'server_config',
-    indexes: [
-      { accessor: 'id', name: 'server_config_id_idx_btree', algorithm: 'btree', columns: [
-        'id',
-      ] },
-    ],
-    constraints: [
-      { name: 'server_config_id_key', constraint: 'unique', columns: ['id'] },
-    ],
-  }, ServerConfigRow),
   User: __table({
     name: 'user',
     indexes: [
@@ -323,15 +285,13 @@ const reducersSchema = __reducers(
   __reducerSchema("extend_session", ExtendSessionReducer),
   __reducerSchema("join_venue", JoinVenueReducer),
   __reducerSchema("leave_venue", LeaveVenueReducer),
-  __reducerSchema("login_or_create_user", LoginOrCreateUserReducer),
-  __reducerSchema("login_with_email_pin", LoginWithEmailPinReducer),
   __reducerSchema("login_with_passkey", LoginWithPasskeyReducer),
   __reducerSchema("register_display_to_venue", RegisterDisplayToVenueReducer),
+  __reducerSchema("register_new_user_with_passkey", RegisterNewUserWithPasskeyReducer),
   __reducerSchema("register_passkey", RegisterPasskeyReducer),
   __reducerSchema("repeat_message", RepeatMessageReducer),
   __reducerSchema("send_message", SendMessageReducer),
   __reducerSchema("set_channel_role", SetChannelRoleReducer),
-  __reducerSchema("set_email_login_pin", SetEmailLoginPinReducer),
   __reducerSchema("set_venue_role", SetVenueRoleReducer),
   __reducerSchema("unblock_user", UnblockUserReducer),
   __reducerSchema("unpair_display", UnpairDisplayReducer),

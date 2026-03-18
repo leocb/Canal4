@@ -70,20 +70,6 @@ export const DisplayPairingPin = __t.object("DisplayPairingPin", {
 });
 export type DisplayPairingPin = __Infer<typeof DisplayPairingPin>;
 
-export const EmailLoginPin = __t.object("EmailLoginPin", {
-  email: __t.string(),
-  pin: __t.string(),
-  attempts: __t.u32(),
-  expiresAt: __t.timestamp(),
-});
-export type EmailLoginPin = __Infer<typeof EmailLoginPin>;
-
-export const LoginLockout = __t.object("LoginLockout", {
-  email: __t.string(),
-  lockedUntil: __t.timestamp(),
-});
-export type LoginLockout = __Infer<typeof LoginLockout>;
-
 export const Message = __t.object("Message", {
   messageId: __t.u64(),
   channelId: __t.u64(),
@@ -131,12 +117,6 @@ export const NotificationFilterType = __t.enum("NotificationFilterType", {
   FilteredText: __t.string(),
 });
 export type NotificationFilterType = __Infer<typeof NotificationFilterType>;
-
-export const ServerConfig = __t.object("ServerConfig", {
-  id: __t.u32(),
-  serverToken: __t.string(),
-});
-export type ServerConfig = __Infer<typeof ServerConfig>;
 
 export const User = __t.object("User", {
   userId: __t.u64(),

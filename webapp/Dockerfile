@@ -9,34 +9,26 @@ RUN npm ci
 
 # Copy source and build
 COPY . .
-RUN npm run build
+RUN tsc -b && npx vite build
 
 
 # ─── Stage 2: Production image ───────────────────────────────────────────────
-FROM node:22-alpine AS runner
-
-WORKDIR /app
-
-ENV NODE_ENV=production
-ENV PORT=3001
-
-# Install only production dependencies
-COPY package.json package-lock.json ./
-RUN npm ci --omit=dev && npm cache clean --force
+FROM nginx:alpine AS runner
 
 # Copy the built frontend from the builder stage
-COPY --from=builder /app/dist ./dist
+COPY --from=builder /app/dist /usr/share/nginx/html
 
-# Copy the Express server
-COPY server.js ./
+# Optional: Add a custom nginx config if needed for SPA routing
+# (React Router needs all paths to serve index.html)
+RUN echo 'server { \
+    listen 80; \
+    location / { \
+        root /usr/share/nginx/html; \
+        index index.html; \
+        try_files $uri $uri/ /index.html; \
+    } \
+}' > /etc/nginx/conf.d/default.conf
 
-# Non-root user for security
-RUN addgroup -S canal4 && adduser -S canal4 -G canal4
-USER canal4
+EXPOSE 80
 
-EXPOSE 3001
-
-HEALTHCHECK --interval=30s --timeout=5s --start-period=10s --retries=3 \
-  CMD wget -qO- http://localhost:3001/ || exit 1
-
-CMD ["node", "server.js"]
+CMD ["nginx", "-g", "daemon off;"]

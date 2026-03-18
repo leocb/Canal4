@@ -481,7 +481,7 @@ export const SettingsScreen = () => {
                       {i < arr.length - 1 && <ArrowRight size={12} style={{ transform: 'translateY(1px)' }} />}
                     </React.Fragment>
                   ))}
-                </strong>.
+                </strong>
               </p>
 
               {activePin ? (

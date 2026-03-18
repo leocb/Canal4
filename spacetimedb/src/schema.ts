@@ -48,31 +48,7 @@ export const UserIdentity = table(
   }
 );
 
-export const EmailLoginPin = table(
-  { name: "email_login_pin", public: true },
-  {
-    email: t.string().primaryKey(),
-    pin: t.string(),
-    attempts: t.u32(),
-    expiresAt: t.timestamp(),
-  }
-);
 
-export const LoginLockout = table(
-  { name: "login_lockout", public: true },
-  {
-    email: t.string().primaryKey(),
-    lockedUntil: t.timestamp(),
-  }
-);
-
-export const ServerConfig = table(
-  { name: "server_config", public: true },
-  {
-    id: t.u32().primaryKey(),
-    serverToken: t.string(),
-  }
-);
 
 export const Venue = table(
   { name: "venue", public: true },
@@ -253,9 +229,6 @@ export const VenueInviteToken = table(
 const spacetimedb = schema({
   User,
   UserIdentity,
-  EmailLoginPin,
-  LoginLockout,
-  ServerConfig,
   Venue,
   Channel,
   VenueMember,

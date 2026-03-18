@@ -23,7 +23,7 @@ export const SpacetimeDBProvider = ({ children }: { children: ReactNode }) => {
 
   // Unified settings source
   const stUri = getSanitized("spacetime_uri") || "ws://localhost:3000";
-  const stDb = getSanitized("spacetime_db") || "spacetimedb-node-name";
+  const stDb = getSanitized("spacetime_db") || "canal4-dev";
 
   useEffect(() => {
     console.log("[SpacetimeDBProvider] Initial Mount. Local token:", activeToken ? "present" : "absent");

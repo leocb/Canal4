@@ -1,10 +1,11 @@
 import React, { useState, useEffect } from 'react';
-import { AlertTriangle } from 'lucide-react';
+import { AlertTriangle, UserPlus, LogIn, Loader2 } from 'lucide-react';
 import { useNavigate, useLocation } from 'react-router-dom';
-import { reducers, tables } from '../module_bindings/index.ts';
-import { useReducer, useTable } from 'spacetimedb/react';
+import { reducers } from '../module_bindings/index.ts';
+import { useReducer } from 'spacetimedb/react';
 import { useAuth } from '../hooks/useAuth';
 import { useTranslation } from 'react-i18next';
+import { usePasskeys } from '../hooks/usePasskeys';
 
 export const LoginScreen = () => {
   const { t, i18n } = useTranslation();
@@ -12,115 +13,53 @@ export const LoginScreen = () => {
   const location = useLocation();
   const redirect = new URLSearchParams(location.search).get('redirect') || '/venues';
   const { user, isLoggedIn, connected } = useAuth();
-  const [email, setEmail] = useState('');
-  const [pin, setPin] = useState('');
   const [fullName, setFullName] = useState('');
   const [loading, setLoading] = useState(false);
   const [errorText, setErrorText] = useState('');
-  const [view, setView] = useState<'email' | 'pin' | 'name'>('email');
-  const [isCreatingAccount, setIsCreatingAccount] = useState(false);
+  const [view, setView] = useState<'selection' | 'name'>('selection');
 
-  const loginWithEmailPin = useReducer(reducers.loginWithEmailPin);
   const updateUserName = useReducer(reducers.updateUserName);
-  const [pins] = useTable(tables.EmailLoginPin);
-  const [lockouts] = useTable(tables.LoginLockout);
-  const [users] = useTable(tables.User);
+  const { createPasskey, authenticatePasskey } = usePasskeys();
 
-  const validateEmail = (emailStr: string) => {
-    return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(emailStr);
-  };
-
-  // If already logging in (loading=true), keep spinner until auth resolves
+  // If already logged in and has a name, navigate away
   useEffect(() => {
-    if (isLoggedIn && user?.name && !isCreatingAccount) {
-      setLoading(false);
+    if (isLoggedIn && user?.name && view !== 'name') {
       navigate(redirect, { replace: true });
+    } else if (isLoggedIn && !user?.name) {
+      setView('name');
     }
-  }, [isLoggedIn, user, navigate, redirect, isCreatingAccount]);
+  }, [isLoggedIn, user, navigate, redirect, view]);
 
-  if (isLoggedIn && user?.name && !isCreatingAccount) {
-    return null;
-  }
-  const handleEmailSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!validateEmail(email.trim())) return;
+  const handleNewUser = async () => {
     setErrorText('');
     setLoading(true);
-
     try {
-      const response = await fetch('/api/request-pin', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ email: email.trim().toLowerCase() }),
-      });
-
-      const data = await response.json();
-      if (!response.ok || data.error) {
-        throw new Error(data.error || 'Failed to send PIN');
-      }
-
-      setView('pin');
+      await createPasskey();
+      // usePasskeys calls register_new_user_with_passkey
+      // Once it returns, SpaceTimeDB should sync the identity and isLoggedIn will be true
+      // The name will be empty so it will stay in the selection -> name transition
+      setView('name');
     } catch (err: any) {
-      setErrorText(t(err.message) || t('login.error_request_pin'));
+      if (err.message !== 'login.passkey_cancelled') {
+        setErrorText(t(err.message) || t('login.error_passkey'));
+      }
     } finally {
       setLoading(false);
     }
   };
 
-  const handlePinSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!pin) return;
+  const handleHaveAccount = async () => {
     setErrorText('');
     setLoading(true);
-
     try {
-      const normalizedEmail = email.trim().toLowerCase();
-      // Check if this is a brand new account BEFORE we call the login reducer
-      const accountExists = users.some(u => u.email?.trim().toLowerCase() === normalizedEmail);
-      if (!accountExists) {
-        setIsCreatingAccount(true);
-      }
-      
-      await loginWithEmailPin({
-        email: normalizedEmail,
-        pin: pin.trim()
-      });
-
-      // Wait for SpacetimeDB to sync the state changes back to us
-      await new Promise(resolve => setTimeout(resolve, 800));
-
-      // 1. If the account didn't exist before, it's a signup - go to name screen
-      if (!accountExists) {
-        setView('name');
-        setLoading(false);
-        return;
-      }
-
-      // If we are logged in now, the useEffect will handle navigation
-      if (isLoggedIn) return;
-
-      // 2. Check for Lockout
-      const lockout = lockouts.find(l => l.email === normalizedEmail);
-      if (lockout) {
-        setLoading(false);
-        setErrorText(t('login.error_lockout'));
-        return;
-      }
-
-      // 3. Check for remaining attempts
-      const currentPin = pins.find(p => p.email === normalizedEmail);
-      if (currentPin) {
-        const remaining = 10 - currentPin.attempts;
-        setLoading(false);
-        setErrorText(t('login.error_invalid_pin', { remaining }));
-      } else {
-        // PIN might have been deleted but no lockout found (rare sync issue)
-        setLoading(false);
-        setErrorText(t('login.error_pin_generic'));
-      }
+      await authenticatePasskey();
+      // once it returns, if successful, useEffect will handle navigation
     } catch (err: any) {
+      if (err.message !== 'login.passkey_cancelled') {
+        setErrorText(t(err.message) || t('login.error_passkey'));
+      }
+    } finally {
       setLoading(false);
-      setErrorText(t(err.message) || t('login.error_login'));
     }
   };
 
@@ -136,8 +75,7 @@ export const LoginScreen = () => {
         newName: fullName.trim()
       });
       
-      setIsCreatingAccount(false); 
-      setLoading(false);
+      // Success: useAuth will have updated user.name, useEffect will navigate
     } catch (err: any) {
       setLoading(false);
       setErrorText(t(err.message) || t('login.error_update_name'));
@@ -149,7 +87,7 @@ export const LoginScreen = () => {
       <div className="glass-panel" style={{ padding: '40px', textAlign: 'center', width: '100%', maxWidth: '400px' }}>
         <h2 style={{ marginBottom: '24px', fontSize: '1.8rem' }}>{t('login.title')}</h2>
 
-        {errorText && view !== 'email' && (
+        {errorText && (
             <div style={{
               color: 'var(--error-color)',
               marginBottom: '16px',
@@ -167,68 +105,61 @@ export const LoginScreen = () => {
             </div>
         )}
 
+        {view === 'selection' && (
+          <div className="flex-col" style={{ gap: '20px' }}>
+             <button 
+                className="primary-button"
+                onClick={handleNewUser}
+                disabled={loading || !connected}
+                style={{ 
+                    display: 'flex', 
+                    alignItems: 'center', 
+                    justifyContent: 'center', 
+                    gap: '12px', 
+                    padding: '18px',
+                    fontSize: '1.1rem',
+                    background: 'linear-gradient(135deg, var(--accent-color) 0%, #7e57c2 100%)',
+                    border: 'none',
+                    boxShadow: '0 4px 15px rgba(100, 100, 255, 0.2)',
+                    transition: 'transform 0.2s, box-shadow 0.2s'
+                }}
+                onMouseEnter={(e) => { e.currentTarget.style.transform = 'translateY(-2px)'; e.currentTarget.style.boxShadow = '0 6px 20px rgba(100, 100, 255, 0.3)'; }}
+                onMouseLeave={(e) => { e.currentTarget.style.transform = 'translateY(0)'; e.currentTarget.style.boxShadow = '0 4px 15px rgba(100, 100, 255, 0.2)'; }}
+             >
+                {loading ? <Loader2 className="animate-spin" size={24} /> : <UserPlus size={24} />}
+                {t('login.new_here')}
+             </button>
 
-        {view === 'email' && (
-          <form onSubmit={handleEmailSubmit} className="flex-col">
-            <h3 style={{ marginBottom: '16px' }}>{t('login.signin_email')}</h3>
+             <button 
+                className="secondary-button"
+                onClick={handleHaveAccount}
+                disabled={loading || !connected}
+                style={{ 
+                    display: 'flex', 
+                    alignItems: 'center', 
+                    justifyContent: 'center', 
+                    gap: '12px', 
+                    padding: '18px',
+                    fontSize: '1.1rem',
+                    background: 'rgba(255,255,255,0.05)',
+                    border: '1px solid rgba(255,255,255,0.1)',
+                    backdropFilter: 'blur(10px)',
+                    transition: 'background 0.2s'
+                }}
+                onMouseEnter={(e) => { e.currentTarget.style.background = 'rgba(255,255,255,0.1)'; }}
+                onMouseLeave={(e) => { e.currentTarget.style.background = 'rgba(255,255,255,0.05)'; }}
+             >
+                {loading ? <Loader2 className="animate-spin" size={24} /> : <LogIn size={24} />}
+                {t('login.have_account')}
+             </button>
 
-            <input
-              type="email"
-              placeholder={t('login.email_placeholder')}
-              value={email}
-              onChange={(e) => {
-                setEmail(e.target.value);
-                if (errorText) setErrorText('');
-              }}
-              required
-              disabled={loading || !connected}
-              autoFocus
-            />
-
-            <button 
-              type="submit" 
-              disabled={loading || !connected || !validateEmail(email)} 
-              style={{ marginTop: '16px' }}
-            >
-              {loading ? t('login.connecting') : t('login.continue')}
-            </button>
-          </form>
-        )}
-
-        {view === 'pin' && (
-          <form onSubmit={handlePinSubmit} className="flex-col">
-            <h3 style={{ marginBottom: '8px' }}>{t('login.enter_pin')}</h3>
-            <p style={{ fontSize: '0.9rem', color: 'var(--text-secondary)', marginBottom: '16px' }}>
-              {t('login.pin_sent', { email: email })}
-            </p>
-
-
-            <input
-              type="text"
-              placeholder={t('login.pin_placeholder')}
-              value={pin}
-              onChange={(e) => setPin(e.target.value.replace(/\D/g, '').slice(0, 6))}
-              required
-              disabled={loading || !connected}
-              autoFocus
-              style={{ textAlign: 'center', fontSize: '1.5rem', letterSpacing: '4px' }}
-            />
-
-            <button type="submit" disabled={loading || !connected || pin.length < 6} style={{ marginTop: '16px' }}>
-              {loading ? t('login.verifying') : t('login.verify_login')}
-            </button>
-
-            <div style={{ marginTop: '16px' }}>
-              <a href="#" style={{ fontSize: '0.9rem' }} onClick={(e) => { 
-                e.preventDefault(); 
-                setView('email'); 
-                setPin(''); 
-                setErrorText('');
-              }}>
-                {t('login.use_different_email')}
-              </a>
-            </div>
-          </form>
+             {!connected && (
+               <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px', color: 'var(--text-secondary)', fontSize: '0.9rem', marginTop: '8px' }}>
+                 <Loader2 className="animate-spin" size={16} />
+                 {t('common.connecting')}
+               </div>
+             )}
+          </div>
         )}
 
         {view === 'name' && (
@@ -249,7 +180,11 @@ export const LoginScreen = () => {
             />
 
             <button type="submit" disabled={loading || !fullName.trim()} style={{ marginTop: '16px' }}>
-              {loading ? t('login.saving') : t('login.complete_signup')}
+              {loading ? (
+                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px' }}>
+                  <Loader2 className="animate-spin" size={18} /> {t('login.saving')}
+                </div>
+              ) : t('login.complete_signup')}
             </button>
           </form>
         )}

@@ -5,12 +5,8 @@ import { DbConnection } from "./module_bindings/index.ts";
 export const SpacetimeDBProvider = ({ children }: { children: ReactNode }) => {
   const token = localStorage.getItem("auth_token") || undefined;
 
-  // window.__ENV__ is injected at request time by Express (/env-config.js).
-  // import.meta.env.* are Vite build-time values used as a fallback for
-  // `npm run dev` (where the Express server isn't serving the HTML).
-  const env = (window as any).__ENV__ ?? {};
-  const DB_NAME: string = env.SPACETIMEDB_NAME || import.meta.env.VITE_SPACETIMEDB_NAME;
-  const SPACETIMEDB_URI: string = env.SPACETIMEDB_URI || import.meta.env.VITE_SPACETIMEDB_URI_DEV;
+  const DB_NAME: string = import.meta.env.VITE_SPACETIMEDB_NAME;
+  const SPACETIMEDB_URI: string = import.meta.env.VITE_SPACETIMEDB_URI || import.meta.env.VITE_SPACETIMEDB_URI_DEV;
 
   if (!DB_NAME) {
     throw new Error("Missing SPACETIMEDB_NAME in environment configuration. Please check your .env file.");
