@@ -31,4 +31,6 @@ RUN echo 'server { \
 
 EXPOSE 80
 
-CMD ["nginx", "-g", "daemon off;"]
+# Generate a config.js file on startup to inject runtime environment variables
+# into the browser-side code. This makes the image portable.
+CMD ["sh", "-c", "echo \"window.CONFIG = { SPACETIMEDB_NAME: '$SPACETIMEDB_NAME', SPACETIMEDB_URI: '$SPACETIMEDB_URI' };\" > /usr/share/nginx/html/config.js && exec nginx -g 'daemon off;'"]

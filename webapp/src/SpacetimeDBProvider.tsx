@@ -5,8 +5,9 @@ import { DbConnection } from "./module_bindings/index.ts";
 export const SpacetimeDBProvider = ({ children }: { children: ReactNode }) => {
   const token = localStorage.getItem("auth_token") || undefined;
 
-  const DB_NAME: string = import.meta.env.VITE_SPACETIMEDB_NAME;
-  const SPACETIMEDB_URI: string = import.meta.env.VITE_SPACETIMEDB_URI || import.meta.env.VITE_SPACETIMEDB_URI_DEV;
+  // Prefer window.CONFIG (runtime injected by Nginx) over import.meta.env (build-time)
+  const DB_NAME: string = (window as any).CONFIG?.SPACETIMEDB_NAME || import.meta.env.VITE_SPACETIMEDB_NAME;
+  const SPACETIMEDB_URI: string = (window as any).CONFIG?.SPACETIMEDB_URI || import.meta.env.VITE_SPACETIMEDB_URI || import.meta.env.VITE_SPACETIMEDB_URI_DEV;
 
   if (!DB_NAME) {
     throw new Error("Missing SPACETIMEDB_NAME in environment configuration. Please check your .env file.");

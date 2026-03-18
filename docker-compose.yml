@@ -7,8 +7,13 @@
 #
 # Usage:
 #   1. Copy .env.example to .env and fill in your values
-#   2. Build the SpacetimeDB module:  cd spacetimedb && npm run build
-#   3. docker compose up -d
+#   2. docker compose up -d
+#
+# SpacetimeDB Cloud (spacetimedb.com):
+#   If you are hosting your database on SpacetimeDB Cloud instead of locally:
+#   1. Set `SPACETIMEDB_URI` in .env to `wss://maincloud.spacetimedb.com`
+#   2. You can comment out or remove the `spacetimedb` service below.
+#   3. Use the module-init below to publish the bundle safely. This also auto updates the database if you use watchtower.
 #
 # Note: The module must be re-published when schema/reducer changes are made.
 #   Run:  docker compose run --rm module-init
@@ -33,27 +38,35 @@ services:
       start_period: 15s
 
   # ─── Module publisher (one-shot) ────────────────────────────────────────────
-  # Publishes dist/bundle.js into the running SpacetimeDB instance.
+  # Publishes compiled logic into the running SpacetimeDB instance.
   # Runs once on `docker compose up` and exits. Re-run manually after schema changes.
   module-init:
-    image: clockworklabs/spacetime:latest
+    image: ghcr.io/leocb/canal4/module-init:latest
     pull_policy: always
     depends_on:
       spacetimedb:
         condition: service_healthy
-    volumes:
-      - ./spacetimedb/dist:/module:ro
-    entrypoint: >
-      sh -c "
-        spacetime publish
-          --server http://spacetimedb:3000
-          --skip-clippy
-          --bundle /module/bundle.js
-          ${SPACETIMEDB_NAME}
-        echo 'Module published successfully.'
-      "
     environment:
       SPACETIMEDB_NAME: ${SPACETIMEDB_NAME}
+      SPACETIMEDB_SERVER: ${SPACETIMEDB_SERVER:-http://spacetimedb:3000}
+      SPACETIMEDB_IDENTITY_TOKEN: ${SPACETIMEDB_IDENTITY_TOKEN} # Get token from `spacetime login --show` on your machine.
+    entrypoint: >
+      sh -c "
+        # 1. Login if a token is provided (prevents anonymous/unauthorized publish)
+        if [ -n \"$${SPACETIMEDB_IDENTITY_TOKEN}\" ]; then
+          echo 'Importing publishing identity...'
+          spacetime login --token \"$${SPACETIMEDB_IDENTITY_TOKEN}\" --server-issued-login \"$${SPACETIMEDB_SERVER}\"
+        fi
+
+        # 2. Publish the module
+        spacetime publish \
+          --server \"$${SPACETIMEDB_SERVER}\" \
+          --skip-clippy \
+          --bundle /module/bundle.js \
+          \"$${SPACETIMEDB_NAME}\"
+        
+        echo 'Module published successfully.'
+      "
     restart: "no"
 
   # ─── Web app ────────────────────────────────────────────────────────────────
