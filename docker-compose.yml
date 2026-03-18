@@ -49,7 +49,7 @@ services:
     environment:
       SPACETIMEDB_NAME: ${SPACETIMEDB_NAME}
       SPACETIMEDB_SERVER: ${SPACETIMEDB_SERVER:-http://spacetimedb:3000}
-      SPACETIMEDB_IDENTITY_TOKEN: ${SPACETIMEDB_IDENTITY_TOKEN} # Get token from `spacetime login --show` on your machine.
+      SPACETIMEDB_IDENTITY_TOKEN: ${SPACETIMEDB_IDENTITY_TOKEN} # Get token from `spacetime login show --token` on your machine.
     entrypoint: >
       sh -c "
         # 1. Login if a token is provided (prevents anonymous/unauthorized publish)

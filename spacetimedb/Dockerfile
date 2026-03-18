@@ -1,7 +1,13 @@
 # ─── Stage 1: Build the SpacetimeDB bundle ────────────────────────────────────
-FROM node:22-alpine AS builder
+# Note: Using bookworm because the spacetime CLI binary requires glibc
+FROM node:22-bookworm AS builder
 
 WORKDIR /app
+
+# Install `spacetime` CLI 
+RUN apt-get update && apt-get install -y curl && \
+    curl -L https://get.spacetimedb.com | sh && \
+    ln -s /root/.spacetime/bin/spacetime /usr/local/bin/spacetime
 
 # Install dependencies
 COPY package*.json ./
