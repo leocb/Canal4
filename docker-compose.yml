@@ -26,7 +26,7 @@ services:
       - spacetimedb_data:/var/lib/spacetimedb
     restart: unless-stopped
     healthcheck:
-      test: ["CMD", "wget", "-qO-", "http://localhost:3000/v1/info"]
+      test: [ "CMD", "wget", "-qO-", "http://localhost:3000/v1/info" ]
       interval: 10s
       timeout: 5s
       retries: 10
@@ -58,12 +58,11 @@ services:
 
   # ─── Web app ────────────────────────────────────────────────────────────────
   webapp:
-    build:
-      context: ./webapp
-      dockerfile: Dockerfile
+    image: ghcr.io/leocb/canal4/webapp:latest
+    pull_policy: always
     ports:
       - "${WEBAPP_PORT:-3001}:80"
-    env_file: .env
+    env_file: .env # Portainer: use "stack.env" instead
     environment:
       # Runtime SpacetimeDB config (passed to Nginx/SPA)
       SPACETIMEDB_NAME: ${SPACETIMEDB_NAME}
@@ -73,7 +72,7 @@ services:
         condition: service_healthy
     restart: unless-stopped
     healthcheck:
-      test: ["CMD", "wget", "-qO-", "http://localhost:80/"]
+      test: [ "CMD", "wget", "-qO-", "http://localhost:80/" ]
       interval: 30s
       timeout: 5s
       retries: 3
