@@ -62,14 +62,15 @@ services:
           spacetime login --token "$$SPACETIMEDB_IDENTITY_TOKEN"
         fi
 
-        # 2. Publish the module using only URL servers or nicknames 
+        # 2. Publish the module using the built JS bundle directly
         echo "Publishing $$SPACETIMEDB_NAME to $$SPACETIMEDB_SERVER..."
         spacetime publish \
+          --no-config \
           --server "$$SPACETIMEDB_SERVER" \
-          --skip-clippy \
-          --bundle /module/bundle.js \
+          --js-path /module/bundle.js \
+          --yes \
           "$$SPACETIMEDB_NAME"
-
+        
         echo "Module published successfully."
     restart: "no"
 

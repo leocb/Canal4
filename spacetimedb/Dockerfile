@@ -29,9 +29,6 @@ WORKDIR /module
 COPY --from=builder /app/dist/bundle.js /module/bundle.js
 COPY package.json /module/package.json
 
-# Create a minimal spacetime.json to satisfy project detection
-RUN echo '{"module-path": ".", "server": "local"}' > /module/spacetime.json
-
 # Note: This container is intended to be used as a one-shot CLI runner.
 # The `module-init` service in docker-compose.yml will override the entrypoint.
 ENTRYPOINT ["spacetime"]

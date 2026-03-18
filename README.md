@@ -78,7 +78,7 @@ spacetime start
 cd spacetimedb
 npm install
 npm run build          # compiles TypeScript → dist/bundle.js
-spacetime publish --skip-clippy canal4-dev
+spacetime publish canal4-dev
 cd ..
 ```
 
