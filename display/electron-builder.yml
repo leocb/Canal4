@@ -18,6 +18,7 @@ asarUnpack:
 
 # ─── macOS ────────────────────────────────────────────────────────────────────
 mac:
+  entitlements: build/entitlements.mac.plist
   entitlementsInherit: build/entitlements.mac.plist
   icon: build/icon.icns
   category: public.app-category.utilities
