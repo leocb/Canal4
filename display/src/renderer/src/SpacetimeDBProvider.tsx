@@ -1,4 +1,4 @@
-import { useMemo, useEffect, useState, createContext, useContext, useCallback, type ReactNode } from "react";
+import { useMemo, useEffect, useRef, useState, createContext, useContext, useCallback, type ReactNode } from "react";
 import { SpacetimeDBProvider as Provider } from "spacetimedb/react";
 import { DbConnection } from "./module_bindings/index";
 
@@ -33,8 +33,12 @@ export const SpacetimeDBProvider = ({ children }: { children: ReactNode }) => {
   const [status, setStatus] = useState<ConnectivityStatus>("offline");
   const [error, setError] = useState<{ message: string, stack?: string } | undefined>(undefined);
   const [heartbeatError, setHeartbeatError] = useState<string | undefined>(undefined);
-  const [nextRetryIn, setNextRetryIn] = useState<number>(15);
+  const [nextRetryIn, setNextRetryIn] = useState<number>(0);
   const [reconnectKey, setReconnectKey] = useState(0);
+  const [retryCount, setRetryCount] = useState(0);
+  const [activeRetryCount, setActiveRetryCount] = useState(0);
+  const retryTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const currentBuilderRef = useRef<any>(null);
 
   const getSanitized = (key: string) => {
     const val = localStorage.getItem(key);
@@ -85,12 +89,38 @@ export const SpacetimeDBProvider = ({ children }: { children: ReactNode }) => {
     }
   }, []);
 
+  const scheduleRetry = useCallback(() => {
+    if (retryTimerRef.current) return;
+
+    setRetryCount(prev => {
+      const nextCount = prev + 1;
+      const delay = 10000; // Fixed 10s delay as requested
+      
+      setNextRetryIn(10);
+      console.log(`[STDB] Scheduling retry #${nextCount} in ${delay}ms...`);
+      
+      retryTimerRef.current = setTimeout(() => {
+        console.log(`[STDB] Executing retry #${nextCount}...`);
+        retryTimerRef.current = null;
+        setActiveRetryCount(nextCount);
+      }, delay);
+      
+      return nextCount;
+    });
+  }, []);
+
   const reconnect = useCallback(() => {
-    console.log("[Provider] Reconnection triggered via context");
+    console.log("[STDB] Reconnection triggered manually via context");
     setStatus("offline");
     setError(undefined);
     setHeartbeatError(undefined);
-    setNextRetryIn(15);
+    setNextRetryIn(0);
+    setRetryCount(0);
+    setActiveRetryCount(0);
+    if (retryTimerRef.current) {
+        clearTimeout(retryTimerRef.current);
+        retryTimerRef.current = null;
+    }
     setReconnectKey(prev => prev + 1);
   }, []);
 
@@ -98,13 +128,25 @@ export const SpacetimeDBProvider = ({ children }: { children: ReactNode }) => {
     // Postpone until we've at least tried to sync with main process file
     if (isSyncingMain) return null;
 
-    return DbConnection.builder()
-      .withUri(stUri)
+    // Force a fresh connection via ConnectionManager by including retry count in URI
+    const url = new URL(stUri);
+    url.searchParams.set("reconnectKey", reconnectKey.toString());
+    url.searchParams.set("retry", activeRetryCount.toString());
+    const finalUri = url.toString();
+
+    const b = DbConnection.builder()
+      .withUri(finalUri)
       .withDatabaseName(stDb)
       .withToken(activeToken)
       .onConnect((connection, _identity, token) => {
+        if (b !== currentBuilderRef.current) return;
+
+        console.log("[STDB] SpacetimeDB Connected.");
         setStatus("online");
         setError(undefined);
+        setRetryCount(0);
+        setActiveRetryCount(0);
+        setNextRetryIn(0);
         const currentLocal = localStorage.getItem("auth_token");
 
         // Only trigger a persistence/broadcast if it's actually new
@@ -131,6 +173,9 @@ export const SpacetimeDBProvider = ({ children }: { children: ReactNode }) => {
         ]);
       })
       .onConnectError((_ctx, err: any) => {
+        if (b !== currentBuilderRef.current) return;
+
+        console.error("[STDB] SpacetimeDB connection error:", err);
         setStatus("error");
         const errorStr = String(err);
         setError({ message: errorStr, stack: err?.stack });
@@ -149,18 +194,31 @@ export const SpacetimeDBProvider = ({ children }: { children: ReactNode }) => {
             window.api.setToken('');
           }
         }
+        
+        scheduleRetry();
       })
       .onDisconnect(() => {
-        setStatus("offline");
-      });
-  }, [activeToken, stUri, stDb, isSyncingMain, reconnectKey]);
+        if (b !== currentBuilderRef.current) {
+          console.debug("[STDB] Ignoring disconnect from old builder.");
+          return;
+        }
 
-  const providerKey = `${activeToken || 'anon'}-${stUri}-${stDb}-${reconnectKey}`;
+        console.warn("[STDB] SpacetimeDB Disconnected.");
+        setStatus("offline");
+        scheduleRetry();
+      });
+
+    return b;
+  }, [activeToken, stUri, stDb, isSyncingMain, reconnectKey, activeRetryCount, scheduleRetry]);
+
+  useEffect(() => {
+    currentBuilderRef.current = builder;
+  }, [builder]);
 
   return (
     <ConnectivityContext.Provider value={{ status, reconnect, nextRetryIn, error, heartbeatError, setHeartbeatError }}>
       {builder ? (
-        <Provider key={providerKey} connectionBuilder={builder}>
+        <Provider key={`${reconnectKey}-${activeRetryCount}`} connectionBuilder={builder}>
           {children}
         </Provider>
       ) : (
