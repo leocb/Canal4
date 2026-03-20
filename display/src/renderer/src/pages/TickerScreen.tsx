@@ -2,6 +2,7 @@ import { useEffect, useState, useRef } from 'react';
 import { useTable, useSpacetimeDB, useReducer } from 'spacetimedb/react';
 import { tables, reducers } from '../module_bindings/index';
 import { loadTickerSettings } from './SettingsScreen';
+import { useConnectivity } from '../SpacetimeDBProvider';
 
 function getAlphaFromColor(color: string): number {
     if (color.startsWith('rgba')) {
@@ -17,7 +18,8 @@ export const TickerScreen = () => {
     const [messages] = useTable(tables.Message);
     const [devices] = useTable(tables.DisplayDevice);
     const [statuses] = useTable(tables.MessageDeliveryStatus);
-    const { isActive: connected } = useSpacetimeDB();
+    const { status } = useConnectivity();
+    const connected = status === 'online';
     
     const updateStatus = useReducer(reducers.updateMessageDeliveryStatus);
     

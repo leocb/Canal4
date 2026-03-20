@@ -62,6 +62,13 @@ export const extend_session = spacetimedb.reducer(
   }
 );
 
+export const ping = spacetimedb.reducer(
+  {},
+  (_ctx) => {
+    // No-op for connectivity check
+  }
+);
+
 export const update_user_name = spacetimedb.reducer(
   { userId: t.u64(), newName: t.string() },
   (ctx, { userId, newName }) => {

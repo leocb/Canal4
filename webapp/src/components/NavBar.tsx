@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
-import { Bell, LogOut, Pencil, Languages } from 'lucide-react';
+import { Bell, LogOut, Languages, Pencil } from 'lucide-react';
 import { useAuth } from '../hooks/useAuth';
 import { useTranslation } from 'react-i18next';
 

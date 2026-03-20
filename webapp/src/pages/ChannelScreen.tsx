@@ -145,15 +145,17 @@ export const ChannelScreen = () => {
   const connectedDevices = (displayDevices as any[]).filter(d => d.venueId === venue.venueId);
   const hasDevices = connectedDevices.length > 0;
 
-  const isNodeConnected = (device: any) => {
-    if (!device.lastConnectedAt) return false;
+  const getNodeStatus = (device: any): 'online' | 'unstable' | 'offline' => {
+    if (!device.lastConnectedAt) return 'offline';
     try {
       const lastActive = Number(BigInt(device.lastConnectedAt.microsSinceUnixEpoch) / 1000n);
       const now = Date.now();
-      // Heartbeat is 5s, threshold is 17s
-      return (now - lastActive) < 17000;
+      const diff = now - lastActive;
+      if (diff < 7000) return 'online';
+      if (diff < 17000) return 'unstable';
+      return 'offline';
     } catch {
-      return false;
+      return 'offline';
     }
   };
 
@@ -179,8 +181,8 @@ export const ChannelScreen = () => {
 
     const statuses = connectedDevices.map(d => ({
       status: getDeliveryStatus(messageId, d.displayId),
-      connected: isNodeConnected(d)
-    })).filter(s => s.connected).map(s => s.status);
+      nodeStatus: getNodeStatus(d)
+    })).filter(s => s.nodeStatus !== 'offline').map(s => s.status);
 
     if (statuses.length === 0) return isMe ? 'var(--accent-color)' : 'rgba(255, 255, 255, 0.15)';
 
@@ -196,27 +198,32 @@ export const ChannelScreen = () => {
 
 
   const NodeIndicator = ({ device }: { device: any }) => {
-    const connected = isNodeConnected(device);
+    const status = getNodeStatus(device);
     const lastTime = device.lastConnectedAt?.microsSinceUnixEpoch?.toString();
+
+    const color = status === 'online' ? '#10B981' : status === 'unstable' ? '#F59E0B' : '#64748b';
+    const shadowSize = status === 'unstable' ? '8px' : '8px';
+    const shadowOpacity = status === 'unstable' ? '0.5' : '0.4';
+    const shadowColor = status === 'online' ? `rgba(16,185,129,${shadowOpacity})` : status === 'unstable' ? `rgba(245,158,11,${shadowOpacity})` : 'transparent';
 
     // We use the lastConnectedAt value as a key to trigger the pulse-ring animation whenever it updates
     return (
       <div style={{ position: 'relative', width: '8px', height: '8px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-        {connected && (
+        {status === 'online' && (
           <div key={lastTime} className="pulse-ring" />
         )}
         <div style={{
           width: '8px', height: '8px', borderRadius: '50%',
-          background: connected ? '#10B981' : '#64748b',
-          boxShadow: connected ? '0 0 8px rgba(16,185,129,0.4)' : 'none',
+          background: color,
+          boxShadow: status !== 'offline' ? `0 0 ${shadowSize} ${shadowColor}` : 'none',
           zIndex: 1
         }} />
       </div>
     );
   };
 
-  const StatusIcon = ({ status, isConnected, deviceName }: { status: string | undefined, isConnected: boolean, deviceName: string }) => {
-    if (!isConnected) {
+  const StatusIcon = ({ status, nodeStatus, deviceName }: { status: string | undefined, nodeStatus: 'online' | 'unstable' | 'offline', deviceName: string }) => {
+    if (nodeStatus === 'offline') {
       return (
         <span title={`${deviceName}: ${t('node_status.offline')}`}>
           <WifiOff size={14} style={{ color: 'var(--text-secondary)', opacity: 0.5 }} />
@@ -255,7 +262,7 @@ export const ChannelScreen = () => {
     setContextMsg(null);
     const hasActiveDevices = (displayDevices as any[])
       .filter(d => d.venueId === venue?.venueId)
-      .some(isNodeConnected);
+      .some(d => getNodeStatus(d) !== 'offline');
 
     if (!hasActiveDevices) {
       if (!window.confirm(t('channel.repeat_no_node_confirm'))) {
@@ -341,7 +348,8 @@ export const ChannelScreen = () => {
             </div>
             <div style={{ display: 'flex', gap: '12px', overflowX: 'auto', paddingBottom: '8px' }}>
               {connectedDevices.map((d: any) => {
-                const connected = isNodeConnected(d);
+                const status = getNodeStatus(d);
+                const isOffline = status === 'offline';
                 return (
                   <div
                     key={d.displayId.toString()}
@@ -353,15 +361,15 @@ export const ChannelScreen = () => {
                       alignItems: 'center',
                       justifyContent: 'space-between',
                       background: 'rgba(255,255,255,0.02)',
-                      border: `1px solid ${connected ? 'rgba(16,185,129,0.2)' : 'rgba(255,255,255,0.05)'}`
+                      border: `1px solid ${status === 'online' ? 'rgba(16,185,129,0.2)' : status === 'unstable' ? 'rgba(245,158,11,0.2)' : 'rgba(255,255,255,0.05)'}`
                     }}
                   >
                     <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
                       <NodeIndicator device={d} />
                       <div>
                         <div style={{ fontSize: '0.85rem', fontWeight: 600 }}>{d.name}</div>
-                        <div style={{ fontSize: '0.7rem', color: 'var(--text-secondary)' }}>
-                          {connected ? t('channel.connected') : t('channel.offline')}
+                        <div style={{ fontSize: '0.7rem', color: isOffline ? 'var(--text-secondary)' : status === 'online' ? '#10B981' : '#F59E0B' }}>
+                          {status === 'online' ? t('channel.connected') : status === 'unstable' ? t('node_status.unstable') : t('channel.offline')}
                         </div>
                       </div>
                     </div>
@@ -435,7 +443,7 @@ export const ChannelScreen = () => {
                           <StatusIcon
                             key={d.displayId.toString()}
                             status={getDeliveryStatus(msg.messageId, d.displayId)}
-                            isConnected={isNodeConnected(d)}
+                            nodeStatus={getNodeStatus(d)}
                             deviceName={d.name}
                           />
                         ))}

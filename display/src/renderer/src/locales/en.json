@@ -5,7 +5,10 @@
     "desktop_name": "Canal4 Display node"
   },
   "common": {
-    "times": "times"
+    "times": "times",
+    "connecting": "Connecting to Canal4...",
+    "error_network": "Network error. Check your connection or the server status.",
+    "connection_error": "Connection Error"
   },
   "settings": {
     "title": "Canal4 Display node Settings",
@@ -18,7 +21,11 @@
     "common": {
       "quit": "Quit Canal4",
       "back": "Back",
-      "language": "Language"
+      "connecting": "Connecting...",
+      "language": "Language",
+      "venue_default_name": "Venue #{{id}}",
+      "template_default_name": "Template #{{id}}",
+      "user_default_name": "User #{{id}}"
     },
     "languages": {
       "en": "English",
@@ -75,6 +82,12 @@
       "fast": "Fast",
       "repeat_count": "Repeat Count",
       "times": "times",
+      "font_monospace": "Monospace",
+      "font_inter": "Inter",
+      "font_georgia": "Georgia",
+      "font_impact": "Impact",
+      "font_courier": "Courier New",
+      "test_message_sample": "Sample Message: Testing ticker settings! ({{time}})",
       "test_banner": "Show Sample Ticker",
       "save_settings": "Save Settings",
       "monitor": "Monitor",

@@ -314,3 +314,16 @@ button.icon-button:hover {
   pointer-events: none;
   animation: pulse-ring 1.5s cubic-bezier(0.21, 0.53, 0.56, 0.8) forwards;
 }
+
+@keyframes spin {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+.animate-spin {
+  animation: spin 1s linear infinite;
+}

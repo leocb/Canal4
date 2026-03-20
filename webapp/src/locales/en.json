@@ -19,7 +19,7 @@
     "name_placeholder": "Your Full Name",
     "complete_signup": "Complete Sign-up",
     "saving": "Saving...",
-    "loading": "Loading...",
+    "loading": "Synchronizing with Canal4...",
     "error_login": "Error during login",
     "error_update_name": "Error updating name"
   },
@@ -46,7 +46,12 @@
     "quit": "Quit Canal4",
     "loading_profile": "Loading Profile...",
     "connection_error": "Connection Error",
-    "connecting": "Connecting to Canal4..."
+    "error_network": "Network error. Check your connection or the server status.",
+    "connecting": "Connecting to Canal4...",
+    "reconnecting_title": "Reconnecting to Canal4...",
+    "reconnecting_helper": "Connection lost. Attempting to restore...",
+    "retrying_in": "Retrying in",
+    "try_now": "Try connect now"
   },
   "languages": {
     "en": "English",
@@ -54,6 +59,7 @@
   },
   "node_status": {
     "offline": "Offline",
+    "unstable": "Unstable",
     "unknown": "Unknown",
     "waiting": "Waiting",
     "in_progress": "In Progress",

@@ -61,12 +61,18 @@ export const DesktopDisplaySyncScreen = () => {
     );
   }
 
-  const isNodeConnected = (device: any) => {
-    if (!device.lastConnectedAt) return false;
-    const lastActive = Number(device.lastConnectedAt.microsSinceUnixEpoch / 1000n);
-    const now = Date.now();
-    // Heartbeat is 5s, threshold is 17s
-    return (now - lastActive) < 17000;
+  const getNodeStatus = (device: any): 'online' | 'unstable' | 'offline' => {
+    if (!device.lastConnectedAt) return 'offline';
+    try {
+      const lastActive = Number(BigInt(device.lastConnectedAt.microsSinceUnixEpoch) / 1000n);
+      const now = Date.now();
+      const diff = now - lastActive;
+      if (diff < 7000) return 'online';
+      if (diff < 17000) return 'unstable';
+      return 'offline';
+    } catch {
+      return 'offline';
+    }
   };
 
   const handleDelete = async (device: any) => {
@@ -90,18 +96,21 @@ export const DesktopDisplaySyncScreen = () => {
   };
 
   const NodeIndicator = ({ device }: { device: any }) => {
-    const connected = isNodeConnected(device);
+    const status = getNodeStatus(device);
     const lastTime = device.lastConnectedAt?.microsSinceUnixEpoch?.toString();
     
+    const color = status === 'online' ? '#10B981' : status === 'unstable' ? '#F59E0B' : '#64748b';
+    const shadow = status === 'online' ? '0 0 10px rgba(16,185,129,0.5)' : status === 'unstable' ? '0 0 10px rgba(245,158,11,0.5)' : 'none';
+
     return (
       <div style={{ position: 'relative', width: '10px', height: '10px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-        {connected && (
+        {status === 'online' && (
           <div key={lastTime} className="pulse-ring" />
         )}
         <div style={{ 
           width: '10px', height: '10px', borderRadius: '50%', 
-          background: connected ? '#10B981' : '#64748b',
-          boxShadow: connected ? '0 0 10px rgba(16,185,129,0.5)' : 'none',
+          background: color,
+          boxShadow: shadow,
           zIndex: 1
         }} />
       </div>
@@ -134,7 +143,10 @@ export const DesktopDisplaySyncScreen = () => {
             </div>
           ) : (
             venueDevices.map(device => {
-              const connected = isNodeConnected(device);
+              const status = getNodeStatus(device);
+              const statusColor = status === 'online' ? '#10B981' : status === 'unstable' ? '#F59E0B' : 'var(--text-secondary)';
+              const statusLabel = status === 'online' ? t('channel.connected') : status === 'unstable' ? t('node_status.unstable') : t('channel.offline');
+
               return (
                 <div 
                   key={device.displayId.toString()} 
@@ -151,12 +163,12 @@ export const DesktopDisplaySyncScreen = () => {
                       <div className="flex-row" style={{ gap: '12px', marginTop: '6px', alignItems: 'center' }}>
                         <span style={{ 
                           fontSize: '0.75rem', 
-                          color: connected ? '#10B981' : 'var(--text-secondary)',
+                          color: statusColor,
                           fontWeight: 600,
                           textTransform: 'uppercase',
                           letterSpacing: '0.02em'
                         }}>
-                          {connected ? t('channel.connected') : t('channel.offline')}
+                          {statusLabel}
                         </span>
                         <span style={{ fontSize: '0.75rem', color: 'rgba(255,255,255,0.1)' }}>|</span>
                         <span style={{ fontSize: '0.8rem', color: 'var(--text-secondary)' }}>

@@ -5,7 +5,10 @@
     "desktop_name": "Nó de Display Canal4"
   },
   "common": {
-    "times": "vezes"
+    "times": "vezes",
+    "connecting": "Conectando ao Canal4...",
+    "error_network": "Erro de rede. Verifique sua conexão ou o status do servidor.",
+    "connection_error": "Erro de Conexão"
   },
   "settings": {
     "title": "Configurações do Nó de Display Canal4",
@@ -18,7 +21,10 @@
     "common": {
       "quit": "Sair do Canal4",
       "back": "Voltar",
-      "language": "Idioma"
+      "language": "Idioma",
+      "venue_default_name": "Estabelecimento #{{id}}",
+      "template_default_name": "Modelo #{{id}}",
+      "user_default_name": "Usuário #{{id}}"
     },
     "languages": {
       "en": "English",
@@ -75,6 +81,12 @@
       "fast": "Rápido",
       "repeat_count": "Contagem de Repetição",
       "times": "vezes",
+      "font_monospace": "Monoespaçada",
+      "font_inter": "Inter",
+      "font_georgia": "Georgia",
+      "font_impact": "Impact",
+      "font_courier": "Courier New",
+      "test_message_sample": "Mensagem de Exemplo: Testando configurações! ({{time}})",
       "test_banner": "Mostrar Banner de Teste",
       "save_settings": "Salvar Configurações",
       "monitor": "Monitor",

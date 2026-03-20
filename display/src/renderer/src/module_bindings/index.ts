@@ -51,6 +51,7 @@ import ExtendSessionReducer from "./extend_session_reducer";
 import JoinVenueReducer from "./join_venue_reducer";
 import LeaveVenueReducer from "./leave_venue_reducer";
 import LoginWithPasskeyReducer from "./login_with_passkey_reducer";
+import PingReducer from "./ping_reducer";
 import RegisterDisplayToVenueReducer from "./register_display_to_venue_reducer";
 import RegisterNewUserWithPasskeyReducer from "./register_new_user_with_passkey_reducer";
 import RegisterPasskeyReducer from "./register_passkey_reducer";
@@ -286,6 +287,7 @@ const reducersSchema = __reducers(
   __reducerSchema("join_venue", JoinVenueReducer),
   __reducerSchema("leave_venue", LeaveVenueReducer),
   __reducerSchema("login_with_passkey", LoginWithPasskeyReducer),
+  __reducerSchema("ping", PingReducer),
   __reducerSchema("register_display_to_venue", RegisterDisplayToVenueReducer),
   __reducerSchema("register_new_user_with_passkey", RegisterNewUserWithPasskeyReducer),
   __reducerSchema("register_passkey", RegisterPasskeyReducer),

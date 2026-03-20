@@ -1,80 +1,55 @@
-import { Routes, Route, Navigate, useLocation, Outlet } from "react-router-dom";
-import { useEffect } from "react";
-import { useSpacetimeDB } from "spacetimedb/react";
-import NavBar from "./components/NavBar";
-import { useAuth } from "./hooks/useAuth";
-import { useReducer } from "spacetimedb/react";
-import { reducers } from "./module_bindings/index.ts";
-import { useTranslation } from 'react-i18next';
+import { useEffect } from 'react';
+import { Routes, Route, Navigate } from 'react-router-dom';
+import { useReducer } from 'spacetimedb/react';
+import { reducers } from './module_bindings';
+import { SpacetimeDBProvider } from './SpacetimeDBProvider';
+import { useConnectivity } from './hooks/useConnectivity';
+import { useAuth } from './hooks/useAuth';
+import NavBar from './components/NavBar';
+import ReconnectingOverlay from './components/ReconnectingOverlay';
+import ProtectedRoute from './components/ProtectedRoute';
 
-import { LoginScreen } from "./pages/LoginScreen";
-import { VenuesListScreen } from "./pages/VenuesListScreen";
-import { VenueChannelsScreen } from "./pages/VenueChannelsScreen";
-import { ChannelScreen } from "./pages/ChannelScreen";
-import { DesktopDisplaySyncScreen } from "./pages/DesktopDisplaySyncScreen";
-import { NewVenueScreen } from "./pages/NewVenueScreen";
-import { NewChannelScreen } from "./pages/NewChannelScreen";
-import { AddNodeScreen } from "./pages/AddNodeScreen";
-import { JoinVenueScreen } from "./pages/JoinVenueScreen";
-import { VenueSettingsScreen } from "./pages/VenueSettingsScreen";
-import { VenuePermissionsScreen } from "./pages/VenuePermissionsScreen";
-import { VenueMemberScreen } from "./pages/VenueMemberScreen";
-import { ChannelSettingsScreen } from "./pages/ChannelSettingsScreen";
-import { ChannelTemplatesScreen } from "./pages/ChannelTemplatesScreen";
-import { ChannelTemplateEditScreen } from "./pages/ChannelTemplateEditScreen";
-import { SendMessageScreen } from "./pages/SendMessageScreen";
-import { ProfileScreen } from "./pages/ProfileScreen";
+// Named imports for screen components
+import { LoginScreen } from './pages/LoginScreen';
+import { ProfileScreen } from './pages/ProfileScreen';
+import { VenuesListScreen } from './pages/VenuesListScreen';
+import { NewVenueScreen } from './pages/NewVenueScreen';
+import { VenueChannelsScreen } from './pages/VenueChannelsScreen';
+import { VenueSettingsScreen } from './pages/VenueSettingsScreen';
+import { VenuePermissionsScreen } from './pages/VenuePermissionsScreen';
+import { VenueMemberScreen } from './pages/VenueMemberScreen';
+import { NewChannelScreen } from './pages/NewChannelScreen';
+import { ChannelScreen } from './pages/ChannelScreen';
+import { SendMessageScreen } from './pages/SendMessageScreen';
+import { ChannelSettingsScreen } from './pages/ChannelSettingsScreen';
+import { ChannelTemplatesScreen } from './pages/ChannelTemplatesScreen';
+import { ChannelTemplateEditScreen } from './pages/ChannelTemplateEditScreen';
+import { JoinVenueScreen } from './pages/JoinVenueScreen';
+import { DesktopDisplaySyncScreen } from './pages/DesktopDisplaySyncScreen';
+import { AddNodeScreen } from './pages/AddNodeScreen';
 
-function ProtectedRoute() {
-  const { t } = useTranslation();
-  const { isReady, isLoggedIn } = useAuth();
-  const location = useLocation();
-
-  if (!isReady) {
-    return (
-      <div className="app-container empty-state" style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center' }}>
-        <h2>{t('common.loading_profile')}</h2>
-        <div style={{ marginTop: '16px', borderTop: '2px solid var(--accent-color)', width: '40px', borderRadius: '2px', animation: 'spin 1s linear infinite' }}></div>
-      </div>
-    );
-  }
-
-  if (!isLoggedIn) {
-    return <Navigate to={`/login?redirect=${encodeURIComponent(location.pathname + location.search)}`} replace />;
-  }
-
-  return <Outlet />;
-}
-
-function App() {
-  const { t } = useTranslation();
-  const { isActive: connected, connectionError: error } = useSpacetimeDB();
+// Inner content that uses SpacetimeDB context
+function AppContent() {
+  const { status, nextRetryIn, reconnect, connectionError, hasAttemptFailed } = useConnectivity();
   const { isLoggedIn } = useAuth();
   const extendSession = useReducer(reducers.extendSession);
 
   // Extend session on mount/re-connect if logged in
   useEffect(() => {
-    if (connected && isLoggedIn) {
-      console.log("Refreshing session...");
+    if (status === 'online' && isLoggedIn) {
       extendSession();
     }
-  }, [connected, isLoggedIn]);
+  }, [status, isLoggedIn, extendSession]);
 
-  if (error) {
+  // Show the friendly overlay for BOTH initial loading and reconnection
+  if (status !== 'online') {
     return (
-      <div className="app-container empty-state">
-        <h2 style={{color: "var(--error-color)"}}>{t('common.connection_error')}</h2>
-        <p style={{ marginTop: '12px' }}>{t(error.message)}</p>
-      </div>
-    );
-  }
-
-  if (!connected) {
-    return (
-      <div className="app-container empty-state" style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center' }}>
-        <h2>{t('common.connecting')}</h2>
-        <div style={{ marginTop: '16px', borderTop: '2px solid var(--accent-color)', width: '40px', borderRadius: '2px', animation: 'spin 1s linear infinite' }}></div>
-      </div>
+      <ReconnectingOverlay 
+        nextRetryIn={nextRetryIn} 
+        isInitialLoad={!hasAttemptFailed}
+        onRetryNow={reconnect}
+        error={connectionError}
+      />
     );
   }
 
@@ -105,6 +80,14 @@ function App() {
         </Route>
       </Routes>
     </>
+  );
+}
+
+function App() {
+  return (
+    <SpacetimeDBProvider>
+      <AppContent />
+    </SpacetimeDBProvider>
   );
 }
 

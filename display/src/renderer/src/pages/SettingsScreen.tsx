@@ -1,9 +1,9 @@
 import React, { useState, useEffect, useMemo, useRef } from 'react';
 import { X, ArrowRight, Languages } from 'lucide-react';
-import { useTable, useReducer, useSpacetimeDB } from 'spacetimedb/react';
+import { useTable, useReducer } from 'spacetimedb/react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { tables, reducers } from '../module_bindings';
-import { useSpacetimeError } from '../SpacetimeDBProvider';
+import { useConnectivity } from '../SpacetimeDBProvider';
 import { useTranslation } from 'react-i18next';
 
 
@@ -123,8 +123,8 @@ function hexAlphaToRgba(hex: string, alpha: number): string {
 // --- Component ---
 export const SettingsScreen = () => {
   const { t, i18n } = useTranslation();
-  const { isActive: connected, connectionError } = useSpacetimeDB();
-  useSpacetimeError();
+  const { status, error: connectionError, reconnect, heartbeatError, nextRetryIn } = useConnectivity();
+  const connected = status === 'online';
   const [messages] = useTable(tables.Message);
   const [venues] = useTable(tables.Venue);
   const [channels] = useTable(tables.Channel);
@@ -206,10 +206,10 @@ export const SettingsScreen = () => {
     .sort((a, b) => Number(b.sentAt.microsSinceUnixEpoch - a.sentAt.microsSinceUnixEpoch))
     .slice(0, 50), [messages, pairedChannelIds]);
 
-  const getVenueName = (id: bigint) => venues.find(v => v.venueId === id)?.name ?? `Venue #${id}`;
+  const getVenueName = (id: bigint) => venues.find(v => v.venueId === id)?.name ?? t('common.venue_default_name', { id: id.toString() });
   const getTemplateName = (id?: bigint | null) =>
-    id ? (templates.find(t => t.templateId === id)?.name ?? `Template #${id}`) : t('settings.logs.manual');
-  const getUserName = (id: bigint) => users.find(u => u.userId === id)?.name ?? `User #${id}`;
+    id ? (templates.find(t => t.templateId === id)?.name ?? t('common.template_default_name', { id: id.toString() })) : t('settings.logs.manual');
+  const getUserName = (id: bigint) => users.find(u => u.userId === id)?.name ?? t('common.user_default_name', { id: id.toString() });
   const getStatus = (messageId: any, deviceId: any) => {
     const mid = BigInt(messageId);
     const did = BigInt(deviceId);
@@ -264,7 +264,7 @@ export const SettingsScreen = () => {
     if (newIds.length > 0 && prevDeviceIds.size > 0) {
       // A new device was just added — find the venue name
       const newDevice = myDevices.find(d => newIds.includes(d.displayId.toString()));
-      const venueName = newDevice ? getVenueName(newDevice.venueId) : 'a venue';
+      const venueName = newDevice ? getVenueName(newDevice.venueId) : t('common.venue_default_name', { id: '?' });
       setNewPairingToast(t('settings.pairing.toast_success', { venue: venueName, name: newDevice?.name }));
       // Auto-dismiss after 6s
       setTimeout(() => setNewPairingToast(null), 6000);
@@ -288,24 +288,23 @@ export const SettingsScreen = () => {
   }, [tickerSettings.scrollSpeed, tickerSettings.fontSize, tickerSettings.fontFamily]);
 
   const FONT_OPTIONS = [
-    { value: 'monospace', label: 'Monospace' },
-    { value: 'Inter, sans-serif', label: 'Inter' },
-    { value: 'Georgia, serif', label: 'Georgia' },
-    { value: 'Impact, sans-serif', label: 'Impact' },
-    { value: 'Courier New, monospace', label: 'Courier New' },
+    { value: 'monospace', label: t('settings.display.font_monospace') },
+    { value: 'Inter, sans-serif', label: t('settings.display.font_inter') },
+    { value: 'Georgia, serif', label: t('settings.display.font_georgia') },
+    { value: 'Impact, sans-serif', label: t('settings.display.font_impact') },
+    { value: 'Courier New, monospace', label: t('settings.display.font_courier') },
   ];
 
   const handleSaveSpacetimeSettings = () => {
     localStorage.setItem("spacetime_uri", stUri);
     localStorage.setItem("spacetime_db", stDb);
-    window.location.reload();
+    reconnect();
   };
 
   const handleShowSample = () => {
-    // Clear first to ensure the storage event fires even if the value is the same
     localStorage.removeItem('test_message');
     setTimeout(() => {
-      localStorage.setItem('test_message', 'Sample Message: Testing ticker settings! (' + new Date().toLocaleTimeString() + ')');
+      localStorage.setItem('test_message', t('settings.display.test_message_sample', { time: new Date().toLocaleTimeString() }));
     }, 10);
   };
 
@@ -324,10 +323,10 @@ export const SettingsScreen = () => {
           <span style={{ fontSize: '1.1rem', fontWeight: 700, letterSpacing: '-0.02em' }}>{t('app.desktop_name')}</span>
 
           {/* DB connection status — independent */}
-          <div style={{ display: 'flex', alignItems: 'center', gap: '6px', background: 'rgba(255,255,255,0.05)', border: `1px solid ${connected ? 'rgba(16,185,129,0.3)' : 'rgba(239,68,68,0.3)'}`, borderRadius: '20px', padding: '3px 10px 3px 8px' }}>
-            <div style={{ width: '6px', height: '6px', borderRadius: '50%', background: connected ? '#10B981' : '#EF4444', boxShadow: `0 0 5px ${connected ? '#10B981' : '#EF4444'}`, flexShrink: 0 }} />
-            <span style={{ fontSize: '0.72rem', fontWeight: 600, color: connected ? '#10B981' : '#EF4444' }}>
-              {connected ? t('settings.connection.status_connected') : t('settings.connection.status_offline')}
+          <div style={{ display: 'flex', alignItems: 'center', gap: '6px', background: 'rgba(255,255,255,0.05)', border: `1px solid ${connected ? 'rgba(16,185,129,0.3)' : status === 'error' ? 'rgba(239,68,68,0.3)' : 'rgba(245,158,11,0.3)'}`, borderRadius: '20px', padding: '3px 10px 3px 8px' }}>
+            <div style={{ width: '6px', height: '6px', borderRadius: '50%', background: connected ? '#10B981' : status === 'error' ? '#EF4444' : '#F59E0B', boxShadow: `0 0 5px ${connected ? '#10B981' : status === 'error' ? '#EF4444' : '#F59E0B'}`, flexShrink: 0 }} />
+            <span style={{ fontSize: '0.72rem', fontWeight: 600, color: connected ? '#10B981' : status === 'error' ? '#EF4444' : '#F59E0B' }}>
+              {connected ? t('settings.connection.status_connected') : status === 'error' ? t('settings.connection.status_offline') : `${t('common.connecting')} (${nextRetryIn}s)`}
             </span>
           </div>
 
@@ -483,6 +482,19 @@ export const SettingsScreen = () => {
                   ))}
                 </strong>
               </p>
+
+              {heartbeatError && (
+                <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '20px', padding: '10px 14px', background: 'rgba(239,68,68,0.08)', border: '1px solid rgba(239,68,68,0.2)', borderRadius: '10px' }}>
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#EF4444" strokeWidth="2.5">
+                    <circle cx="12" cy="12" r="10" />
+                    <line x1="12" y1="8" x2="12" y2="12" />
+                    <line x1="12" y1="16" x2="12.01" y2="16" />
+                  </svg>
+                  <span style={{ fontSize: '0.8rem', color: '#EF4444', fontWeight: 500 }}>
+                    {t(heartbeatError.startsWith('api_errors.') ? heartbeatError : `api_errors.${heartbeatError}`, { defaultValue: heartbeatError })}
+                  </span>
+                </div>
+              )}
 
               {activePin ? (
                 <div style={{ textAlign: 'center', padding: '24px', background: 'rgba(59,130,246,0.08)', borderRadius: '12px', border: '1px solid rgba(59,130,246,0.2)' }}>
