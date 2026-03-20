@@ -13,16 +13,16 @@
   "settings": {
     "title": "Configurações do Nó de Display Canal4",
     "tabs": {
-      "logs": "Registro de Atividades",
-      "pairing": "Emparelhamento",
-      "settings": "Configurações de Display",
+      "logs": "Mensagens",
+      "pairing": "Vincular",
+      "settings": "Configurações",
       "general": "Geral"
     },
     "common": {
       "quit": "Sair do Canal4",
       "back": "Voltar",
       "language": "Idioma",
-      "venue_default_name": "Estabelecimento #{{id}}",
+      "venue_default_name": "Local #{{id}}",
       "template_default_name": "Modelo #{{id}}",
       "user_default_name": "Usuário #{{id}}"
     },
@@ -33,7 +33,7 @@
     "logs": {
       "title": "Mensagens Recentes",
       "no_messages": "Nenhuma Mensagem Ainda",
-      "no_messages_helper": "Mensagens de locais emparelhados aparecerão aqui.",
+      "no_messages_helper": "Mensagens de locais vinculados aparecerão aqui.",
       "manual": "Manual",
       "by_user": "por {{name}}",
       "status": {
@@ -46,28 +46,26 @@
       }
     },
     "connection": {
-      "title": "Conexão SpacetimeDB",
+      "title": "Spacetime DB",
       "save_reload": "Salvar e Recarregar",
       "host_uri": "URI do Host",
-      "restart_helper": "Reinicie o app para aplicar as mudanças de URI.",
       "db_name": "Nome do Banco de Dados",
       "device_id": "ID do Dispositivo",
-      "status_connected": "DB Conectado",
-      "status_offline": "DB Offline",
+      "status_connected": "Conectado",
+      "status_offline": "Sem conexão",
       "waiting_device_id": "Aguardando ID do dispositivo…",
       "error_title": "Erro de Conexão",
-      "stack_trace": "Rastro da pilha (Stack trace)",
-      "fix_localhost": "Corrigir: Substituir localhost → 127.0.0.1 e Recarregar",
+      "stack_trace": "Stack trace",
       "reset_auth": "Redefinir Token de Autenticação",
-      "reset_confirm": "Redefinir token de autenticação e recarregar?",
-      "reset_helper": "Se você vir um erro 403, sua identidade pode ser inválida. Redefinir a identidade e os dados pode ajudar."
+      "reset_confirm": "Redefinir token de autenticação e recarregar? Isso removerá todos os vinculos ativos.",
+      "reset_helper": "Se observar um erro 403 (Não autorizado), sua identidade pode estar inválida. Redefinir a identidade e os dados pode ajudar."
     },
     "display": {
       "position": "Posição do Banner",
       "top": "Topo",
-      "bottom": "Baixo",
-      "font": "Família da Fonte",
-      "font_size": "Tamanho da Fonte",
+      "bottom": "Rodapé",
+      "font": "Fonte",
+      "font_size": "Tamanho",
       "font_weight": "Peso",
       "font_weight_regular": "Regular",
       "font_weight_semibold": "Semi-Negrito",
@@ -75,12 +73,11 @@
       "bg_color": "Cor de Fundo",
       "fg_color": "Cor do Texto",
       "alpha": "ALFA",
-      "opacity": "Opacidade",
       "motion": "Movimento",
       "scroll_speed": "Velocidade de Rolagem (px/s)",
       "slow": "Lento",
       "fast": "Rápido",
-      "repeat_count": "Contagem de Repetição",
+      "repeat_count": "Repetição de mensagens",
       "times": "vezes",
       "font_monospace": "Monoespaçada",
       "font_inter": "Inter",
@@ -88,16 +85,14 @@
       "font_impact": "Impact",
       "font_courier": "Courier New",
       "test_message_sample": "Mensagem de Exemplo: Testando configurações! ({{time}})",
-      "test_banner": "Mostrar Banner de Teste",
-      "save_settings": "Salvar Configurações",
+      "test_banner": "Exibir mensagem de teste",
       "monitor": "Monitor",
       "screen_position": "Posição na Tela",
       "typography": "Tipografia",
       "colors": "Cores",
-      "preview": "Visualização",
+      "preview": "Pré-visualização",
       "sample_text": "Amostra: Bem-vindo ao Canal4!",
-      "rename_node": "Renomear nó de exibição",
-      "delete_node": "Excluir Nó de Exibição"
+      "delete_node": "Excluir Vinculo"
     },
     "pairing": {
       "toast_success": "Emparelhado com \"{{venue}}\" como \"{{name}}\"",

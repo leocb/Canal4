@@ -13,9 +13,9 @@
   "settings": {
     "title": "Canal4 Display node Settings",
     "tabs": {
-      "logs": "Activity Logs",
+      "logs": "Messages",
       "pairing": "Pairing",
-      "settings": "Display Settings",
+      "settings": "Settings",
       "general": "General"
     },
     "common": {
@@ -47,21 +47,19 @@
       }
     },
     "connection": {
-      "title": "SpacetimeDB Connection",
+      "title": "Spacetime DB",
       "save_reload": "Save & Reload",
       "host_uri": "Host URI",
-      "restart_helper": "Restart the app to apply URI changes.",
       "db_name": "Database Name",
       "device_id": "Device ID",
-      "status_connected": "DB Connected",
-      "status_offline": "DB Offline",
+      "status_connected": "Connected",
+      "status_offline": "Offline",
       "waiting_device_id": "Waiting for device ID…",
       "error_title": "Connection Error",
       "stack_trace": "Stack trace",
-      "fix_localhost": "Fix: Replace localhost → 127.0.0.1 & Reload",
       "reset_auth": "Reset Auth Token",
-      "reset_confirm": "Reset authentication token and reload?",
-      "reset_helper": "If you see a 403 error, your identity might be invalid. Resetting identity and data might help."
+      "reset_confirm": "Reset authentication token and reload? This will remove all active pairings.",
+      "reset_helper": "If you see a 403 error (Unauthorized), your identity might be invalid. Resetting identity and data might help."
     },
     "display": {
       "position": "Banner Position",
@@ -76,7 +74,6 @@
       "bg_color": "Background Color",
       "fg_color": "Text Color",
       "alpha": "ALPHA",
-      "opacity": "Opacity",
       "motion": "Motion",
       "scroll_speed": "Scroll Speed (px/s)",
       "slow": "Slow",
@@ -89,16 +86,14 @@
       "font_impact": "Impact",
       "font_courier": "Courier New",
       "test_message_sample": "Sample Message: Testing ticker settings! ({{time}})",
-      "test_banner": "Show Sample Ticker",
-      "save_settings": "Save Settings",
+      "test_banner": "Show sample message",
       "monitor": "Monitor",
       "screen_position": "Position on Screen",
       "typography": "Typography",
       "colors": "Colors",
       "preview": "Preview",
       "sample_text": "Sample: Welcome to Canal4!",
-      "rename_node": "Rename display node",
-      "delete_node": "Delete Display Node"
+      "delete_node": "Delete pairing"
     },
     "pairing": {
       "toast_success": "Paired with \"{{venue}}\" as \"{{name}}\"",

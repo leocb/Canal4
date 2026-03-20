@@ -339,32 +339,32 @@ export const SettingsScreen = () => {
           <span style={{ fontSize: '1.1rem', fontWeight: 700, letterSpacing: '-0.02em' }}>{t('app.desktop_name')}</span>
 
           {/* DB connection status — independent */}
-          <div style={{ 
-            display: 'flex', 
-            alignItems: 'center', 
-            gap: '6px', 
-            background: 'rgba(255,255,255,0.05)', 
-            border: `1px solid ${connected ? 'rgba(16,185,129,0.3)' : status === 'error' ? 'rgba(239,68,68,0.3)' : 'rgba(245,158,11,0.3)'}`, 
-            borderRadius: '20px', 
-            padding: '3px 10px 3px 8px' 
+          <div style={{
+            display: 'flex',
+            alignItems: 'center',
+            gap: '6px',
+            background: 'rgba(255,255,255,0.05)',
+            border: `1px solid ${connected ? 'rgba(16,185,129,0.3)' : status === 'error' ? 'rgba(239,68,68,0.3)' : 'rgba(245,158,11,0.3)'}`,
+            borderRadius: '20px',
+            padding: '3px 10px 3px 8px'
           }}>
-            <div style={{ 
-              width: '6px', 
-              height: '6px', 
-              borderRadius: '50%', 
-              background: connected ? '#10B981' : (status === 'error') ? '#EF4444' : '#F59E0B', 
-              boxShadow: `0 0 5px ${connected ? '#10B981' : (status === 'error') ? '#EF4444' : '#F59E0B'}`, 
-              flexShrink: 0 
+            <div style={{
+              width: '6px',
+              height: '6px',
+              borderRadius: '50%',
+              background: connected ? '#10B981' : (status === 'error') ? '#EF4444' : '#F59E0B',
+              boxShadow: `0 0 5px ${connected ? '#10B981' : (status === 'error') ? '#EF4444' : '#F59E0B'}`,
+              flexShrink: 0
             }} />
-            <span style={{ 
-              fontSize: '0.72rem', 
-              fontWeight: 600, 
-              color: connected ? '#10B981' : (status === 'error') ? '#EF4444' : '#F59E0B' 
+            <span style={{
+              fontSize: '0.72rem',
+              fontWeight: 600,
+              color: connected ? '#10B981' : (status === 'error') ? '#EF4444' : '#F59E0B'
             }}>
-              {connected ? t('settings.connection.status_connected') : 
-               (nextRetryIn > 0) ? 
-                 (status === 'error' ? `${nextRetryIn}s ${t('settings.connection.status_offline')}` : `${t('common.connecting')} (${nextRetryIn}s)`) :
-                 t('settings.connection.status_offline')}
+              {connected ? t('settings.connection.status_connected') :
+                (nextRetryIn > 0) ?
+                  (status === 'error' ? `${t('settings.connection.status_offline')} ${nextRetryIn}s` : `${t('common.connecting')} (${nextRetryIn}s)`) :
+                  t('settings.connection.status_offline')}
             </span>
           </div>
 
@@ -642,16 +642,16 @@ export const SettingsScreen = () => {
                                   status === 'Shown' ? '#10B981' :
                                     status === 'InProgress' ? '#3B82F6' :
                                       status === 'Queued' ? '#94A3B8' :
-                                      status === 'Skipped' ? '#F59E0B' :
-                                        status === 'Unavailable' ? '#F59E0B' :
-                                          status === 'Cancelled' ? '#EF4444' : '#334155';
+                                        status === 'Skipped' ? '#F59E0B' :
+                                          status === 'Unavailable' ? '#F59E0B' :
+                                            status === 'Cancelled' ? '#EF4444' : '#334155';
                                 const statusLabel =
                                   status === 'Shown' ? t('settings.logs.status.shown') :
                                     status === 'InProgress' ? t('settings.logs.status.in_progress') :
                                       status === 'Queued' ? t('settings.logs.status.queued') :
                                         status === 'Skipped' ? t('settings.logs.status.skipped') :
-                                        status === 'Unavailable' ? t('settings.logs.status.unavailable') :
-                                          status === 'Cancelled' ? t('settings.logs.status.deleted') : status;
+                                          status === 'Unavailable' ? t('settings.logs.status.unavailable') :
+                                            status === 'Cancelled' ? t('settings.logs.status.deleted') : status;
                                 return (
                                   <span key={d.displayId.toString()} style={{ fontSize: '0.7rem', color: statusColor, display: 'flex', alignItems: 'center', gap: '4px' }}>
                                     <span style={{ width: '6px', height: '6px', borderRadius: '50%', background: statusColor, display: 'inline-block' }} />
