@@ -123,11 +123,11 @@ function hexAlphaToRgba(hex: string, alpha: number): string {
 // --- Component ---
 export const SettingsScreen = () => {
   const { t, i18n } = useTranslation();
-  const { 
-    status, 
-    error: connectionError, 
-    reconnect, 
-    heartbeatError, 
+  const {
+    status,
+    error: connectionError,
+    reconnect,
+    heartbeatError,
     nextRetryIn,
     stUri,
     setStUri,
@@ -692,7 +692,7 @@ export const SettingsScreen = () => {
               {(connectionError || heartbeatError) && (
                 <div style={{ marginTop: '16px', background: 'rgba(239,68,68,0.08)', border: '1px solid rgba(239,68,68,0.3)', borderRadius: '12px', padding: '14px 16px' }}>
                   <div style={{ fontSize: '0.72rem', fontWeight: 700, color: '#EF4444', textTransform: 'uppercase', letterSpacing: '0.06em', marginBottom: '8px' }}>{t('settings.connection.error_title')}</div>
-                  
+
                   {connectionError && (
                     <div style={{ fontFamily: 'monospace', fontSize: '0.8rem', color: '#FCA5A5', wordBreak: 'break-all', lineHeight: 1.5, marginBottom: heartbeatError ? '12px' : 0 }}>
                       {t(connectionError.message)}
@@ -718,16 +718,21 @@ export const SettingsScreen = () => {
                     </div>
                   )}
 
-                  {/* Reset Auth Button — moved here as requested */}
-                  {localStorage.getItem('auth_token') && (
+                  {/* Reset Identity Button — renamed from Reset Auth for clarity */}
+                  {(localStorage.getItem('auth_token') || heartbeatError || status === 'error') && (
                     <div style={{ marginTop: '16px' }}>
                       <button
-                        onClick={() => {
+                        onClick={async () => {
                           if (window.confirm(t('settings.connection.reset_confirm'))) {
-                            localStorage.removeItem('auth_token');
                             // @ts-ignore
-                            if (window.api?.setToken) window.api.setToken('');
-                            window.location.reload();
+                            if (window.api?.resetIdentity) {
+                              await window.api.resetIdentity();
+                            } else {
+                              localStorage.removeItem('auth_token');
+                              // @ts-ignore
+                              if (window.api?.setToken) window.api.setToken('');
+                              window.location.reload();
+                            }
                           }
                         }}
                         style={{ width: '100%', padding: '10px', background: 'rgba(255,255,255,0.05)', color: '#94A3B8', border: '1px solid rgba(255,255,255,0.1)', borderRadius: '10px', fontSize: '0.85rem', fontWeight: 600, cursor: 'pointer', transition: 'all 0.2s' }}

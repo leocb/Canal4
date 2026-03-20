@@ -190,6 +190,7 @@ export const SpacetimeDBProvider = ({ children }: { children: ReactNode }) => {
         // Only trigger a persistence/broadcast if it's actually new
         if (token && token !== currentLocal) {
           localStorage.setItem("auth_token", token);
+          setActiveToken(token); // Crucial: sync state immediately
           // @ts-ignore
           if (window.api?.setToken) window.api.setToken(token);
         }

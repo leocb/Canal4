@@ -1,7 +1,7 @@
 import { Routes, Route, Navigate } from "react-router-dom";
 import { useEffect, useState } from "react";
-import { useReducer } from "spacetimedb/react";
-import { reducers } from "./module_bindings/index";
+import { useTable, useReducer } from "spacetimedb/react";
+import { tables, reducers } from "./module_bindings/index";
 import { SettingsScreen } from "./pages/SettingsScreen";
 import { TickerScreen } from "./pages/TickerScreen";
 import { ErrorBoundary } from "./ErrorBoundary";
@@ -25,9 +25,12 @@ function App() {
     }
   }, []);
 
+  const [devices] = useTable(tables.DisplayDevice);
+  const myDevicesCount = devices.filter(d => d.uid === machineUid).length;
+
   // Heartbeat to keep lastConnectedAt fresh in the database
   useEffect(() => {
-    if (!connected || !machineUid) return;
+    if (!connected || !machineUid || myDevicesCount === 0) return;
 
     const runHeartbeat = () => {
       console.log("[App] Sending heartbeat for UID:", machineUid);
@@ -35,6 +38,7 @@ function App() {
         .then(() => setHeartbeatError(undefined))
         .catch(err => {
           console.error("[App] Heartbeat failed:", err);
+          // Only show error if it's still paired (avoids race conditions)
           setHeartbeatError(err?.message || String(err));
         });
     };
@@ -43,7 +47,7 @@ function App() {
     runHeartbeat();
 
     return () => clearInterval(interval);
-  }, [connected, machineUid]);
+  }, [connected, machineUid, myDevicesCount]);
 
   return (
     <Routes>
