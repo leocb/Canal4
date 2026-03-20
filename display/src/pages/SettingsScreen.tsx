@@ -206,7 +206,7 @@ export const SettingsScreen = () => {
 
   // This device's registration entries
   const myDevices = devices.filter(d => d.uid === machineUid);
-  const hasPairedVenues = myDevices.length > 0;
+
 
   // Build full log list (last 50 messages, newest first)
   // Filtered to only messages from venues that this device is paired with
@@ -366,15 +366,7 @@ export const SettingsScreen = () => {
             </span>
           </div>
 
-          {/* Venue pairing badge — separate */}
-          {machineUid !== 'Loading...' && (
-            <div style={{ display: 'flex', alignItems: 'center', gap: '6px', background: 'rgba(255,255,255,0.05)', border: `1px solid ${hasPairedVenues ? 'rgba(99,102,241,0.3)' : 'rgba(255,255,255,0.1)'}`, borderRadius: '20px', padding: '3px 10px 3px 8px' }}>
-              <div style={{ width: '6px', height: '6px', borderRadius: '50%', background: hasPairedVenues ? '#818CF8' : '#475569', flexShrink: 0 }} />
-              <span style={{ fontSize: '0.72rem', fontWeight: 600, color: hasPairedVenues ? '#818CF8' : '#64748B' }}>
-                {hasPairedVenues ? t('settings.pairing.paired_venues_count', { count: myDevices.length, defaultValue: `${myDevices.length} venues paired` }) : t('settings.pairing.no_venues')}
-              </span>
-            </div>
-          )}
+
         </div>
 
         <div style={{ position: 'relative' }}>
