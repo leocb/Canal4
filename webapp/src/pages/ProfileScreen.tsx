@@ -3,11 +3,11 @@ import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../hooks/useAuth';
 import { useReducer } from 'spacetimedb/react';
 import { reducers } from '../module_bindings/index.ts';
-import { ArrowLeft, Trash2 } from 'lucide-react';
+import { ArrowLeft, Trash2, Languages, LogOut, ChevronDown } from 'lucide-react';
 import { useTranslation, Trans } from 'react-i18next';
 
 export const ProfileScreen = () => {
-  const { t } = useTranslation();
+  const { t, i18n } = useTranslation();
   const navigate = useNavigate();
   const { user, isLoggedIn } = useAuth();
 
@@ -17,6 +17,7 @@ export const ProfileScreen = () => {
 
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
   const [deleteConfirmationName, setDeleteConfirmationName] = useState('');
+  const [showLangMenu, setShowLangMenu] = useState(false);
 
   const updateUserName = useReducer(reducers.updateUserName);
   const deleteUserAccount = useReducer(reducers.deleteUserAccount);
@@ -112,8 +113,91 @@ export const ProfileScreen = () => {
           </div>
         </div>
       </form>
+      <div style={{ marginTop: '32px', display: 'flex', flexDirection: 'column', gap: '16px', width: '100%' }}>
+        <div className="glass-panel" style={{ padding: '16px', display: 'flex', flexDirection: 'column', gap: '12px', position: 'relative' }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '8px', color: 'var(--text-secondary)', marginBottom: '4px' }}>
+            <Languages size={18} />
+            <span style={{ fontWeight: 600, fontSize: '0.9rem' }}>{t('common.language')}</span>
+          </div>
 
-      <div style={{ marginTop: '48px', paddingTop: '24px', borderTop: '1px solid var(--surface-border)', width: '100%' }}>
+          <div style={{ position: 'relative' }}>
+            <button
+              type="button"
+              className="secondary"
+              style={{
+                width: '100%',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'space-between',
+                padding: '12px 16px',
+                textAlign: 'left'
+              }}
+              onClick={() => setShowLangMenu(!showLangMenu)}
+            >
+              <span>{i18n.language === 'en' ? t('languages.en') : t('languages.pt-BR')}</span>
+              <ChevronDown size={18} style={{ transform: showLangMenu ? 'rotate(180deg)' : 'none', transition: 'transform 0.2s' }} />
+            </button>
+
+            {showLangMenu && (
+              <>
+                <div
+                  style={{ position: 'fixed', inset: 0, zIndex: 999 }}
+                  onClick={() => setShowLangMenu(false)}
+                />
+                <div className="glass-panel dropdown-menu" style={{
+                  position: 'absolute',
+                  top: '100%',
+                  left: 0,
+                  right: 0,
+                  marginTop: '8px',
+                  zIndex: 1000,
+                  transformOrigin: 'top center',
+                  background: 'rgba(20, 25, 35, 0.98)',
+                  backdropFilter: 'blur(16px)',
+                  border: '1px solid var(--surface-border)'
+                }}>
+                  <button
+                    type="button"
+                    className="dropdown-item"
+                    style={{
+                      background: i18n.language === 'en' ? 'rgba(255,255,255,0.1)' : 'transparent',
+                      color: i18n.language === 'en' ? 'var(--accent-color)' : 'inherit'
+                    }}
+                    onClick={() => { i18n.changeLanguage('en'); setShowLangMenu(false); }}
+                  >
+                    {t('languages.en')}
+                  </button>
+                  <button
+                    type="button"
+                    className="dropdown-item"
+                    style={{
+                      background: i18n.language === 'pt-BR' ? 'rgba(255,255,255,0.1)' : 'transparent',
+                      color: i18n.language === 'pt-BR' ? 'var(--accent-color)' : 'inherit'
+                    }}
+                    onClick={() => { i18n.changeLanguage('pt-BR'); setShowLangMenu(false); }}
+                  >
+                    {t('languages.pt-BR')}
+                  </button>
+                </div>
+              </>
+            )}
+          </div>
+        </div>
+
+        <button
+          className="secondary"
+          style={{ width: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px', padding: '12px' }}
+          onClick={() => {
+            localStorage.removeItem('auth_token');
+            window.location.href = '/login';
+          }}
+        >
+          <LogOut size={18} />
+          {t('nav.logout')}
+        </button>
+      </div>
+
+      <div style={{ marginTop: '32px', paddingTop: '24px', borderTop: '1px solid var(--surface-border)', width: '100%' }}>
         <h3 style={{ color: 'var(--error-color)' }}>{t('profile.danger_zone.title')}</h3>
 
         {errorText && (
