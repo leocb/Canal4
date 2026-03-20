@@ -9,9 +9,9 @@ interface ReconnectingOverlayProps {
   error?: string;
 }
 
-const ReconnectingOverlay: React.FC<ReconnectingOverlayProps> = ({ 
-  nextRetryIn, 
-  isInitialLoad = false,
+const ReconnectingOverlay: React.FC<ReconnectingOverlayProps> = ({
+  nextRetryIn,
+  isInitialLoad = true,
   onRetryNow,
   error
 }) => {
@@ -29,13 +29,13 @@ const ReconnectingOverlay: React.FC<ReconnectingOverlayProps> = ({
           </div>
           <Wifi className="status-icon" size={32} />
         </div>
-        
+
         <h2>
-          {isInitialLoad 
-            ? t('common.connecting') 
+          {isInitialLoad
+            ? t('common.connecting')
             : t('common.reconnecting_title')}
         </h2>
-        
+
         <p className="helper-text">
           {error ? t('common.error_network') : (isInitialLoad ? t('login.loading') : t('common.reconnecting_helper'))}
         </p>
@@ -43,13 +43,13 @@ const ReconnectingOverlay: React.FC<ReconnectingOverlayProps> = ({
         {showRetryInfo && (
           <div className="retry-status">
             <span className="retry-text">
-               {t('common.retrying_in')} {nextRetryIn}s
+              {t('common.retrying_in')} {nextRetryIn}s
             </span>
           </div>
         )}
 
         {showRetryInfo && onRetryNow && (
-          <button 
+          <button
             className="retry-button"
             onClick={onRetryNow}
           >

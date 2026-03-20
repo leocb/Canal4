@@ -48,10 +48,10 @@ export const SpacetimeDBProvider = ({ children }: { children: ReactNode }) => {
     const nextCount = retryAttemptRef.current + 1;
     retryAttemptRef.current = nextCount;
     const delay = 10000; // Fixed 10s delay as requested
-    
+
     setNextRetryIn(10);
     console.log(`[STDB] Scheduling retry #${nextCount} in ${delay}ms...`);
-    
+
     retryTimerRef.current = setTimeout(() => {
       console.log(`[STDB] Executing retry #${nextCount}...`);
       retryTimerRef.current = null;
@@ -110,7 +110,7 @@ export const SpacetimeDBProvider = ({ children }: { children: ReactNode }) => {
         retryAttemptRef.current = 0;
         setActiveRetryCount(0);
         localStorage.setItem("auth_token", token);
-        
+
         try {
           const sub = connection.subscriptionBuilder();
           sub.subscribe([
@@ -158,11 +158,11 @@ export const SpacetimeDBProvider = ({ children }: { children: ReactNode }) => {
     currentBuilderRef.current = builder;
   }, [builder]);
 
-  const isInitialLoad = status === "offline" && !hasConnectedOnce && retryAttemptRef.current === 0;
+  const isInitialLoad = !hasConnectedOnce;
 
   return (
     <ConnectivityContext.Provider value={{ status, error, reconnect, nextRetryIn, isInitialLoad }}>
-      <Provider key={`${reconnectKey}-${activeRetryCount}`} connectionBuilder={builder}>
+      <Provider connectionBuilder={builder}>
         {children}
       </Provider>
     </ConnectivityContext.Provider>

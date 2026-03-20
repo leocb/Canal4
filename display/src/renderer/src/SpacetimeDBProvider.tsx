@@ -11,6 +11,11 @@ interface ConnectivityContextType {
   error: { message: string, stack?: string } | undefined;
   heartbeatError: string | undefined;
   setHeartbeatError: (err: string | undefined) => void;
+  stUri: string;
+  setStUri: (u: string) => void;
+  stDb: string;
+  setStDb: (db: string) => void;
+  hasConnectedOnce: boolean;
 }
 
 const ConnectivityContext = createContext<ConnectivityContextType | undefined>(undefined);
@@ -36,6 +41,7 @@ export const SpacetimeDBProvider = ({ children }: { children: ReactNode }) => {
   const [nextRetryIn, setNextRetryIn] = useState<number>(0);
   const [reconnectKey, setReconnectKey] = useState(0);
   const [activeRetryCount, setActiveRetryCount] = useState(0);
+  const [hasConnectedOnce, setHasConnectedOnce] = useState(false);
   const retryAttemptRef = useRef(0);
   const retryTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const currentBuilderRef = useRef<any>(null);
@@ -49,9 +55,19 @@ export const SpacetimeDBProvider = ({ children }: { children: ReactNode }) => {
   const [activeToken, setActiveToken] = useState<string | undefined>(getSanitized("auth_token"));
   const [isSyncingMain, setIsSyncingMain] = useState(true);
 
-  // Unified settings source
-  const stUri = getSanitized("spacetime_uri") || "ws://localhost:3000";
-  const stDb = getSanitized("spacetime_db") || "canal4-dev";
+  const [stUri, setStUri] = useState<string>(getSanitized("spacetime_uri") || "ws://localhost:3000");
+  const [stDb, setStDb] = useState<string>(getSanitized("spacetime_db") || "canal4-dev");
+  
+  // Wrap setters to persist to localStorage
+  const updateStUri = useCallback((u: string) => {
+    localStorage.setItem("spacetime_uri", u);
+    setStUri(u);
+  }, []);
+
+  const updateStDb = useCallback((db: string) => {
+    localStorage.setItem("spacetime_db", db);
+    setStDb(db);
+  }, []);
 
   useEffect(() => {
     // Pull token from Main as the source of truth
@@ -91,6 +107,12 @@ export const SpacetimeDBProvider = ({ children }: { children: ReactNode }) => {
 
   const scheduleRetry = useCallback(() => {
     if (retryTimerRef.current) return;
+    
+    // Only retry if it was connected previously as requested
+    if (!hasConnectedOnce) {
+      console.log("[STDB] Skipping auto-retry: App has never connected successfully.");
+      return;
+    }
 
     const nextCount = retryAttemptRef.current + 1;
     retryAttemptRef.current = nextCount;
@@ -104,7 +126,7 @@ export const SpacetimeDBProvider = ({ children }: { children: ReactNode }) => {
       retryTimerRef.current = null;
       setActiveRetryCount(nextCount);
     }, delay);
-  }, []);
+  }, [hasConnectedOnce]);
 
   // Handle countdown ticking
   useEffect(() => {
@@ -130,6 +152,8 @@ export const SpacetimeDBProvider = ({ children }: { children: ReactNode }) => {
     setNextRetryIn(0);
     retryAttemptRef.current = 0;
     setActiveRetryCount(0);
+    // Note: Manual reconnect doesn't reset hasConnectedOnce, potentially allowing auto-retries 
+    // to resume if they were previously active.
     if (retryTimerRef.current) {
         clearTimeout(retryTimerRef.current);
         retryTimerRef.current = null;
@@ -157,6 +181,7 @@ export const SpacetimeDBProvider = ({ children }: { children: ReactNode }) => {
         console.log("[STDB] SpacetimeDB Connected.");
         setStatus("online");
         setError(undefined);
+        setHasConnectedOnce(true);
         retryAttemptRef.current = 0;
         setActiveRetryCount(0);
         setNextRetryIn(0);
@@ -229,9 +254,13 @@ export const SpacetimeDBProvider = ({ children }: { children: ReactNode }) => {
   }, [builder]);
 
   return (
-    <ConnectivityContext.Provider value={{ status, reconnect, nextRetryIn, error, heartbeatError, setHeartbeatError }}>
+    <ConnectivityContext.Provider value={{ 
+      status, reconnect, nextRetryIn, error, heartbeatError, setHeartbeatError,
+      stUri, setStUri: updateStUri, stDb, setStDb: updateStDb,
+      hasConnectedOnce
+    }}>
       {builder ? (
-        <Provider key={`${reconnectKey}-${activeRetryCount}`} connectionBuilder={builder}>
+        <Provider connectionBuilder={builder}>
           {children}
         </Provider>
       ) : (

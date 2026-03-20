@@ -45,7 +45,6 @@
     "language": "Language",
     "quit": "Quit Canal4",
     "loading_profile": "Loading Profile...",
-    "connection_error": "Connection Error",
     "error_network": "Network error. Check your connection or the server status.",
     "connecting": "Connecting to Canal4...",
     "reconnecting_title": "Reconnecting to Canal4...",

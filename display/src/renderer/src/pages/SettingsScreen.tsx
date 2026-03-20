@@ -123,7 +123,17 @@ function hexAlphaToRgba(hex: string, alpha: number): string {
 // --- Component ---
 export const SettingsScreen = () => {
   const { t, i18n } = useTranslation();
-  const { status, error: connectionError, reconnect, heartbeatError, nextRetryIn } = useConnectivity();
+  const { 
+    status, 
+    error: connectionError, 
+    reconnect, 
+    heartbeatError, 
+    nextRetryIn,
+    stUri,
+    setStUri,
+    stDb,
+    setStDb
+  } = useConnectivity();
   const connected = status === 'online';
   const [messages] = useTable(tables.Message);
   const [venues] = useTable(tables.Venue);
@@ -141,8 +151,14 @@ export const SettingsScreen = () => {
   const [tickerSettings, setTickerSettingsState] = useState<TickerSettings>(loadTickerSettings());
   const [showLangMenu, setShowLangMenu] = useState(false);
 
-  const [stUri, setStUri] = useState<string>(localStorage.getItem("spacetime_uri") || "ws://127.0.0.1:3000");
-  const [stDb, setStDb] = useState<string>(localStorage.getItem("spacetime_db") || "canal4-dev");
+  const [tempStUri, setTempStUri] = useState(stUri);
+  const [tempStDb, setTempStDb] = useState(stDb);
+
+  // Sync temp state if context changes externally (e.g. initial load)
+  useEffect(() => {
+    setTempStUri(stUri);
+    setTempStDb(stDb);
+  }, [stUri, stDb]);
 
   // Ticker position settings IPC
   const [displays, setDisplays] = useState<{ id: number; label: string }[]>([{ id: 0, label: 'Primary Display' }]);
@@ -296,8 +312,8 @@ export const SettingsScreen = () => {
   ];
 
   const handleSaveSpacetimeSettings = () => {
-    localStorage.setItem("spacetime_uri", stUri);
-    localStorage.setItem("spacetime_db", stDb);
+    setStUri(tempStUri);
+    setStDb(tempStDb);
     reconnect();
   };
 
@@ -483,18 +499,6 @@ export const SettingsScreen = () => {
                 </strong>
               </p>
 
-              {heartbeatError && (
-                <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '20px', padding: '10px 14px', background: 'rgba(239,68,68,0.08)', border: '1px solid rgba(239,68,68,0.2)', borderRadius: '10px' }}>
-                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#EF4444" strokeWidth="2.5">
-                    <circle cx="12" cy="12" r="10" />
-                    <line x1="12" y1="8" x2="12" y2="12" />
-                    <line x1="12" y1="16" x2="12.01" y2="16" />
-                  </svg>
-                  <span style={{ fontSize: '0.8rem', color: '#EF4444', fontWeight: 500 }}>
-                    {t(heartbeatError.startsWith('api_errors.') ? heartbeatError : `api_errors.${heartbeatError}`, { defaultValue: heartbeatError })}
-                  </span>
-                </div>
-              )}
 
               {activePin ? (
                 <div style={{ textAlign: 'center', padding: '24px', background: 'rgba(59,130,246,0.08)', borderRadius: '12px', border: '1px solid rgba(59,130,246,0.2)' }}>
@@ -660,71 +664,12 @@ export const SettingsScreen = () => {
               </div>
 
               {/* Connection error — shown at top when there's an error */}
-              {connectionError && (
-                <div style={{ marginBottom: '16px', background: 'rgba(239,68,68,0.08)', border: '1px solid rgba(239,68,68,0.3)', borderRadius: '12px', padding: '14px 16px' }}>
-                  <div style={{ fontSize: '0.72rem', fontWeight: 700, color: '#EF4444', textTransform: 'uppercase', letterSpacing: '0.06em', marginBottom: '8px' }}>{t('settings.connection.error_title')}</div>
-                  <div style={{ fontFamily: 'monospace', fontSize: '0.8rem', color: '#FCA5A5', wordBreak: 'break-all', lineHeight: 1.5 }}>
-                    {t(connectionError.message)}
-                  </div>
-                  {connectionError.stack && (
-                    <details style={{ marginTop: '8px' }}>
-                      <summary style={{ fontSize: '0.72rem', color: '#EF4444', cursor: 'pointer', userSelect: 'none' }}>{t('settings.connection.stack_trace')}</summary>
-                      <pre style={{ fontSize: '0.7rem', color: '#7F1D1D', marginTop: '6px', whiteSpace: 'pre-wrap', wordBreak: 'break-all' }}>{connectionError.stack}</pre>
-                    </details>
-                  )}
-                  <div style={{ marginTop: '10px', fontSize: '0.75rem', color: '#94A3B8' }}>
-                    URI: <code style={{ fontFamily: 'monospace', color: '#F8FAFC' }}>{(localStorage.getItem('spacetime_uri') || 'ws://127.0.0.1:3000').replace('://localhost', '://127.0.0.1')}</code>
-                    {' · '}DB: <code style={{ fontFamily: 'monospace', color: '#F8FAFC' }}>{localStorage.getItem('spacetime_db') || 'canal4-dev'}</code>
-                  </div>
-                  {(localStorage.getItem('spacetime_uri') || '').includes('localhost') && (
-                    <button
-                      onClick={() => {
-                        localStorage.setItem('spacetime_uri', (localStorage.getItem('spacetime_uri') || '').replace('://localhost', '://127.0.0.1'));
-                        window.location.reload();
-                      }}
-                      style={{ marginTop: '10px', padding: '6px 12px', background: '#EF4444', color: '#fff', border: 'none', borderRadius: '6px', fontSize: '0.75rem', fontWeight: 600, cursor: 'pointer' }}
-                    >
-                      {t('settings.connection.fix_localhost')}
-                    </button>
-                  )}
-                  {localStorage.getItem('auth_token') && (
-                    <button
-                      onClick={() => {
-                        if (window.confirm(t('settings.connection.reset_confirm'))) {
-                          localStorage.removeItem('auth_token');
-                          // @ts-ignore
-                          if (window.api?.setToken) {
-                            window.api.setToken('');
-                          }
-                          window.location.reload();
-                        }
-                      }}
-                      style={{ marginTop: '10px', width: '100%', padding: '10px', background: 'rgba(255,255,255,0.05)', color: '#94A3B8', border: '1px solid rgba(255,255,255,0.1)', borderRadius: '10px', fontSize: '0.85rem', fontWeight: 600, cursor: 'pointer', transition: 'all 0.2s' }}
-                      onMouseEnter={(e) => {
-                        e.currentTarget.style.background = 'rgba(239, 68, 68, 0.1)';
-                        e.currentTarget.style.color = '#EF4444';
-                        e.currentTarget.style.borderColor = 'rgba(239, 68, 68, 0.2)';
-                      }}
-                      onMouseLeave={(e) => {
-                        e.currentTarget.style.background = 'rgba(255,255,255,0.05)';
-                        e.currentTarget.style.color = '#94A3B8';
-                        e.currentTarget.style.borderColor = 'rgba(255,255,255,0.1)';
-                      }}
-                    >
-                      {t('settings.connection.reset_auth')}
-                    </button>
-                  )}
-                  <p style={{ fontSize: '0.75rem', color: '#94A3B8', marginTop: '10px', lineHeight: 1.5 }}>
-                    {t('settings.connection.reset_helper')}
-                  </p>
-                </div>
-              )}
 
               <label style={labelStyle}>{t('settings.connection.host_uri')}</label>
               <input
                 type="text"
-                value={stUri}
-                onChange={e => setStUri(e.target.value)}
+                value={tempStUri}
+                onChange={e => setTempStUri(e.target.value)}
                 style={inputStyle}
                 placeholder="ws://127.0.0.1:3000"
               />
@@ -732,8 +677,8 @@ export const SettingsScreen = () => {
               <label style={{ ...labelStyle, marginTop: '16px' }}>{t('settings.connection.db_name')}</label>
               <input
                 type="text"
-                value={stDb}
-                onChange={e => setStDb(e.target.value)}
+                value={tempStDb}
+                onChange={e => setTempStDb(e.target.value)}
                 style={inputStyle}
                 placeholder="canal4-dev"
               />
@@ -742,6 +687,70 @@ export const SettingsScreen = () => {
                 <span style={{ fontSize: '0.75rem', fontWeight: 600, color: '#94A3B8' }}>{t('settings.connection.device_id')}</span>
                 <span style={{ fontSize: '0.75rem', fontFamily: 'monospace', color: '#64748b' }}>{machineUid}</span>
               </div>
+
+              {/* Advanced Error & Auth Reset Panel */}
+              {(connectionError || heartbeatError) && (
+                <div style={{ marginTop: '16px', background: 'rgba(239,68,68,0.08)', border: '1px solid rgba(239,68,68,0.3)', borderRadius: '12px', padding: '14px 16px' }}>
+                  <div style={{ fontSize: '0.72rem', fontWeight: 700, color: '#EF4444', textTransform: 'uppercase', letterSpacing: '0.06em', marginBottom: '8px' }}>{t('settings.connection.error_title')}</div>
+                  
+                  {connectionError && (
+                    <div style={{ fontFamily: 'monospace', fontSize: '0.8rem', color: '#FCA5A5', wordBreak: 'break-all', lineHeight: 1.5, marginBottom: heartbeatError ? '12px' : 0 }}>
+                      {t(connectionError.message)}
+                      {connectionError.stack && (
+                        <details style={{ marginTop: '8px' }}>
+                          <summary style={{ fontSize: '0.72rem', color: '#EF4444', cursor: 'pointer', userSelect: 'none' }}>{t('settings.connection.stack_trace')}</summary>
+                          <pre style={{ fontSize: '0.7rem', color: '#7F1D1D', marginTop: '6px', whiteSpace: 'pre-wrap', wordBreak: 'break-all' }}>{connectionError.stack}</pre>
+                        </details>
+                      )}
+                    </div>
+                  )}
+
+                  {heartbeatError && (
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '8px', padding: '10px', background: 'rgba(239,68,68,0.1)', borderRadius: '8px' }}>
+                      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#EF4444" strokeWidth="2.5">
+                        <circle cx="12" cy="12" r="10" />
+                        <line x1="12" y1="8" x2="12" y2="12" />
+                        <line x1="12" y1="16" x2="12.01" y2="16" />
+                      </svg>
+                      <span style={{ fontSize: '0.8rem', color: '#EF4444', fontWeight: 500 }}>
+                        {t(heartbeatError.startsWith('api_errors.') ? heartbeatError : `api_errors.${heartbeatError}`, { defaultValue: heartbeatError })}
+                      </span>
+                    </div>
+                  )}
+
+                  {/* Reset Auth Button — moved here as requested */}
+                  {localStorage.getItem('auth_token') && (
+                    <div style={{ marginTop: '16px' }}>
+                      <button
+                        onClick={() => {
+                          if (window.confirm(t('settings.connection.reset_confirm'))) {
+                            localStorage.removeItem('auth_token');
+                            // @ts-ignore
+                            if (window.api?.setToken) window.api.setToken('');
+                            window.location.reload();
+                          }
+                        }}
+                        style={{ width: '100%', padding: '10px', background: 'rgba(255,255,255,0.05)', color: '#94A3B8', border: '1px solid rgba(255,255,255,0.1)', borderRadius: '10px', fontSize: '0.85rem', fontWeight: 600, cursor: 'pointer', transition: 'all 0.2s' }}
+                        onMouseEnter={(e) => {
+                          e.currentTarget.style.background = 'rgba(239, 68, 68, 0.1)';
+                          e.currentTarget.style.color = '#EF4444';
+                          e.currentTarget.style.borderColor = 'rgba(239, 68, 68, 0.2)';
+                        }}
+                        onMouseLeave={(e) => {
+                          e.currentTarget.style.background = 'rgba(255,255,255,0.05)';
+                          e.currentTarget.style.color = '#94A3B8';
+                          e.currentTarget.style.borderColor = 'rgba(255,255,255,0.1)';
+                        }}
+                      >
+                        {t('settings.connection.reset_auth')}
+                      </button>
+                      <p style={{ fontSize: '0.75rem', color: '#94A3B8', marginTop: '10px', lineHeight: 1.5 }}>
+                        {t('settings.connection.reset_helper')}
+                      </p>
+                    </div>
+                  )}
+                </div>
+              )}
             </section>
 
             {/* Display & Position */}
