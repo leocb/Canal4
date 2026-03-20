@@ -240,7 +240,6 @@ export const SpacetimeDBProvider = ({ children }: { children: ReactNode }) => {
         if (activeToken && isAuthError) {
           localStorage.removeItem("auth_token");
           setActiveToken(undefined);
-          // @ts-ignore
           if (window.api?.setToken) {
             window.api.setToken('');
           }

@@ -182,9 +182,7 @@ export const SettingsScreen = () => {
   const [prevDeviceIds, setPrevDeviceIds] = useState<Set<string>>(new Set());
 
   useEffect(() => {
-    // @ts-ignore
     if (window.api?.getMachineId) {
-      // @ts-ignore
       window.api.getMachineId().then((uid: string) => setMachineUid(uid));
     } else {
       const stored = localStorage.getItem('fallback_uid');
@@ -748,12 +746,10 @@ export const SettingsScreen = () => {
                       <button
                         onClick={async () => {
                           if (window.confirm(t('settings.connection.reset_confirm'))) {
-                            // @ts-ignore
                             if (window.api?.resetIdentity) {
                               await window.api.resetIdentity();
                             } else {
                               localStorage.removeItem('auth_token');
-                              // @ts-ignore
                               if (window.api?.setToken) window.api.setToken('');
                               window.location.reload();
                             }

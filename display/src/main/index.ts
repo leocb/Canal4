@@ -27,7 +27,7 @@ function createTickerWindow(): void {
     alwaysOnTop: true,
     skipTaskbar: true,
     focusable: false, // Don't steal focus from user
-    type: 'panel', 
+    type: 'panel',
     webPreferences: {
       preload: join(__dirname, '../preload/index.js'),
       sandbox: false,
@@ -48,7 +48,7 @@ function createTickerWindow(): void {
 
   const url = is.dev && process.env['ELECTRON_RENDERER_URL']
     ? `${process.env['ELECTRON_RENDERER_URL']}/#/ticker`
-    : `file://${join(__dirname, '../renderer/index.html')}#/ticker`;
+    : `file://${join(__dirname, '../index.html')}#/ticker`;
 
   tickerWindow.loadURL(url)
 }
@@ -56,7 +56,7 @@ function createTickerWindow(): void {
 function createSettingsWindow(tab: 'logs' | 'settings' | 'pairing' = 'pairing'): void {
   const url = is.dev && process.env['ELECTRON_RENDERER_URL']
     ? `${process.env['ELECTRON_RENDERER_URL']}/#/settings/${tab}`
-    : `file://${join(__dirname, '../renderer/index.html')}#/settings/${tab}`;
+    : `file://${join(__dirname, '../index.html')}#/settings/${tab}`;
 
   if (settingsWindow) {
     settingsWindow.loadURL(url)

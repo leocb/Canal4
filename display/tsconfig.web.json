@@ -1,10 +1,18 @@
 {
   "extends": "@electron-toolkit/tsconfig/tsconfig.web.json",
   "include": [
-    "src/renderer/src/env.d.ts",
-    "src/renderer/src/**/*",
-    "src/renderer/src/**/*.tsx",
-    "src/preload/*.d.ts"
+    "src/env.d.ts",
+    "src/**/*",
+    "src/**/*.tsx",
+    "src/preload/*.d.ts",
+    "src/components",
+    "src/module_bindings",
+    "src/pages",
+    "src/App.tsx",
+    "src/ErrorBoundary.tsx",
+    "src/i18n.ts",
+    "src/main.tsx",
+    "src/SpacetimeDBProvider.tsx"
   ],
   "compilerOptions": {
     "composite": true,
@@ -12,7 +20,7 @@
     "baseUrl": ".",
     "paths": {
       "@renderer/*": [
-        "src/renderer/src/*"
+        "src/*"
       ]
     }
   }

@@ -6,9 +6,15 @@ export default defineConfig({
   main: {},
   preload: {},
   renderer: {
+    root: 'src',
+    build: {
+      rollupOptions: {
+        input: resolve(__dirname, 'src/index.html')
+      }
+    },
     resolve: {
       alias: {
-        '@renderer': resolve('src/renderer/src')
+        '@renderer': resolve(__dirname, 'src')
       }
     },
     plugins: [react()],

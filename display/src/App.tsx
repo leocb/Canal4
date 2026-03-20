@@ -14,9 +14,7 @@ function App() {
   const [machineUid, setMachineUid] = useState<string>('');
 
   useEffect(() => {
-    // @ts-ignore
     if (window.api?.getMachineId) {
-      // @ts-ignore
       window.api.getMachineId().then((uid: string) => setMachineUid(uid));
     } else {
       const id = localStorage.getItem('fallback_uid') || 'fallback_' + Math.random().toString(36).slice(2, 9);
