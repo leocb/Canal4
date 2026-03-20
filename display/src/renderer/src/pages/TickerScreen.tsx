@@ -1,5 +1,5 @@
 import { useEffect, useState, useRef } from 'react';
-import { useTable, useSpacetimeDB, useReducer } from 'spacetimedb/react';
+import { useTable, useReducer } from 'spacetimedb/react';
 import { tables, reducers } from '../module_bindings/index';
 import { loadTickerSettings } from './SettingsScreen';
 import { useConnectivity } from '../SpacetimeDBProvider';

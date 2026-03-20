@@ -74,7 +74,7 @@ npm run dev
 
 ### Adding a new UI string
 
-1. Add the key to `webapp/src/locales/en.json` (and `display/src/renderer/src/locales/en.json` if it's in the desktop app).
+1. Add the key to `locales/en.json` (and other languages if applicable). Since both apps share the same file, the key will be available to both.
 2. Use `t('your.key')` in the React component — never hardcode user-visible strings.
 
 ### Authentication (Passkeys)
@@ -110,7 +110,7 @@ Canal4 uses **WebAuthn (Passkeys)** for all user accounts.
 ### PR checklist
 
 - [ ] No hardcoded user-visible strings (use `t()` with locale keys).
-- [ ] New locale keys added to `en.json`.
+- [ ] New locale keys added to `locales/en.json`.
 - [ ] TypeScript types are valid.
 - [ ] If schema changed: bindings were regenerated and committed.
 

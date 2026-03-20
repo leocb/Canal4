@@ -47,6 +47,7 @@ Built on [SpacetimeDB](https://spacetimedb.com) for real-time, low-latency synch
 Canal4/
 ├── webapp/             # Web dashboard (React 19 + Vite SPA)
 ├── display/            # Desktop display node (Electron + React)
+├── locales/            # Shared translation files (JSON)
 ├── spacetimedb/        # SpacetimeDB module (TypeScript reducers & schema)
 ├── docker-compose.yml  # Production deployment
 └── .env.example        # Environment variable template
