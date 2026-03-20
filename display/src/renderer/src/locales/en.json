@@ -41,6 +41,7 @@
         "shown": "Shown",
         "in_progress": "In Progress",
         "queued": "Queued",
+        "skipped": "Skipped",
         "unavailable": "Unavailable",
         "deleted": "Deleted"
       }

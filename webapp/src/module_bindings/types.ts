@@ -46,6 +46,7 @@ export const DeliveryStatus = __t.enum("DeliveryStatus", {
   Queued: __t.string(),
   InProgress: __t.string(),
   Shown: __t.string(),
+  Skipped: __t.string(),
   Unavailable: __t.string(),
   Cancelled: __t.string(),
 });

@@ -28,7 +28,6 @@ export const SpacetimeDBProvider = ({ children }: { children: ReactNode }) => {
   const [nextRetryIn, setNextRetryIn] = useState<number>(0);
   const [hasConnectedOnce, setHasConnectedOnce] = useState(false);
   const [reconnectKey, setReconnectKey] = useState(0);
-  const [activeRetryCount, setActiveRetryCount] = useState(0);
   const retryAttemptRef = useRef(0);
   const retryTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const currentBuilderRef = useRef<any>(null);
@@ -55,7 +54,7 @@ export const SpacetimeDBProvider = ({ children }: { children: ReactNode }) => {
     retryTimerRef.current = setTimeout(() => {
       console.log(`[STDB] Executing retry #${nextCount}...`);
       retryTimerRef.current = null;
-      setActiveRetryCount(nextCount);
+      setReconnectKey(prev => prev + 1);
     }, delay);
   }, []);
 
@@ -81,7 +80,6 @@ export const SpacetimeDBProvider = ({ children }: { children: ReactNode }) => {
     setError(undefined);
     setNextRetryIn(0);
     retryAttemptRef.current = 0;
-    setActiveRetryCount(0);
     if (retryTimerRef.current) {
       clearTimeout(retryTimerRef.current);
       retryTimerRef.current = null;
@@ -92,7 +90,7 @@ export const SpacetimeDBProvider = ({ children }: { children: ReactNode }) => {
   const builder = useMemo(() => {
     const url = new URL(resolvedUri);
     url.searchParams.set('reconnectKey', reconnectKey.toString());
-    url.searchParams.set('retry', activeRetryCount.toString());
+    url.searchParams.set('retry', retryAttemptRef.current.toString());
     const finalUri = url.toString();
 
     const b = DbConnection.builder()
@@ -108,7 +106,7 @@ export const SpacetimeDBProvider = ({ children }: { children: ReactNode }) => {
         setHasConnectedOnce(true);
         setNextRetryIn(0);
         retryAttemptRef.current = 0;
-        setActiveRetryCount(0);
+        // DO NOT update reconnectKey here to maintain builder stability
         localStorage.setItem("auth_token", token);
 
         try {
@@ -152,7 +150,7 @@ export const SpacetimeDBProvider = ({ children }: { children: ReactNode }) => {
       });
 
     return b;
-  }, [token, resolvedUri, DB_NAME, reconnectKey, activeRetryCount, scheduleRetry]);
+  }, [token, resolvedUri, DB_NAME, reconnectKey, scheduleRetry]);
 
   useEffect(() => {
     currentBuilderRef.current = builder;

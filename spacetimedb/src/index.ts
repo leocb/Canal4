@@ -871,6 +871,38 @@ export const update_message_delivery_status = spacetimedb.reducer(
   }
 );
 
+export const skip_missed_messages = spacetimedb.reducer(
+  { uid: t.string(), appStartTimeMicros: t.u64() },
+  (ctx, { uid, appStartTimeMicros }) => {
+    // 1. Get all devices for this UID that match the sender's identity
+    const myDevices = [...ctx.db.DisplayDevice.display_device_uid.filter(uid)]
+      .filter(d => d.identity.isEqual(ctx.sender));
+
+    if (myDevices.length === 0) return;
+
+    const myDisplayIds = myDevices.map(d => d.displayId);
+    
+    // 2. Find all 'Queued' statuses for these displays that were sent before the app started
+    // We use a small buffer (1s = 1,000,000 micros) to avoid racing with messages sent exactly at startup
+    const buffer = 1000000n;
+    const threshold = BigInt(appStartTimeMicros) - buffer;
+
+    for (const statusRow of ctx.db.MessageDeliveryStatus.iter()) {
+      if (!myDisplayIds.includes(statusRow.displayId)) continue;
+      if (statusRow.status.tag !== "Queued") continue;
+
+      const msg = ctx.db.Message.messageId.find(statusRow.messageId);
+      if (msg && msg.sentAt.microsSinceUnixEpoch < threshold) {
+        ctx.db.MessageDeliveryStatus.statusId.update({
+          ...statusRow,
+          status: { tag: "Skipped", value: "" },
+          updatedAt: ctx.timestamp
+        });
+      }
+    }
+  }
+);
+
 export const delete_display_device = spacetimedb.reducer(
   { displayId: t.u64() },
   (ctx, { displayId }) => {

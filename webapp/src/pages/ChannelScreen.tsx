@@ -187,7 +187,7 @@ export const ChannelScreen = () => {
     if (statuses.length === 0) return isMe ? 'var(--accent-color)' : 'rgba(255, 255, 255, 0.15)';
 
     if (statuses.some(s => s === 'InProgress')) return '#3B82F6';
-    if (statuses.some(s => s === 'Unavailable')) return '#F59E0B';
+    if (statuses.some(s => s === 'Unavailable' || s === 'Skipped')) return '#F59E0B';
     if (statuses.every(s => s === 'Cancelled')) return '#EF4444';
     if (statuses.every(s => s === 'Shown')) return '#10B981';
     if (statuses.some(s => s === 'Queued')) return '#94A3B8';
@@ -244,6 +244,8 @@ export const ChannelScreen = () => {
         return <span title={`${deviceName}: ${t('node_status.shown')}`}><CheckCircle2 size={14} style={{ color: '#10B981' }} /></span>;
       case 'Unavailable':
         return <span title={`${deviceName}: ${t('node_status.unavailable')}`}><AlertCircle size={14} style={{ color: '#F59E0B' }} /></span>;
+      case 'Skipped':
+        return <span title={`${deviceName}: ${t('node_status.skipped')}`}><AlertCircle size={14} style={{ color: '#F59E0B' }} /></span>;
       case 'Cancelled':
         return <span title={`${deviceName}: ${t('node_status.deleted')}`}><XCircle size={14} style={{ color: '#EF4444' }} /></span>;
       default:

@@ -63,6 +63,7 @@
     "waiting": "Waiting",
     "in_progress": "In Progress",
     "shown": "Shown",
+    "skipped": "Skipped",
     "unavailable": "Unavailable",
     "deleted": "Deleted"
   },

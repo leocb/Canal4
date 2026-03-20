@@ -245,7 +245,7 @@ export const SettingsScreen = () => {
     if (statuses.length === 0) return 'rgba(59,130,246,0.5)';
 
     if (statuses.some(s => s === 'InProgress')) return '#3B82F6';
-    if (statuses.some(s => s === 'Unavailable')) return '#F59E0B';
+    if (statuses.some(s => s === 'Unavailable' || s === 'Skipped')) return '#F59E0B';
     if (statuses.every(s => s === 'Cancelled')) return '#EF4444';
     if (statuses.every(s => s === 'Shown')) return '#10B981';
     if (statuses.some(s => s === 'Queued')) return '#94A3B8';
@@ -620,12 +620,14 @@ export const SettingsScreen = () => {
                                   status === 'Shown' ? '#10B981' :
                                     status === 'InProgress' ? '#3B82F6' :
                                       status === 'Queued' ? '#94A3B8' :
+                                      status === 'Skipped' ? '#F59E0B' :
                                         status === 'Unavailable' ? '#F59E0B' :
                                           status === 'Cancelled' ? '#EF4444' : '#334155';
                                 const statusLabel =
                                   status === 'Shown' ? t('settings.logs.status.shown') :
                                     status === 'InProgress' ? t('settings.logs.status.in_progress') :
                                       status === 'Queued' ? t('settings.logs.status.queued') :
+                                        status === 'Skipped' ? t('settings.logs.status.skipped') :
                                         status === 'Unavailable' ? t('settings.logs.status.unavailable') :
                                           status === 'Cancelled' ? t('settings.logs.status.deleted') : status;
                                 return (

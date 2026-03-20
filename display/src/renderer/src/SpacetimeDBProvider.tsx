@@ -40,7 +40,6 @@ export const SpacetimeDBProvider = ({ children }: { children: ReactNode }) => {
   const [heartbeatError, setHeartbeatError] = useState<string | undefined>(undefined);
   const [nextRetryIn, setNextRetryIn] = useState<number>(0);
   const [reconnectKey, setReconnectKey] = useState(0);
-  const [activeRetryCount, setActiveRetryCount] = useState(0);
   const [hasConnectedOnce, setHasConnectedOnce] = useState(false);
   const retryAttemptRef = useRef(0);
   const retryTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
@@ -124,9 +123,10 @@ export const SpacetimeDBProvider = ({ children }: { children: ReactNode }) => {
     retryTimerRef.current = setTimeout(() => {
       console.log(`[STDB] Executing retry #${nextCount}...`);
       retryTimerRef.current = null;
-      setActiveRetryCount(nextCount);
+      // Changing reconnectKey is the stable way to trigger a NEW builder
+      setReconnectKey(prev => prev + 1);
     }, delay);
-  }, [hasConnectedOnce]);
+  }, []);
 
   // Handle countdown ticking
   useEffect(() => {
@@ -143,7 +143,6 @@ export const SpacetimeDBProvider = ({ children }: { children: ReactNode }) => {
     }
     return undefined;
   }, [status, nextRetryIn]);
-
   const reconnect = useCallback(() => {
     console.log("[STDB] Reconnection triggered manually via context");
     setStatus("offline");
@@ -151,7 +150,6 @@ export const SpacetimeDBProvider = ({ children }: { children: ReactNode }) => {
     setHeartbeatError(undefined);
     setNextRetryIn(0);
     retryAttemptRef.current = 0;
-    setActiveRetryCount(0);
     // Note: Manual reconnect doesn't reset hasConnectedOnce, potentially allowing auto-retries 
     // to resume if they were previously active.
     if (retryTimerRef.current) {
@@ -165,32 +163,41 @@ export const SpacetimeDBProvider = ({ children }: { children: ReactNode }) => {
     // Postpone until we've at least tried to sync with main process file
     if (isSyncingMain) return null;
 
-    // Force a fresh connection via ConnectionManager by including retry count in URI
+    // We use reconnectKey and the current retry attempt to ensure a unique URI
+    // but we don't depend on activeRetryCount directly to avoid re-memoizing
+    // and breaking the connection session during the transition to 'online'.
     const url = new URL(stUri);
     url.searchParams.set("reconnectKey", reconnectKey.toString());
-    url.searchParams.set("retry", activeRetryCount.toString());
+    url.searchParams.set("retry", retryAttemptRef.current.toString());
     const finalUri = url.toString();
 
+    console.log(`[STDB] Creating new builder: ${finalUri}`);
     const b = DbConnection.builder()
       .withUri(finalUri)
       .withDatabaseName(stDb)
       .withToken(activeToken)
       .onConnect((connection, _identity, token) => {
-        if (b !== currentBuilderRef.current) return;
+        // Use the instance-captured builder 'b' for the check
+        if (b !== currentBuilderRef.current) {
+          console.warn("[STDB] onConnect fired for an abandoned builder. Ignoring.");
+          return;
+        }
 
         console.log("[STDB] SpacetimeDB Connected.");
         setStatus("online");
         setError(undefined);
         setHasConnectedOnce(true);
+        
+        // Reset retry counters
         retryAttemptRef.current = 0;
-        setActiveRetryCount(0);
         setNextRetryIn(0);
+        // DO NOT update activeRetryCount here as it would trigger a re-memoization 
+        // of the builder we are currently using, potentially breaking currentBuilderRef check.
+        
         const currentLocal = localStorage.getItem("auth_token");
-
-        // Only trigger a persistence/broadcast if it's actually new
         if (token && token !== currentLocal) {
           localStorage.setItem("auth_token", token);
-          setActiveToken(token); // Crucial: sync state immediately
+          setActiveToken(token);
           // @ts-ignore
           if (window.api?.setToken) window.api.setToken(token);
         }
@@ -248,7 +255,7 @@ export const SpacetimeDBProvider = ({ children }: { children: ReactNode }) => {
       });
 
     return b;
-  }, [activeToken, stUri, stDb, isSyncingMain, reconnectKey, activeRetryCount, scheduleRetry]);
+  }, [activeToken, stUri, stDb, isSyncingMain, reconnectKey, scheduleRetry]);
 
   useEffect(() => {
     currentBuilderRef.current = builder;

@@ -22,6 +22,7 @@ export const TickerScreen = () => {
     const connected = status === 'online';
     
     const updateStatus = useReducer(reducers.updateMessageDeliveryStatus);
+    const skipMissedMessages = useReducer(reducers.skipMissedMessages);
     
     const [machineUid, setMachineUid] = useState<string>('');
     const [activeMessage, setActiveMessage] = useState<{ id: bigint; displayId: bigint; text: string; repeat: number; totalRepeats: number; isTest?: boolean } | null>(null);
@@ -193,6 +194,23 @@ export const TickerScreen = () => {
             });
         }
     }, [messages, statuses, devices, machineUid, connected, activeMessage, appStartTime, settings.repeatCount]);
+
+    // Handle 'Skipped' status: Mark old messages as 'Skipped' if they were queued while we were offline
+    // We do this in bulk via a single reducer call on connection to avoid flooding the network
+    useEffect(() => {
+        if (!machineUid || !connected) return;
+
+        // Convert ms to micros for SpacetimeDB
+        const appStartTimeMicros = BigInt(appStartTime) * 1000n;
+        
+        console.log(`[Ticker] Requesting bulk skip for messages before ${appStartTime}ms`);
+        skipMissedMessages({ 
+            uid: machineUid, 
+            appStartTimeMicros 
+        }).catch(err => {
+            console.error("[Ticker] skipMissedMessages failed:", err);
+        });
+    }, [machineUid, connected, appStartTime, skipMissedMessages]);
 
     const handleAnimationIteration = () => {
         if (!activeMessage || !machineUid) return;

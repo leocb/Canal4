@@ -18,6 +18,7 @@ export const DeliveryStatus = t.enum("DeliveryStatus", {
   Queued: t.string(),
   InProgress: t.string(),
   Shown: t.string(),
+  Skipped: t.string(),
   Unavailable: t.string(),
   Cancelled: t.string(),
 });
