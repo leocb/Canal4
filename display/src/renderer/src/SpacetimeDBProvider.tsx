@@ -104,11 +104,16 @@ export const SpacetimeDBProvider = ({ children }: { children: ReactNode }) => {
     }
   }, []);
 
+  const hasConnectedOnceRef = useRef(false);
+  useEffect(() => {
+    hasConnectedOnceRef.current = hasConnectedOnce;
+  }, [hasConnectedOnce]);
+
   const scheduleRetry = useCallback(() => {
     if (retryTimerRef.current) return;
     
     // Only retry if it was connected previously as requested
-    if (!hasConnectedOnce) {
+    if (!hasConnectedOnceRef.current) {
       console.log("[STDB] Skipping auto-retry: App has never connected successfully.");
       return;
     }
