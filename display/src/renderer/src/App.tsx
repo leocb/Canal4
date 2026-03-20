@@ -1,6 +1,6 @@
 import { Routes, Route, Navigate } from "react-router-dom";
-import { useEffect, useState, useCallback } from "react";
-import { useSpacetimeDB, useReducer } from "spacetimedb/react";
+import { useEffect, useState } from "react";
+import { useReducer } from "spacetimedb/react";
 import { reducers } from "./module_bindings/index";
 import { SettingsScreen } from "./pages/SettingsScreen";
 import { TickerScreen } from "./pages/TickerScreen";
@@ -8,8 +8,8 @@ import { ErrorBoundary } from "./ErrorBoundary";
 import { useConnectivity } from "./SpacetimeDBProvider";
 
 function App() {
-  const { setHeartbeatError } = useConnectivityTracker();
-  const { isActive: connected } = useSpacetimeDB();
+  const { status, setHeartbeatError } = useConnectivity();
+  const connected = status === 'online';
   const displayConnect = useReducer(reducers.displayConnect);
   const [machineUid, setMachineUid] = useState<string>('');
 
@@ -53,55 +53,6 @@ function App() {
       <Route path="*" element={<Navigate to="/settings/pairing" replace />} />
     </Routes>
   );
-}
-
-// Internal tracker for the 15s countdown
-function useConnectivityTracker() {
-  const { status, reconnect, error, setHeartbeatError } = useConnectivity();
-  const [nextRetryIn, setNextRetryIn] = useState<number>(15);
-  const [hasAttemptFailed, setHasAttemptFailed] = useState(false);
-
-  useEffect(() => {
-    if (status === 'error') {
-      setHasAttemptFailed(true);
-    }
-  }, [status]);
-
-  const triggerReconnect = useCallback(() => {
-    console.log("[App] Triggering reconnection cycle...");
-    setNextRetryIn(15);
-    reconnect();
-  }, [reconnect]);
-
-  // Countdown logic
-  useEffect(() => {
-    if (status === 'online') {
-      setNextRetryIn(15);
-      setHasAttemptFailed(false);
-      return;
-    }
-
-    // Only countdown if we explicitly hit an error OR after being offline
-    if (status === 'error' || hasAttemptFailed) {
-      const interval = setInterval(() => {
-        setNextRetryIn((prev) => {
-          if (prev <= 0) return 0;
-          return prev - 1;
-        });
-      }, 1000);
-      return () => clearInterval(interval);
-    }
-    return undefined;
-  }, [status, hasAttemptFailed]);
-
-  // Handle auto-reconnect trigger when countdown hits 0
-  useEffect(() => {
-    if ((status === 'error' || (status === 'offline' && hasAttemptFailed)) && nextRetryIn === 0) {
-      triggerReconnect();
-    }
-  }, [status, nextRetryIn, hasAttemptFailed, triggerReconnect]);
-
-  return { status, nextRetryIn, reconnect: triggerReconnect, error, hasAttemptFailed, setHeartbeatError };
 }
 
 export default App;

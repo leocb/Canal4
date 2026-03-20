@@ -30,7 +30,7 @@ import { AddNodeScreen } from './pages/AddNodeScreen';
 
 // Inner content that uses SpacetimeDB context
 function AppContent() {
-  const { status, nextRetryIn, reconnect, connectionError, hasAttemptFailed } = useConnectivity();
+  const { status, nextRetryIn, reconnect, connectionError, isInitialLoad } = useConnectivity();
   const { isLoggedIn } = useAuth();
   const extendSession = useReducer(reducers.extendSession);
 
@@ -46,7 +46,7 @@ function AppContent() {
     return (
       <ReconnectingOverlay 
         nextRetryIn={nextRetryIn} 
-        isInitialLoad={!hasAttemptFailed}
+        isInitialLoad={isInitialLoad}
         onRetryNow={reconnect}
         error={connectionError}
       />
