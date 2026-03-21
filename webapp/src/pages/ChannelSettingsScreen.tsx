@@ -34,8 +34,10 @@ export const ChannelSettingsScreen = () => {
   )?.role.tag;
 
   const isVenueOwner = myVenueRole?.toLowerCase() === 'owner';
-  const isVenueAdmin = myVenueRole?.toLowerCase() === 'admin';
-  const canUpdate = isVenueOwner || isVenueAdmin || myChannelRole?.toLowerCase() === 'owner';
+  const isChannelOwner = myChannelRole?.toLowerCase() === 'owner';
+  const isChannelAdmin = myChannelRole?.toLowerCase() === 'admin';
+
+  const canUpdate = isVenueOwner || isChannelOwner || isChannelAdmin;
 
   const [name, setName] = useState('');
   const [description, setDescription] = useState('');

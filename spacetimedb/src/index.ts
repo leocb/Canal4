@@ -295,12 +295,13 @@ export const update_channel = spacetimedb.reducer(
     if (!venue) throw new SenderError("api_errors.venue_not_found");
 
     const myVenueMembership = [...ctx.db.VenueMember.venue_member_venue_id.filter(channel.venueId)].find(m => m.userId === userId);
-    const isVenueOwnerOrAdmin = myVenueMembership?.role.tag === "owner" || myVenueMembership?.role.tag === "admin";
+    const isVenueOwner = myVenueMembership?.role.tag === "owner";
     
     const myChannelRole = [...ctx.db.ChannelMemberRole.channel_member_role_channel_id.filter(channelId)].find(r => r.userId === userId);
     const isChannelOwner = myChannelRole?.role.tag === "owner";
+    const isChannelAdmin = myChannelRole?.role.tag === "admin";
 
-    if (!isVenueOwnerOrAdmin && !isChannelOwner) {
+    if (!isVenueOwner && !isChannelOwner && !isChannelAdmin) {
       throw new SenderError("api_errors.update_channel_forbidden");
     }
 

@@ -30,8 +30,11 @@ export const ChannelTemplatesScreen = () => {
     (r: any) => r.userId === user?.userId && r.channelId === channel?.channelId
   )?.role.tag;
 
-  const isVenueOwner = venue?.ownerId === user?.userId || myVenueRole?.toLowerCase() === 'owner';
-  const isChannelOwner = isVenueOwner || myChannelRole?.toLowerCase() === 'owner';
+  const isVenueOwner = myVenueRole?.toLowerCase() === 'owner';
+  const isChannelOwner = myChannelRole?.toLowerCase() === 'owner';
+  const isChannelAdmin = myChannelRole?.toLowerCase() === 'admin';
+
+  const canManageTemplates = isVenueOwner || isChannelOwner || isChannelAdmin;
 
   const channelTemplates = templates.filter(t => t.channelId === channelIdBigInt);
 
@@ -45,7 +48,7 @@ export const ChannelTemplatesScreen = () => {
   if (!isLoggedIn || !user || !connected) return null;
   if (!venue || !channel) return null;
 
-  if (!isChannelOwner) {
+  if (!canManageTemplates) {
     return (
       <div className="app-container empty-state">
         <h2>{t('venue_channels.access_denied')}</h2>

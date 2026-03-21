@@ -63,11 +63,10 @@ export const ChannelScreen = () => {
 
   const roleTag: string = isBlocked ? 'member' : (myChannelRole?.role.tag ?? 'member').toLowerCase();
   const isVenueOwner = !isBlocked && myVenueMembership?.role.tag === 'Owner';
-  const isVenueAdmin = !isBlocked && myVenueMembership?.role.tag === 'Admin';
   const isOwner = isVenueOwner || roleTag === 'owner';
-  const canUpdate = isOwner || isVenueAdmin;
   const isAdmin = isOwner || roleTag === 'admin';
   const isModerator = isAdmin || roleTag === 'moderator';
+  const canUpdate = isAdmin; // isAdmin includes isVenueOwner, but NOT isVenueAdmin
 
   // Messages: reverse chronological (newest at top per spec and notification style UX)
   const channelMessages = [...(messages as any[])]
@@ -302,31 +301,24 @@ export const ChannelScreen = () => {
             <h2>{channel.name}</h2>
           </div>
 
-          {/* 3-dot menu — per spec, only "Channel Settings" (owners only) */}
-          <div style={{ position: 'relative' }} ref={menuRef}>
-            <button className="icon-button" onClick={() => setShowMenu(s => !s)}>
-              <MoreVertical size={20} />
-            </button>
-            {showMenu && (
-              <div className="dropdown-menu glass-panel" style={{ position: 'absolute', right: 0, top: '48px', zIndex: 100, minWidth: '180px', display: 'flex', flexDirection: 'column' }}>
-                {canUpdate && (
-                  <>
-                    <button className="dropdown-item" onClick={() => { setShowMenu(false); navigate(`/venues/${venue.link}/channels/${channel.channelId}/settings`); }}>
-                      <Settings size={16} /> {t('channel.settings_button')}
-                    </button>
-                    <button className="dropdown-item" onClick={() => { setShowMenu(false); navigate(`/venues/${venue.link}/channels/${channel.channelId}/templates`); }}>
-                      <LayoutTemplate size={16} /> {t('channel.templates_button')}
-                    </button>
-                  </>
-                )}
-                {!canUpdate && (
-                  <div style={{ padding: '12px 16px', color: 'var(--text-secondary)', fontSize: '0.85rem' }}>
-                    {t('channel.no_actions')}
-                  </div>
-                )}
-              </div>
-            )}
-          </div>
+          {/* 3-dot menu — only shown if user can manage the channel */}
+          {canUpdate && (
+            <div style={{ position: 'relative' }} ref={menuRef}>
+              <button className="icon-button" onClick={() => setShowMenu(s => !s)}>
+                <MoreVertical size={20} />
+              </button>
+              {showMenu && (
+                <div className="dropdown-menu glass-panel" style={{ position: 'absolute', right: 0, top: '48px', zIndex: 100, minWidth: '180px', display: 'flex', flexDirection: 'column' }}>
+                  <button className="dropdown-item" onClick={() => { setShowMenu(false); navigate(`/venues/${venue.link}/channels/${channel.channelId}/settings`); }}>
+                    <Settings size={16} /> {t('channel.settings_button')}
+                  </button>
+                  <button className="dropdown-item" onClick={() => { setShowMenu(false); navigate(`/venues/${venue.link}/channels/${channel.channelId}/templates`); }}>
+                    <LayoutTemplate size={16} /> {t('channel.templates_button')}
+                  </button>
+                </div>
+              )}
+            </div>
+          )}
         </div>
 
         {/* Send message — moderators and above only */}
