@@ -63,10 +63,12 @@ export const ChannelScreen = () => {
 
   const roleTag: string = isBlocked ? 'member' : (myChannelRole?.role.tag ?? 'member').toLowerCase();
   const isVenueOwner = !isBlocked && myVenueMembership?.role.tag === 'Owner';
+  const isVenueAdmin = !isBlocked && myVenueMembership?.role.tag === 'Admin';
   const isOwner = isVenueOwner || roleTag === 'owner';
   const isAdmin = isOwner || roleTag === 'admin';
   const isModerator = isAdmin || roleTag === 'moderator';
   const canUpdate = isAdmin; // isAdmin includes isVenueOwner, but NOT isVenueAdmin
+  const canBlockUsers = isVenueOwner || isVenueAdmin;
 
   // Messages: reverse chronological (newest at top per spec and notification style UX)
   const channelMessages = [...(messages as any[])]
@@ -488,7 +490,7 @@ export const ChannelScreen = () => {
             <button className="dropdown-item danger" onClick={() => handleDelete(contextMsg)} style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
               <Trash2 size={16} /> {t('channel.delete_button')}
             </button>
-            {isAdmin && contextMsg.senderId !== user?.userId && (
+            {canBlockUsers && contextMsg.senderId !== user?.userId && (
               <button className="dropdown-item danger" onClick={() => handleDeleteAndBlock(contextMsg)} style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
                 <UserX size={16} /> {t('channel.delete_block_button')}
               </button>

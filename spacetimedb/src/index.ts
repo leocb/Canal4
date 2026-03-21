@@ -583,6 +583,12 @@ export const block_user = spacetimedb.reducer(
       throw new SenderError("api_errors.cannot_block_self");
     }
 
+    // New rules:
+    // 1. Cannot block owners
+    if (targetMember.role.tag === "owner") {
+      throw new SenderError("api_errors.cannot_block_owner");
+    }
+
     ctx.db.VenueMember.delete({ ...targetMember });
     ctx.db.VenueMember.insert({ ...targetMember, isBlocked: true });
   }
@@ -600,6 +606,11 @@ export const unblock_user = spacetimedb.reducer(
     const isAdmin = callerMember?.role.tag === "owner" || callerMember?.role.tag === "admin";
 
     if (!isAdmin) throw new SenderError("api_errors.unblock_user_forbidden");
+
+    // New rule: cannot unblock self
+    if (targetUserId === userId) {
+      throw new SenderError("api_errors.cannot_unblock_self");
+    }
 
     const targetMember = allMembers.find(m => m.userId === targetUserId);
     if (!targetMember) throw new SenderError("api_errors.target_user_not_in_venue");

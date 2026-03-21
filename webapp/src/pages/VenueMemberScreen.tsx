@@ -117,6 +117,8 @@ export const VenueMemberScreen = () => {
     }
   };
 
+  const targetRole = targetMember.role.tag.toLowerCase();
+
   const toggleBlock = async () => {
     if (targetMember.isBlocked) {
       if (!window.confirm(t('venue_member.confirm_unblock', { name: targetUser.name }))) return;
@@ -142,6 +144,9 @@ export const VenueMemberScreen = () => {
       }
     }
   };
+
+  const canBlock = (isVenueOwner || isVenueAdmin) && memberId !== user?.userId && targetRole !== 'owner';
+  const canUnblock = (isVenueOwner || isVenueAdmin) && memberId !== user?.userId;
 
   const availableRoles = ['Owner', 'Admin', 'Moderator', 'Member'];
 
@@ -233,17 +238,47 @@ export const VenueMemberScreen = () => {
               {t('venue_member.last_seen', { date: formatDate(targetMember.lastSeen) })}
             </p>
           </div>
-          <div>
-            <button className={targetMember.isBlocked ? "primary" : "danger"} onClick={toggleBlock} disabled={loading}>
-              {targetMember.isBlocked ? t('venue_member.unblock_button') : t('venue_member.block_button')}
-            </button>
-          </div>
         </div>
 
         {lastMessage && (
           <div style={{ marginTop: '16px', padding: '16px', background: 'rgba(0,0,0,0.2)', borderRadius: '8px' }}>
             <p style={{ margin: 0, fontSize: '0.9rem', color: 'var(--text-secondary)', marginBottom: '8px' }}>{t('venue_member.last_message', { date: formatDate(lastMessage.sentAt) })}</p>
             <p style={{ margin: 0 }}>"{lastMessage.content}"</p>
+            <div style={{ marginTop: '12px', display: 'flex', justifyContent: 'flex-end' }}>
+              <button 
+                className={targetMember.isBlocked ? "primary" : "secondary"} 
+                onClick={toggleBlock} 
+                disabled={loading || (targetMember.isBlocked ? !canUnblock : !canBlock)}
+                style={{ 
+                  fontSize: '0.8rem', 
+                  padding: '6px 12px',
+                  background: targetMember.isBlocked ? 'var(--accent-color)' : 'rgba(255,80,80,0.1)',
+                  color: targetMember.isBlocked ? 'white' : 'var(--error-color)',
+                  border: targetMember.isBlocked ? 'none' : '1px solid rgba(255,80,80,0.2)'
+                }}
+              >
+                {targetMember.isBlocked ? t('venue_member.unblock_button') : t('venue_member.block_button')}
+              </button>
+            </div>
+          </div>
+        )}
+
+        {!lastMessage && (
+          <div style={{ marginTop: '16px', display: 'flex', justifyContent: 'flex-end' }}>
+            <button 
+              className={targetMember.isBlocked ? "primary" : "secondary"} 
+              onClick={toggleBlock} 
+              disabled={loading || (targetMember.isBlocked ? !canUnblock : !canBlock)}
+              style={{ 
+                fontSize: '0.8rem', 
+                padding: '6px 12px',
+                background: targetMember.isBlocked ? 'var(--accent-color)' : 'rgba(255,80,80,0.1)',
+                color: targetMember.isBlocked ? 'white' : 'var(--error-color)',
+                border: targetMember.isBlocked ? 'none' : '1px solid rgba(255,80,80,0.2)'
+              }}
+            >
+              {targetMember.isBlocked ? t('venue_member.unblock_button') : t('venue_member.block_button')}
+            </button>
           </div>
         )}
       </div>

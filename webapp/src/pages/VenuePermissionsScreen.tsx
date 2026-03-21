@@ -66,8 +66,8 @@ export const VenuePermissionsScreen = () => {
   const getHighestRole = (userId: bigint): { level: number, name: string } => {
     const venueMember = venueMembers.find(m => m.venueId === venueIdBigInt && m.userId === userId);
     const venueRole = venueMember?.role.tag;
-    if (venueRole === 'Owner') return { level: 4, name: 'Owner' };
-    if (venueRole === 'Admin') return { level: 3.5, name: 'Admin (Global)' };
+    if (venueRole === 'Owner') return { level: 4, name: 'owner' };
+    if (venueRole === 'Admin') return { level: 3.5, name: 'admin_global' };
     
     const roles = channelRoles.filter(r => r.userId === userId && venueChannels.some(c => c.channelId === r.channelId));
     
@@ -82,10 +82,10 @@ export const VenuePermissionsScreen = () => {
       if (tag === 'moderator') hasMod = true;
     }
     
-    if (hasOwner) return { level: 4, name: 'Owner' };
-    if (hasAdmin) return { level: 3, name: 'Admin' };
-    if (hasMod)  return { level: 2, name: 'Moderator' };
-    return { level: 1, name: 'Member' };
+    if (hasOwner) return { level: 4, name: 'owner' };
+    if (hasAdmin) return { level: 3, name: 'admin' };
+    if (hasMod)  return { level: 2, name: 'moderator' };
+    return { level: 1, name: 'member' };
   };
 
   const processedMembers: GroupedMember[] = members.map(m => {
@@ -108,17 +108,21 @@ export const VenuePermissionsScreen = () => {
 
   const filteredMembers = processedMembers.filter(m => {
     const matchesSearch = m.name.toLowerCase().includes(searchTerm.toLowerCase());
-    const effectiveRole = m.isBlocked ? 'Blocked' : m.highestRole;
-    const matchesRole = roleFilter ? effectiveRole === roleFilter : true;
+    const effectiveRole = m.isBlocked ? 'blocked' : m.highestRole;
+    const matchesRole = roleFilter ? (
+      effectiveRole === roleFilter.toLowerCase() || 
+      (roleFilter.toLowerCase() === 'admin' && effectiveRole === 'admin_global')
+    ) : true;
     return matchesSearch && matchesRole;
   });
 
   const getRoleBadgeColor = (role: string, isBlocked: boolean) => {
     if (isBlocked) return { bg: 'rgba(255,80,80,0.15)', text: 'var(--error-color)' };
     switch (role) {
-      case 'Owner': return { bg: 'rgba(234, 179, 8, 0.15)', text: '#eab308' };
-      case 'Admin': return { bg: 'rgba(56, 189, 248, 0.15)', text: '#38bdf8' };
-      case 'Moderator': return { bg: 'rgba(52, 211, 153, 0.15)', text: '#34d399' };
+      case 'owner': return { bg: 'rgba(234, 179, 8, 0.15)', text: '#eab308' };
+      case 'admin_global':
+      case 'admin': return { bg: 'rgba(56, 189, 248, 0.15)', text: '#38bdf8' };
+      case 'moderator': return { bg: 'rgba(52, 211, 153, 0.15)', text: '#34d399' };
       default: return { bg: 'var(--surface-color)', text: 'var(--text-secondary)' };
     }
   };
@@ -190,7 +194,7 @@ export const VenuePermissionsScreen = () => {
                 fontSize: '0.8rem',
                 fontWeight: 600,
               }}>
-                {member.isBlocked ? t('roles.blocked') : t(`roles.${member.highestRole.toLowerCase()}`)}
+                {member.isBlocked ? t('roles.blocked') : t(`roles.${member.highestRole}`)}
               </span>
             </div>
           );

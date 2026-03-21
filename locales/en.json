@@ -189,6 +189,7 @@
   "roles": {
     "owner": "Owner",
     "admin": "Admin",
+    "admin_global": "Venue Admin",
     "moderator": "Moderator",
     "member": "Member",
     "blocked": "Blocked",
@@ -265,7 +266,9 @@
     "display_again": "Display Again",
     "delete_button": "Delete",
     "delete_block_button": "Delete & Block",
-    "close_button": "Close"
+    "close_button": "Close",
+    "confirm_block_user": "Are you sure you want to block this user?",
+    "block_user": "Block User"
   },
   "add_node": {
     "title": "Add Desktop Display",
@@ -418,7 +421,9 @@
     "rename_node_forbidden": "Only venue owners or channel admins can rename display nodes",
     "unpair_node_forbidden": "Only the registered device identity can unpair itself.",
     "cannot_demote_last_owner": "Cannot demote yourself — you are the last owner of this venue/channel.",
-    "cannot_demote_same_role": "Insufficient permissions to demote another user of the same or higher role rank."
+    "cannot_demote_same_role": "Insufficient permissions to demote another user of the same or higher role rank.",
+    "cannot_block_owner": "You cannot block an owner.",
+    "cannot_unblock_self": "You cannot unblock yourself."
   },
   "settings": {
     "title": "Canal4 Display node Settings",

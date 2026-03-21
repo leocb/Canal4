@@ -189,6 +189,7 @@
   "roles": {
     "owner": "Proprietário",
     "admin": "Administrador",
+    "admin_global": "Administrador do Local",
     "moderator": "Moderador",
     "member": "Membro",
     "blocked": "Bloqueado",
@@ -265,7 +266,9 @@
     "display_again": "Exibir Novamente",
     "delete_button": "Excluir",
     "delete_block_button": "Excluir e Bloquear",
-    "close_button": "Fechar"
+    "close_button": "Fechar",
+    "confirm_block_user": "Tem certeza que deseja bloquear este usuário?",
+    "block_user": "Bloquear Usuário"
   },
   "add_node": {
     "title": "Adicionar Display Desktop",
@@ -418,7 +421,9 @@
     "rename_node_forbidden": "Apenas proprietários do local ou administradores de canal podem renomear nós de exibição",
     "unpair_node_forbidden": "Apenas a identidade do dispositivo registrado pode desemparelhar a si mesmo.",
     "cannot_demote_last_owner": "Você não pode se rebaixar — você é o único proprietário restante deste local/canal.",
-    "cannot_demote_same_role": "Permissões insuficientes para rebaixar outro usuário com cargo igual ou superior ao seu."
+    "cannot_demote_same_role": "Permissões insuficientes para rebaixar outro usuário com cargo igual ou superior ao seu.",
+    "cannot_block_owner": "Você não pode bloquear um proprietário.",
+    "cannot_unblock_self": "Você não pode desbloquear a si mesmo."
   },
   "settings": {
     "title": "Configurações do Nó de Display Canal4",
