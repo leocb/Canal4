@@ -1,5 +1,5 @@
-import React, { useState, useEffect } from 'react';
-import { AlertTriangle, UserPlus, LogIn, Loader2 } from 'lucide-react';
+import { AlertTriangle, UserPlus, LogIn, Loader2, Languages, ChevronDown } from 'lucide-react';
+import { useState, useEffect, useRef } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { reducers } from '../module_bindings/index.ts';
 import { useReducer } from 'spacetimedb/react';
@@ -20,6 +20,20 @@ export const LoginScreen = () => {
 
   const updateUserName = useReducer(reducers.updateUserName);
   const { createPasskey, authenticatePasskey } = usePasskeys();
+  
+  const [showMenu, setShowMenu] = useState(false);
+  const menuRef = useRef<HTMLDivElement>(null);
+
+  // Close menu on click outside
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (menuRef.current && !menuRef.current.contains(event.target as Node)) {
+        setShowMenu(false);
+      }
+    };
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => document.removeEventListener("mousedown", handleClickOutside);
+  }, []);
 
   // If already logged in and has a name, navigate away
   useEffect(() => {
@@ -190,23 +204,64 @@ export const LoginScreen = () => {
         )}
       </div>
 
-      <div style={{ display: 'flex', justifyContent: 'center', gap: '8px', marginTop: '24px' }}>
-        <div style={{ display: 'flex', alignItems: 'center', gap: '8px', background: 'rgba(255,255,255,0.05)', padding: '4px 10px', borderRadius: '8px', border: '1px solid rgba(255,255,255,0.1)' }}>
-          <select 
-            value={i18n.language} 
-            onChange={(e) => i18n.changeLanguage(e.target.value)}
+      <div style={{ display: 'flex', justifyContent: 'center', marginTop: '24px' }}>
+        <div style={{ position: 'relative', minWidth: '160px' }} ref={menuRef}>
+          <button
+            className="secondary"
             style={{ 
-              background: 'transparent', 
-              color: 'var(--text-primary)', 
-              border: 'none', 
-              fontSize: '0.85rem', 
-              outline: 'none',
-              cursor: 'pointer'
+              width: '100%', 
+              display: 'flex', 
+              alignItems: 'center', 
+              justifyContent: 'space-between', 
+              padding: '10px 16px',
+              fontSize: '0.9rem' 
             }}
+            onClick={() => setShowMenu(!showMenu)}
+            type="button"
           >
-            <option value="en" style={{ background: '#1e1e2e' }}>{t('languages.en')}</option>
-            <option value="pt-BR" style={{ background: '#1e1e2e' }}>{t('languages.pt-BR')}</option>
-          </select>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+              <Languages size={18} />
+              <span>{i18n.language === 'en' ? t('languages.en') : t('languages.pt-BR')}</span>
+            </div>
+            <ChevronDown size={16} style={{ 
+              transform: showMenu ? 'rotate(180deg)' : 'none', 
+              transition: 'transform 0.2s',
+              opacity: 0.7 
+            }} />
+          </button>
+          
+          {showMenu && (
+            <div className="dropdown-menu glass-panel" style={{ 
+              position: 'absolute', 
+              bottom: 'calc(100% + 8px)', 
+              left: 0,
+              right: 0,
+              zIndex: 100, 
+              display: 'flex', 
+              flexDirection: 'column' 
+            }}>
+              <button
+                className="dropdown-item"
+                style={{
+                  color: i18n.language === 'en' ? 'var(--accent-color)' : 'inherit',
+                  fontWeight: i18n.language === 'en' ? 600 : 400
+                }}
+                onClick={() => { i18n.changeLanguage('en'); setShowMenu(false); }}
+              >
+                {t('languages.en')}
+              </button>
+              <button
+                className="dropdown-item"
+                style={{
+                  color: i18n.language === 'pt-BR' ? 'var(--accent-color)' : 'inherit',
+                  fontWeight: i18n.language === 'pt-BR' ? 600 : 400
+                }}
+                onClick={() => { i18n.changeLanguage('pt-BR'); setShowMenu(false); }}
+              >
+                {t('languages.pt-BR')}
+              </button>
+            </div>
+          )}
         </div>
       </div>
 

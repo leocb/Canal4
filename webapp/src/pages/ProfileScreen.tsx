@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../hooks/useAuth';
 import { useReducer } from 'spacetimedb/react';
@@ -18,6 +18,18 @@ export const ProfileScreen = () => {
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
   const [deleteConfirmationName, setDeleteConfirmationName] = useState('');
   const [showLangMenu, setShowLangMenu] = useState(false);
+  const menuRef = useRef<HTMLDivElement>(null);
+
+  // Close menu on click outside
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (menuRef.current && !menuRef.current.contains(event.target as Node)) {
+        setShowLangMenu(false);
+      }
+    };
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => document.removeEventListener("mousedown", handleClickOutside);
+  }, []);
 
   const updateUserName = useReducer(reducers.updateUserName);
   const deleteUserAccount = useReducer(reducers.deleteUserAccount);
@@ -114,13 +126,21 @@ export const ProfileScreen = () => {
         </div>
       </form>
       <div style={{ marginTop: '32px', display: 'flex', flexDirection: 'column', gap: '16px', width: '100%' }}>
-        <div className="glass-panel" style={{ padding: '16px', display: 'flex', flexDirection: 'column', gap: '12px', position: 'relative' }}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: '8px', color: 'var(--text-secondary)', marginBottom: '4px' }}>
+        <div style={{ 
+          display: 'flex', 
+          flexDirection: 'column',
+          gap: '12px',
+          padding: '24px',
+          background: 'var(--surface-color)',
+          border: '1px solid var(--surface-border)',
+          borderRadius: 'var(--radius-lg)',
+        }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '8px', color: 'var(--text-secondary)' }}>
             <Languages size={18} />
             <span style={{ fontWeight: 600, fontSize: '0.9rem' }}>{t('common.language')}</span>
           </div>
-
-          <div style={{ position: 'relative' }}>
+          
+          <div style={{ position: 'relative' }} ref={menuRef}>
             <button
               type="button"
               className="secondary"
@@ -139,47 +159,38 @@ export const ProfileScreen = () => {
             </button>
 
             {showLangMenu && (
-              <>
-                <div
-                  style={{ position: 'fixed', inset: 0, zIndex: 999 }}
-                  onClick={() => setShowLangMenu(false)}
-                />
-                <div className="glass-panel dropdown-menu" style={{
-                  position: 'absolute',
-                  top: '100%',
-                  left: 0,
-                  right: 0,
-                  marginTop: '8px',
-                  zIndex: 1000,
-                  transformOrigin: 'top center',
-                  background: 'rgba(20, 25, 35, 0.98)',
-                  backdropFilter: 'blur(16px)',
-                  border: '1px solid var(--surface-border)'
-                }}>
-                  <button
-                    type="button"
-                    className="dropdown-item"
-                    style={{
-                      background: i18n.language === 'en' ? 'rgba(255,255,255,0.1)' : 'transparent',
-                      color: i18n.language === 'en' ? 'var(--accent-color)' : 'inherit'
-                    }}
-                    onClick={() => { i18n.changeLanguage('en'); setShowLangMenu(false); }}
-                  >
-                    {t('languages.en')}
-                  </button>
-                  <button
-                    type="button"
-                    className="dropdown-item"
-                    style={{
-                      background: i18n.language === 'pt-BR' ? 'rgba(255,255,255,0.1)' : 'transparent',
-                      color: i18n.language === 'pt-BR' ? 'var(--accent-color)' : 'inherit'
-                    }}
-                    onClick={() => { i18n.changeLanguage('pt-BR'); setShowLangMenu(false); }}
-                  >
-                    {t('languages.pt-BR')}
-                  </button>
-                </div>
-              </>
+              <div className="dropdown-menu glass-panel" style={{ 
+                position: 'absolute', 
+                top: 'calc(100% + 8px)',
+                left: 0,
+                right: 0,
+                zIndex: 100, 
+                display: 'flex', 
+                flexDirection: 'column' 
+              }}>
+                <button
+                  type="button"
+                  className="dropdown-item"
+                  style={{
+                    color: i18n.language === 'en' ? 'var(--accent-color)' : 'inherit',
+                    fontWeight: i18n.language === 'en' ? 600 : 400
+                  }}
+                  onClick={() => { i18n.changeLanguage('en'); setShowLangMenu(false); }}
+                >
+                  {t('languages.en')}
+                </button>
+                <button
+                  type="button"
+                  className="dropdown-item"
+                  style={{
+                    color: i18n.language === 'pt-BR' ? 'var(--accent-color)' : 'inherit',
+                    fontWeight: i18n.language === 'pt-BR' ? 600 : 400
+                  }}
+                  onClick={() => { i18n.changeLanguage('pt-BR'); setShowLangMenu(false); }}
+                >
+                  {t('languages.pt-BR')}
+                </button>
+              </div>
             )}
           </div>
         </div>
