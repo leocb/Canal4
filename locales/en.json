@@ -1,13 +1,12 @@
 {
   "app": {
     "name": "Canal4",
-    "desktop_name": "Canal4 Display node",
-    "default_node_name": "Display Node ({{id}})"
+    "desktop_name": "Canal4 Display"
   },
   "tray": {
     "settings": "Settings",
     "quit": "Quit Canal4",
-    "tooltip": "Canal4 Display node"
+    "tooltip": "Canal4 Display"
   },
   "login": {
     "title": "Canal4",
@@ -68,7 +67,7 @@
     "send_message": "Send Message",
     "templates": "Templates",
     "displays": "Displays",
-    "new_node": "New Node",
+    "new_node": "New Display",
     "join": "Join/Invite"
   },
   "languages": {
@@ -112,8 +111,8 @@
     "back_to_venues": "Back to Venues",
     "menu": {
       "new_channel": "New Channel",
-      "display_nodes": "Display Nodes",
-      "venue_settings": "Venue Settings",
+      "display_nodes": "Displays",
+      "venue_settings": "Settings",
       "permissions": "Permissions",
       "invite": "Invite",
       "notifications": "Notifications",
@@ -136,11 +135,11 @@
     }
   },
   "venue_settings": {
-    "title": "{{name}} Settings",
+    "title": "Venue Settings",
     "error_name_required": "Name is required",
-    "error_confirm_mismatch": "Confirmation name does not match",
+    "error_confirm_mismatch": "Confirmation and name are not the same",
     "venue_name_label": "Venue Name",
-    "venue_name_placeholder": "E.g. Engineering Team",
+    "venue_name_placeholder": "E.g. Main Building",
     "confirm_button": "Confirm",
     "danger_zone": {
       "title": "Danger Zone",
@@ -152,8 +151,8 @@
   },
   "new_channel": {
     "title": "Create a New Channel",
-    "name_placeholder": "Channel Name (e.g. alerts-prod)",
-    "description_placeholder": "Description (optional)",
+    "name_placeholder": "E.g. Cafeteria",
+    "description_placeholder": "Description",
     "create": "Create Channel",
     "creating": "Creating...",
     "error_failed": "Failed to create channel. Please try again."
@@ -182,7 +181,7 @@
     "field_required": "This field is required.",
     "field_numeric_only": "Only numeric values are allowed.",
     "field_invalid_format": "Invalid format.",
-    "no_node_confirm": "No display node is currently connected to this venue. Send anyway?",
+    "no_node_confirm": "No display is currently connected to this venue. Send anyway?",
     "timeout_error": "Request timed out. The server didn't respond in time.",
     "success_title": "Message Sent!",
     "title": "Send Message",
@@ -193,7 +192,7 @@
     "sending": "Sending..."
   },
   "venue_permissions": {
-    "title": "{{name}} Permissions",
+    "title": "Manage Permissions",
     "unknown_user": "Unknown User",
     "search_placeholder": "Search members...",
     "no_members": "No members found.",
@@ -216,24 +215,21 @@
     "error_update_role": "Failed to update role. Please try again.",
     "error_update_roles": "Failed to update roles. Please try again.",
     "error_update_venue_role": "Failed to update venue role. Please try again.",
-    "confirm_apply_all": "Apply role {{role}} to all channels in the venue?",
+    "confirm_apply_all": "Apply the role of {{role}} in all channels of the venue?",
     "confirm_unblock": "Are you sure you want to unblock {{name}}?",
     "confirm_block": "Are you sure you want to block {{name}}?",
     "never": "Never",
     "blocked_badge": "BLOCKED",
     "joined": "Joined: {{date}}",
     "last_seen": "Last Seen: {{date}}",
-    "venue_base_role": "Venue Base Role:",
-    "apply_all_prompt": "Enter role to apply to all channels (Owner, Admin, Moderator, Member):",
-    "apply_all_invalid": "Invalid role entered.",
-    "apply_all_button": "Apply to all channels",
+    "venue_role_section": "Venue Role",
+    "venue_base_role": "Current role:",
     "unblock_button": "Unblock User",
     "block_button": "Block User",
     "last_message": "Last Message ({{date}}):",
-    "channel_permissions": "Channel Permissions",
+    "channel_permissions": "Channel Roles",
     "no_channels": "No channels in this venue.",
-    "venue_role_section": "Venue Role (Global)",
-    "help_title": "Role Permissions Help",
+    "help_title": "Roles Help",
     "help_owner_title": "Owner",
     "help_owner_desc": "Full control over the venue and all its channels. Can promote others to Admin or Owner.",
     "help_admin_title": "Admin",
@@ -241,7 +237,7 @@
     "help_moderator_title": "Moderator",
     "help_moderator_desc": "Can send and manage messages. Cannot change member roles.",
     "help_member_title": "Member",
-    "help_member_desc": "Can view and send messages if the channel allows.",
+    "help_member_desc": "Can view messages",
     "apply_to_all_label": "Bulk Action: Set role for all channels",
     "apply_button": "Apply"
   },
@@ -265,13 +261,13 @@
     "not_member": "You are not a member of this venue.",
     "blocked_in_venue": "You have been blocked in this venue.",
     "deleted_user": "[deleted user]",
-    "repeat_no_node_confirm": "No display node is currently connected to this venue. Repeat anyway?",
+    "repeat_no_node_confirm": "No display is currently connected to this venue. Repeat anyway?",
     "delete_block_confirm": "Are you sure you want to delete this message and block the user?",
     "settings_button": "Channel Settings",
     "templates_button": "Templates",
     "no_actions": "No actions available",
     "send_broadcast": "Send New Broadcast",
-    "display_nodes": "Display Nodes",
+    "display_nodes": "Displays",
     "connected": "Connected",
     "offline": "Offline",
     "no_notifications_title": "No recent notifications",
@@ -287,33 +283,33 @@
     "block_user": "Block User"
   },
   "add_node": {
-    "title": "Add Desktop Display",
-    "helper_text": "Pair a new display node by entering its 6-digit PIN.",
+    "title": "Add Display",
+    "helper_text": "Pair a new display by entering its 6-digit PIN.",
     "error_pin_digits": "PIN must be exactly 6 digits.",
-    "error_name_required": "Please provide a name for this node.",
+    "error_name_required": "Please provide a name for this display.",
     "error_pairing_failed": "Pairing failed — check the PIN and try again.",
-    "name_placeholder": "Node Name (e.g. Lobby TV)",
+    "name_placeholder": "Lobby TV",
     "pairing": "Pairing...",
-    "pair_button": "Pair Node"
+    "pair_button": "Pair Display"
   },
   "display_nodes": {
-    "title": "{{name}} Desktop Displays",
+    "title": "Manage Displays",
     "unauthorized": "Unauthorized",
-    "unauthorized_helper": "Only Admins and Owners can manage desktop displays.",
-    "confirm_delete": "Are you sure you want to remove the display node \"{{name}}\"? This cannot be undone.",
+    "unauthorized_helper": "Only Admins and Owners can manage displays.",
+    "confirm_delete": "Are you sure you want to remove the display \"{{name}}\"? This cannot be undone.",
     "error_delete": "Error deleting device: {{error}}",
-    "rename_prompt": "Enter new name for this display node:",
+    "rename_prompt": "Enter new name for this display:",
     "error_rename": "Error updating name: {{error}}",
     "back_to_channels": "Back to Channel List",
-    "add_button": "Add Node",
+    "add_button": "Add Display",
     "no_displays": "No displays registered",
-    "no_displays_helper": "Pair a new display node below to see it here.",
+    "no_displays_helper": "Pair a new display below to see it here.",
     "last_seen": "Last seen: {{date}}",
-    "rename_tooltip": "Rename display node",
-    "delete_tooltip": "Delete Display Node"
+    "rename_tooltip": "Rename display",
+    "delete_tooltip": "Delete Display"
   },
   "channel_templates": {
-    "title": "{{name}} Templates",
+    "title": "Manage Templates",
     "only_owners": "Only channel owners can manage templates.",
     "new_template_tooltip": "New Template",
     "no_templates": "No Templates",
@@ -321,7 +317,7 @@
     "create_button": "Create Template"
   },
   "channel_settings": {
-    "title": "{{name}} Settings",
+    "title": "Settings",
     "name_label": "Channel Name",
     "name_placeholder": "e.g., General Announcements",
     "desc_label": "Description",
@@ -379,12 +375,7 @@
   },
   "api_errors": {
     "not_logged_in": "Not logged in",
-    "session_expired": "Session expired. Please log in again using email PIN.",
-    "email_required": "Must provide email to login/create user",
-    "unauthorized": "Unauthorized",
-    "lockout_fail": "This account is temporarily locked due to too many failed attempts. Try again in 10 minutes.",
-    "lockout_wait": "This account is temporarily locked. Please wait 10 minutes.",
-    "no_login_request": "No login requested for this email",
+    "session_expired": "Session expired. Please log in again.",
     "invalid_pin": "This PIN is invalid or has expired",
     "change_name_forbidden": "You are only permitted to change your own name.",
     "user_not_found": "User not found",
@@ -425,16 +416,16 @@
     "member_of_venue_required": "You are not a member of this venue.",
     "blocked_in_venue": "You are blocked in this venue.",
     "repeat_message_forbidden": "Only Moderators and above can repeat messages.",
-    "register_node_member_required": "You must be a member of this venue to register a display node",
-    "register_node_forbidden": "Only venue owners or channel admins can register display nodes",
+    "register_node_member_required": "You must be a member of this venue to register a display",
+    "register_node_forbidden": "Only venue owners or channel admins can register displays",
     "invalid_pin_expired": "Invalid or expired PIN",
     "pin_expired": "PIN has expired",
-    "display_device_not_registered": "Display device not registered or identity mismatch",
+    "display_device_not_registered": "Display not registered",
     "channel_not_found_for_message": "Channel for message not found",
-    "display_device_mismatch": "Display device not paired with this venue or identity mismatch",
+    "display_device_mismatch": "Display not paired with this venue",
     "device_not_found": "Device not found",
-    "delete_node_forbidden": "Only venue owners or channel admins can delete display nodes",
-    "rename_node_forbidden": "Only venue owners or channel admins can rename display nodes",
+    "delete_node_forbidden": "Only venue owners or channel admins can delete displays",
+    "rename_node_forbidden": "Only venue owners or channel admins can rename displays",
     "unpair_node_forbidden": "Only the registered device identity can unpair itself.",
     "cannot_demote_last_owner": "Cannot demote yourself — you are the last owner of this venue/channel.",
     "cannot_demote_same_role": "Insufficient permissions to demote another user of the same or higher role rank.",
@@ -442,7 +433,7 @@
     "cannot_unblock_self": "You cannot unblock yourself."
   },
   "settings": {
-    "title": "Canal4 Display node Settings",
+    "title": "Canal4 Display Settings",
     "tabs": {
       "logs": "Messages",
       "pairing": "Pairing",
@@ -533,7 +524,7 @@
       "as_name": "as \"{{name}}\"",
       "register_new": "Register with a New Venue",
       "register_helper": "Generate a 6-digit PIN, then enter it in the Web Dashboard under",
-      "register_path": "Venue > Desktop Displays > Add Node",
+      "register_path": "Venue > Menu > Displays > Add Display",
       "enter_pin_helper": "Enter this PIN in the Web Dashboard:",
       "generate_pin": "Generate Pairing PIN",
       "pin_expires": "Expires in {{seconds}}s",

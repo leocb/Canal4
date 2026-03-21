@@ -1,13 +1,12 @@
 {
   "app": {
     "name": "Canal4",
-    "desktop_name": "Nó de Display Canal4",
-    "default_node_name": "Nó de Exibição ({{id}})"
+    "desktop_name": "Tela Canal4"
   },
   "tray": {
     "settings": "Configurações",
-    "quit": "Sair do Canal4",
-    "tooltip": "Nó de Display Canal4"
+    "quit": "Fechar",
+    "tooltip": "Tela Canal4"
   },
   "login": {
     "title": "Canal4",
@@ -40,7 +39,7 @@
     "back_to_venues": "Voltar para Locais"
   },
   "common": {
-    "quit": "Sair",
+    "quit": "Fechar",
     "back": "Voltar",
     "loading": "Carregando...",
     "error": "Erro",
@@ -67,8 +66,8 @@
     "new_channel": "Novo Canal",
     "send_message": "Enviar Mensagem",
     "templates": "Modelos",
-    "displays": "Displays",
-    "new_node": "Novo Nó",
+    "displays": "Telas",
+    "new_node": "Nova Tela",
     "join": "Entrar/Convite"
   },
   "languages": {
@@ -88,7 +87,7 @@
   },
   "venues_list": {
     "login_required": "Por favor, faça login para ver os locais.",
-    "go_to_login": "Ir para Login",
+    "go_to_login": "Entrar",
     "title": "Seus Locais",
     "new_venue": "Novo Local",
     "no_venues": "Nenhum local encontrado",
@@ -112,8 +111,8 @@
     "back_to_venues": "Voltar para Locais",
     "menu": {
       "new_channel": "Novo Canal",
-      "display_nodes": "Nós de Exibição",
-      "venue_settings": "Configurações do Local",
+      "display_nodes": "Telas",
+      "venue_settings": "Configurações",
       "permissions": "Permissões",
       "invite": "Convidar",
       "notifications": "Notificações",
@@ -136,11 +135,11 @@
     }
   },
   "venue_settings": {
-    "title": "Configurações de {{name}}",
+    "title": "Configurações do Local",
     "error_name_required": "O nome é obrigatório",
-    "error_confirm_mismatch": "O nome de confirmação não coincide",
+    "error_confirm_mismatch": "A confirmação não está igual o nome",
     "venue_name_label": "Nome do Local",
-    "venue_name_placeholder": "Ex: Equipe de Engenharia",
+    "venue_name_placeholder": "Ex: Prédio Matriz",
     "confirm_button": "Confirmar",
     "danger_zone": {
       "title": "Zona de Perigo",
@@ -152,8 +151,8 @@
   },
   "new_channel": {
     "title": "Criar um Novo Canal",
-    "name_placeholder": "Nome do Canal (ex: alertas-prod)",
-    "description_placeholder": "Descrição (opcional)",
+    "name_placeholder": "Ex: Cafeteria",
+    "description_placeholder": "Descrição",
     "create": "Criar Canal",
     "creating": "Criando...",
     "error_failed": "Falha ao criar canal. Por favor, tente novamente."
@@ -182,24 +181,24 @@
     "field_required": "Este campo é obrigatório.",
     "field_numeric_only": "Apenas valores numéricos são permitidos.",
     "field_invalid_format": "Formato inválido.",
-    "no_node_confirm": "Nenhum nó de exibição está conectado a este local no momento. Enviar assim mesmo?",
+    "no_node_confirm": "Nenhuma tela está conectada a este local no momento. Enviar assim mesmo?",
     "timeout_error": "Tempo limite da solicitação atingido. O servidor não respondeu a tempo.",
     "success_title": "Mensagem Enviada!",
     "title": "Enviar Mensagem",
     "select_template": "Selecionar Modelo",
     "optional": "(Opcional)",
-    "live_preview": "Visualização ao Vivo",
+    "live_preview": "Mensagem completa",
     "preview_empty": "A mensagem aparecerá aqui...",
     "sending": "Enviando..."
   },
   "venue_permissions": {
-    "title": "Permissões de {{name}}",
+    "title": "Gerenciar Permissões",
     "unknown_user": "Usuário Desconhecido",
     "search_placeholder": "Pesquisar membros...",
     "no_members": "Nenhum membro encontrado.",
     "blocked_suffix": "(Bloqueado)",
     "filters": {
-      "all_roles": "Todos os Cargos"
+      "all_roles": "Todas as Funções"
     }
   },
   "roles": {
@@ -209,40 +208,37 @@
     "moderator": "Moderador",
     "member": "Membro",
     "blocked": "Bloqueado",
-    "select": "Selecionar cargo..."
+    "select": "Selecionar função..."
   },
   "venue_member": {
     "not_found": "Membro não encontrado",
-    "error_update_role": "Falha ao atualizar cargo. Por favor, tente novamente.",
-    "error_update_roles": "Falha ao atualizar cargos. Por favor, tente novamente.",
-    "error_update_venue_role": "Falha ao atualizar cargo do local. Por favor, tente novamente.",
-    "confirm_apply_all": "Aplicar cargo {{role}} a todos os canais do local?",
+    "error_update_role": "Falha ao atualizar a função. Por favor, tente novamente.",
+    "error_update_roles": "Falha ao atualizar funções. Por favor, tente novamente.",
+    "error_update_venue_role": "Falha ao atualizar a função do local. Por favor, tente novamente.",
+    "confirm_apply_all": "Aplicar a função de {{role}} em todos os canais do local?",
     "confirm_unblock": "Tem certeza que deseja desbloquear {{name}}?",
     "confirm_block": "Tem certeza que deseja bloquear {{name}}?",
     "never": "Nunca",
     "blocked_badge": "BLOQUEADO",
     "joined": "Entrou em: {{date}}",
     "last_seen": "Visto por último: {{date}}",
-    "venue_base_role": "Cargo Base do Local:",
-    "apply_all_prompt": "Digite o cargo para aplicar a todos os canais (Proprietário, Administrador, Moderador, Membro):",
-    "apply_all_invalid": "Cargo inválido digitado.",
-    "apply_all_button": "Aplicar a todos os canais",
+    "venue_role_section": "Função do Local",
+    "venue_base_role": "Função atual:",
     "unblock_button": "Desbloquear Usuário",
     "block_button": "Bloquear Usuário",
     "last_message": "Última Mensagem ({{date}}):",
-    "channel_permissions": "Permissões de Canal",
+    "channel_permissions": "Funções nos Canais",
     "no_channels": "Nenhum canal neste local.",
-    "venue_role_section": "Cargo no Local (Global)",
-    "help_title": "Ajuda de Permissões de Cargos",
+    "help_title": "Sobre as funções",
     "help_owner_title": "Proprietário",
     "help_owner_desc": "Controle total sobre o local e todos seus canais. Pode promover outros a Administrador ou Proprietário.",
     "help_admin_title": "Administrador",
     "help_admin_desc": "Pode gerenciar membros e canais. Pode promover outros a Moderador ou Membro.",
     "help_moderator_title": "Moderador",
-    "help_moderator_desc": "Pode enviar e gerenciar mensagens. Não pode alterar cargos de membros.",
+    "help_moderator_desc": "Pode enviar e gerenciar mensagens. Não pode alterar funções de membros.",
     "help_member_title": "Membro",
-    "help_member_desc": "Pode visualizar e enviar mensagens se o canal permitir.",
-    "apply_to_all_label": "Ação em Massa: Aplicar aos canais",
+    "help_member_desc": "Pode visualizar mensagens.",
+    "apply_to_all_label": "Aplicar a mesma função em todos canais",
     "apply_button": "Aplicar"
   },
   "profile": {
@@ -267,11 +263,11 @@
     "deleted_user": "[usuário excluído]",
     "repeat_no_node_confirm": "Nenhum nó de exibição está conectado a este local no momento. Repetir assim mesmo?",
     "delete_block_confirm": "Tem certeza que deseja excluir esta mensagem e bloquear o usuário?",
-    "settings_button": "Configurações do Canal",
+    "settings_button": "Configurações",
     "templates_button": "Modelos",
     "no_actions": "Nenhuma ação disponível",
     "send_broadcast": "Enviar Nova Transmissão",
-    "display_nodes": "Nós de Exibição",
+    "display_nodes": "Telas",
     "connected": "Conectado",
     "offline": "Offline",
     "no_notifications_title": "Nenhuma notificação recente",
@@ -287,41 +283,41 @@
     "block_user": "Bloquear Usuário"
   },
   "add_node": {
-    "title": "Adicionar Display Desktop",
-    "helper_text": "Emparelhe um novo nó mensageiro digitando seu PIN de 6 dígitos.",
+    "title": "Adicionar Tela",
+    "helper_text": "Vincule uma nova tela digitando seu PIN de 6 dígitos.",
     "error_pin_digits": "O PIN deve ter exatamente 6 dígitos.",
-    "error_name_required": "Por favor, forneça um nome para este nó.",
-    "error_pairing_failed": "O emparelhamento falhou — verifique o PIN e tente novamente.",
-    "name_placeholder": "Nome do Nó (ex: TV do Lobby)",
-    "pairing": "Emparelhando...",
-    "pair_button": "Emparelhar Nó"
+    "error_name_required": "Por favor, forneça um nome para esta tela.",
+    "error_pairing_failed": "O vínculo falhou — verifique o PIN e tente novamente.",
+    "name_placeholder": "Nome da Tela (ex: TV da recepção)",
+    "pairing": "Vinculando...",
+    "pair_button": "Vincular Tela"
   },
   "display_nodes": {
-    "title": "Displays Desktop de {{name}}",
+    "title": "Gerenciar Telas",
     "unauthorized": "Não autorizado",
-    "unauthorized_helper": "Somente Administradores e Proprietários podem gerenciar os displays desktop.",
-    "confirm_delete": "Tem certeza que deseja remover o nó de exibição \"{{name}}\"? Esta ação não pode ser desfeita.",
+    "unauthorized_helper": "Somente Administradores e Proprietários podem gerenciar as telas.",
+    "confirm_delete": "Tem certeza que deseja remover a tela \"{{name}}\"? Esta ação não pode ser desfeita.",
     "error_delete": "Erro ao excluir dispositivo: {{error}}",
-    "rename_prompt": "Digite o novo nome para este nó de exibição:",
+    "rename_prompt": "Digite o novo nome para esta tela:",
     "error_rename": "Erro ao atualizar nome: {{error}}",
     "back_to_channels": "Voltar para Lista de Canais",
-    "add_button": "Adicionar Nó",
-    "no_displays": "Nenhum display registrado",
-    "no_displays_helper": "Emparelhe um novo nó de exibição abaixo para vê-lo aqui.",
+    "add_button": "Adicionar Tela",
+    "no_displays": "Nenhuma tela registrada",
+    "no_displays_helper": "Vincule uma nova tela abaixo para vê-la aqui.",
     "last_seen": "Visto por último: {{date}}",
-    "rename_tooltip": "Renomear nó de exibição",
-    "delete_tooltip": "Excluir Nó de Exibição"
+    "rename_tooltip": "Renomear tela",
+    "delete_tooltip": "Excluir Tela"
   },
   "channel_templates": {
-    "title": "Templates de {{name}}",
-    "only_owners": "Apenas os proprietários do canal podem gerenciar templates.",
-    "new_template_tooltip": "Novo Template",
-    "no_templates": "Nenhum Template",
-    "empty_helper": "Crie um template para começar a enviar mensagens estruturadas para este canal.",
-    "create_button": "Criar Template"
+    "title": "Gerenciar Modelos",
+    "only_owners": "Apenas os proprietários do canal podem gerenciar modelos.",
+    "new_template_tooltip": "Novo Modelo",
+    "no_templates": "Nenhum modelo",
+    "empty_helper": "Crie um modelo para começar a enviar mensagens estruturadas para este canal.",
+    "create_button": "Criar Modelo"
   },
   "channel_settings": {
-    "title": "Configurações de {{name}}",
+    "title": "Configurações do Canal",
     "name_label": "Nome do Canal",
     "name_placeholder": "ex: Anúncios Gerais",
     "desc_label": "Descrição",
@@ -333,22 +329,22 @@
     "danger_zone": {
       "title": "Zona de Perigo",
       "delete_button": "Excluir Canal",
-      "delete_confirm_text": "Esta ação não pode ser desfeita. Isso excluirá permanentemente o canal <strong>{{name}}</strong> e removerá todos os templates, mensagens e configurações associados.",
+      "delete_confirm_text": "Esta ação não pode ser desfeita. Isso excluirá permanentemente o canal <strong>{{name}}</strong> e removerá todos os modelos, mensagens e configurações associados.",
       "type_confirm": "Por favor, digite <strong>{{name}}</strong> para confirmar."
     }
   },
   "template_edit": {
-    "title_new": "Novo Template",
-    "title_edit": "Editar Template",
-    "only_owners_edit": "Apenas proprietários do canal podem editar templates.",
-    "name_label": "Nome do Template",
+    "title_new": "Novo Modelo",
+    "title_edit": "Editar Modelo",
+    "only_owners_edit": "Apenas proprietários do canal podem editar modelos.",
+    "name_label": "Nome do Modelo",
     "name_placeholder": "Ex: Feed de Preços",
     "desc_label": "Descrição",
     "desc_placeholder": "Descreva para que serve esta notificação...",
-    "fields_title": "Configuração de Campos",
+    "fields_title": "Configurações",
     "add_field": "Adicionar Campo",
-    "no_fields_error": "Os templates devem ter pelo menos um campo.",
-    "save_template": "Salvar Template",
+    "no_fields_error": "Os modelos devem ter pelo menos um campo.",
+    "save_template": "Salvar Modelo",
     "saving": "Salvando...",
     "preview_title": "Prévia da Saída (Aproximada)",
     "no_fields_preview": "A mensagem não tem configurações de campos.",
@@ -372,19 +368,14 @@
     },
     "danger_zone": {
       "title": "Zona de Perigo",
-      "delete_button": "Excluir Template",
-      "confirm_title": "Excluir Template?",
-      "confirm_text": "Tem certeza de que deseja excluir este template? Esta ação não pode ser desfeita."
+      "delete_button": "Excluir Modelo",
+      "confirm_title": "Excluir Modelo?",
+      "confirm_text": "Tem certeza de que deseja excluir este modelo? Esta ação não pode ser desfeita."
     }
   },
   "api_errors": {
-    "not_logged_in": "Não está logado",
-    "session_expired": "Sessão expirada. Por favor, faça login novamente usando o PIN do e-mail.",
-    "email_required": "Deve fornecer um e-mail para fazer login/criar usuário",
-    "unauthorized": "Não autorizado",
-    "lockout_fail": "Esta conta está temporariamente bloqueada devido a muitas tentativas falhas. Tente novamente em 10 minutos.",
-    "lockout_wait": "Esta conta está temporariamente bloqueada. Por favor, aguarde 10 minutos.",
-    "no_login_request": "Nenhum login solicitado para este e-mail",
+    "not_logged_in": "Sessão não iniciada",
+    "session_expired": "Sessão expirada. Por favor, entre novamente.",
     "invalid_pin": "Este PIN é inválido ou expirou",
     "change_name_forbidden": "Você só tem permissão para alterar seu próprio nome.",
     "user_not_found": "Usuário não encontrado",
@@ -405,14 +396,14 @@
     "invite_expired": "O link de convite expirou",
     "already_member": "Você já é membro deste local",
     "owner_cannot_leave": "O proprietário original do local não pode sair do local. Você deve transferir a propriedade ou excluir o local.",
-    "cannot_leave_last_owner": "Você é o único dono desta venue. Promova outro membro a Dono antes de sair.",
+    "cannot_leave_last_owner": "Você é o único proprietário deste local. Promova outro membro a Proprietário antes de sair.",
     "not_member": "Você não é membro deste local",
     "set_venue_role_forbidden": "Permissões insuficientes para definir funções no local",
     "admin_role_limit": "Administradores só podem atribuir funções de Moderador ou Membro",
-    "target_user_not_found": "Usuário alvo não encontrado no local",
+    "target_user_not_found": "Usuário destinatário não encontrado no local",
     "set_channel_role_forbidden": "Permissões insuficientes para definir funções",
     "block_user_forbidden": "Apenas Administradores ou Proprietários do local podem bloquear usuários",
-    "target_user_not_in_venue": "O usuário alvo não está neste local",
+    "target_user_not_in_venue": "O usuário destinatário não está neste local",
     "cannot_block_self": "Você não pode bloquear a si mesmo",
     "unblock_user_forbidden": "Apenas Administradores ou Proprietários do local podem desbloquear usuários",
     "template_not_found": "Modelo não encontrado",
@@ -425,24 +416,24 @@
     "member_of_venue_required": "Você não é membro deste local.",
     "blocked_in_venue": "Você está bloqueado neste local.",
     "repeat_message_forbidden": "Apenas Moderadores e superiores podem repetir mensagens.",
-    "register_node_member_required": "Você deve ser membro deste local para registrar um nó de exibição",
-    "register_node_forbidden": "Apenas proprietários do local ou administradores de canal podem registrar nós de exibição",
+    "register_node_member_required": "Você deve ser membro deste local para registrar uma tela",
+    "register_node_forbidden": "Apenas proprietários do local ou administradores de canal podem registrar telas",
     "invalid_pin_expired": "PIN inválido ou expirado",
     "pin_expired": "O PIN expirou",
-    "display_device_not_registered": "Dispositivo de Mensageiro não registrado ou incompatibilidade de identidade",
+    "display_device_not_registered": "Tela não registrada",
     "channel_not_found_for_message": "Canal da mensagem não encontrado",
-    "display_device_mismatch": "Dispositivo de Mensageiro não emparelhado com este local ou incompatibilidade de identidade",
+    "display_device_mismatch": "Tela não vinculada com este local",
     "device_not_found": "Dispositivo não encontrado",
-    "delete_node_forbidden": "Apenas proprietários do local ou administradores de canal podem excluir nós de exibição",
-    "rename_node_forbidden": "Apenas proprietários do local ou administradores de canal podem renomear nós de exibição",
-    "unpair_node_forbidden": "Apenas a identidade do dispositivo registrado pode desemparelhar a si mesmo.",
+    "delete_node_forbidden": "Apenas proprietários do local ou administradores de canal podem excluir telas",
+    "rename_node_forbidden": "Apenas proprietários do local ou administradores de canal podem renomear telas",
+    "unpair_node_forbidden": "Apenas a identidade do dispositivo registrado pode desvincular a si mesmo.",
     "cannot_demote_last_owner": "Você não pode se rebaixar — você é o único proprietário restante deste local/canal.",
-    "cannot_demote_same_role": "Permissões insuficientes para rebaixar outro usuário com cargo igual ou superior ao seu.",
+    "cannot_demote_same_role": "Permissões insuficientes para rebaixar outro usuário com função igual ou superior à sua.",
     "cannot_block_owner": "Você não pode bloquear um proprietário.",
     "cannot_unblock_self": "Você não pode desbloquear a si mesmo."
   },
   "settings": {
-    "title": "Configurações do Nó de Display Canal4",
+    "title": "Configurações",
     "tabs": {
       "logs": "Mensagens",
       "pairing": "Vincular",
@@ -450,7 +441,7 @@
       "general": "Geral"
     },
     "common": {
-      "quit": "Sair do Canal4",
+      "quit": "Fechar",
       "back": "Voltar",
       "language": "Idioma",
       "venue_default_name": "Local #{{id}}",
@@ -523,22 +514,22 @@
       "colors": "Cores",
       "preview": "Pré-visualização",
       "sample_text": "Amostra: Bem-vindo ao Canal4!",
-      "delete_node": "Excluir Vinculo"
+      "delete_node": "Excluir Tela"
     },
     "pairing": {
-      "toast_success": "Emparelhado com \"{{venue}}\" como \"{{name}}\"",
-      "paired_venues": "Locais Emparelhados",
-      "paired_venues_count": "{{count}} local(is) emparelhado(s)",
+      "toast_success": "Vinculado com \"{{venue}}\" como \"{{name}}\"",
+      "paired_venues": "Locais Vinculados",
+      "paired_venues_count": "{{count}} local(is) vinculado(s)",
       "as_name": "como \"{{name}}\"",
       "register_new": "Registrar em um Novo Local",
       "register_helper": "Gere um PIN de 6 dígitos e digite-o no Painel Web em",
-      "register_path": "Local > Displays Desktop > Adicionar Nó",
+      "register_path": "Local > Menu > Displays > Adicionar Tela",
       "enter_pin_helper": "Digite este PIN no Painel Web:",
-      "generate_pin": "Gerar PIN de Emparelhamento",
+      "generate_pin": "Gerar PIN de Vínculo",
       "pin_expires": "Expira em {{seconds}}s",
       "pin_remaining": "{{time}} restantes",
       "pin_expired": "PIN expirado — gere um novo",
-      "unpair_confirm": "Desemparelhar de \"{{name}}\"? Este dispositivo parará de receber mensagens deste local.",
+      "unpair_confirm": "Desvincular de \"{{name}}\"? Este dispositivo parará de receber mensagens deste local.",
       "not_connected_error": "Não conectado ao banco de dados — verifique Configurações → Conexão SpacetimeDB",
       "no_venues": "Nenhum local"
     }
