@@ -5,7 +5,8 @@
   "scripts": {
     "build": "spacetime build && spacetime generate --yes --lang typescript --out-dir ../webapp/src/module_bindings && spacetime generate --yes --lang typescript --out-dir ../display/src/module_bindings",
     "build:bundle": "spacetime build",
-    "publish-local": "spacetime publish -s local canal4-dev --yes"
+    "publish-local": "spacetime publish -s local canal4-dev --yes",
+    "publish-local-delete": "spacetime publish -s local canal4-dev --yes --delete-data"
   },
   "keywords": [],
   "author": "",

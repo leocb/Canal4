@@ -191,7 +191,8 @@
     "admin": "Administrador",
     "moderator": "Moderador",
     "member": "Membro",
-    "blocked": "Bloqueado"
+    "blocked": "Bloqueado",
+    "select": "Selecionar cargo..."
   },
   "venue_member": {
     "not_found": "Membro não encontrado",
@@ -213,7 +214,19 @@
     "block_button": "Bloquear Usuário",
     "last_message": "Última Mensagem ({{date}}):",
     "channel_permissions": "Permissões de Canal",
-    "no_channels": "Nenhum canal neste local."
+    "no_channels": "Nenhum canal neste local.",
+    "venue_role_section": "Cargo no Local (Global)",
+    "help_title": "Ajuda de Permissões de Cargos",
+    "help_owner_title": "Proprietário",
+    "help_owner_desc": "Controle total sobre o local e todos seus canais. Pode promover outros a Administrador ou Proprietário.",
+    "help_admin_title": "Administrador",
+    "help_admin_desc": "Pode gerenciar membros e canais. Pode promover outros a Moderador ou Membro.",
+    "help_moderator_title": "Moderador",
+    "help_moderator_desc": "Pode enviar e gerenciar mensagens. Não pode alterar cargos de membros.",
+    "help_member_title": "Membro",
+    "help_member_desc": "Pode visualizar e enviar mensagens se o canal permitir.",
+    "apply_to_all_label": "Ação em Massa: Aplicar aos canais",
+    "apply_button": "Aplicar"
   },
   "profile": {
     "title": "Seu Perfil",
@@ -373,6 +386,7 @@
     "invite_expired": "O link de convite expirou",
     "already_member": "Você já é membro deste local",
     "owner_cannot_leave": "O proprietário original do local não pode sair do local. Você deve transferir a propriedade ou excluir o local.",
+    "cannot_leave_last_owner": "Você é o único dono desta venue. Promova outro membro a Dono antes de sair.",
     "not_member": "Você não é membro deste local",
     "set_venue_role_forbidden": "Permissões insuficientes para definir funções no local",
     "admin_role_limit": "Administradores só podem atribuir funções de Moderador ou Membro",
@@ -402,7 +416,9 @@
     "device_not_found": "Dispositivo não encontrado",
     "delete_node_forbidden": "Apenas proprietários do local ou administradores de canal podem excluir nós de exibição",
     "rename_node_forbidden": "Apenas proprietários do local ou administradores de canal podem renomear nós de exibição",
-    "unpair_node_forbidden": "Apenas a identidade do dispositivo registrado pode desemparelhar a si mesmo."
+    "unpair_node_forbidden": "Apenas a identidade do dispositivo registrado pode desemparelhar a si mesmo.",
+    "cannot_demote_last_owner": "Você não pode se rebaixar — você é o único proprietário restante deste local/canal.",
+    "cannot_demote_same_role": "Permissões insuficientes para rebaixar outro usuário com cargo igual ou superior ao seu."
   },
   "settings": {
     "title": "Configurações do Nó de Display Canal4",

@@ -27,11 +27,17 @@ export const VenuePermissionsScreen = () => {
 
   // Permissions check
   const venueChannels = channels.filter(c => c.venueId === venueIdBigInt);
-  const isOwner = venue?.ownerId === user?.userId;
-  const userRolesInVenue = channelRoles.filter(
+  const userVenueMember = venueMembers.find(m => m.venueId === venueIdBigInt && m.userId === user?.userId);
+  const isVenueOwner = userVenueMember?.role.tag === 'Owner';
+  const isVenueAdmin = userVenueMember?.role.tag === 'Admin';
+  
+  // Also check channel-level admin roles
+  const userChannelRoles = channelRoles.filter(
     (r) => r.userId === user?.userId && venueChannels.some((c) => c.channelId === r.channelId)
   );
-  const isAdmin = userRolesInVenue.some((r) => r.role.tag === 'Admin' || r.role.tag === 'Owner');
+  const isChannelAdmin = userChannelRoles.some((r) => r.role.tag === 'Admin' || r.role.tag === 'Owner');
+  
+  const hasAccess = isVenueOwner || isVenueAdmin || isChannelAdmin;
   
   if (!venuesReady || !membersReady || !usersReady) {
     return <div className="app-container empty-state"><h2>{t('login.loading')}</h2></div>;
@@ -41,7 +47,7 @@ export const VenuePermissionsScreen = () => {
     return <div className="app-container empty-state"><h2>{t('venue_channels.venue_not_found')}</h2></div>;
   }
   
-  if (!isOwner && !isAdmin) {
+  if (!hasAccess) {
     return <div className="app-container empty-state"><h2>{t('venue_channels.access_denied')}</h2></div>;
   }
 
@@ -58,7 +64,10 @@ export const VenuePermissionsScreen = () => {
   };
 
   const getHighestRole = (userId: bigint): { level: number, name: string } => {
-    if (venue.ownerId === userId) return { level: 4, name: 'Owner' };
+    const venueMember = venueMembers.find(m => m.venueId === venueIdBigInt && m.userId === userId);
+    const venueRole = venueMember?.role.tag;
+    if (venueRole === 'Owner') return { level: 4, name: 'Owner' };
+    if (venueRole === 'Admin') return { level: 3.5, name: 'Admin (Global)' };
     
     const roles = channelRoles.filter(r => r.userId === userId && venueChannels.some(c => c.channelId === r.channelId));
     

@@ -53,7 +53,8 @@ export const VenueChannelsScreen = () => {
   const isMember = !!myMember;
   const isBlocked = myMember?.isBlocked ?? false;
 
-  const isOwner = !isBlocked && venue?.ownerId === user?.userId;
+  const isOwner = !isBlocked && myMember?.role.tag === 'Owner';
+  const isVenueAdmin = !isBlocked && myMember?.role.tag === 'Admin';
 
   const getRoleLevel = (role: string) => {
     switch (role.toLowerCase()) {
@@ -87,8 +88,8 @@ export const VenueChannelsScreen = () => {
     r.userId === user?.userId &&
     venueChannels.some(c => c.channelId === r.channelId)
   );
-  const isAdmin = !isBlocked && userRolesInVenue.some(r => r.role.tag.toLowerCase() === 'admin' || r.role.tag.toLowerCase() === 'owner');
-  const canManageDisplays = isOwner || isAdmin;
+  const isChannelAdmin = !isBlocked && userRolesInVenue.some(r => r.role.tag.toLowerCase() === 'admin' || r.role.tag.toLowerCase() === 'owner');
+  const canManageDisplays = isOwner || isVenueAdmin || isChannelAdmin;
 
   if (!venuesReady || !membersReady) {
     return (
@@ -160,10 +161,6 @@ export const VenueChannelsScreen = () => {
 
   const handleLeaveVenueClick = () => {
     setShowMenu(false);
-    if (isOwner) {
-      alert(t('venue_channels.owner_leave_error'));
-      return;
-    }
     setShowLeaveConfirm(true);
   };
 
@@ -176,7 +173,7 @@ export const VenueChannelsScreen = () => {
       navigate('/venues', { replace: true });
     } catch (err: unknown) {
       const message = err instanceof Error ? err.message : String(err);
-      setLeaveErrorText(message || t('venue_channels.leave_failed'));
+      setLeaveErrorText(t(message) || t('venue_channels.leave_failed'));
       setLeaveLoading(false);
     }
   };

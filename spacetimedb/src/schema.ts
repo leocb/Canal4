@@ -56,7 +56,6 @@ export const Venue = table(
   {
     venueId: t.u64().primaryKey().autoInc(),
     name: t.string(),
-    ownerId: t.u64(),
     link: t.string(),
     createdAt: t.timestamp(),
   }

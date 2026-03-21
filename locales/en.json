@@ -191,7 +191,8 @@
     "admin": "Admin",
     "moderator": "Moderator",
     "member": "Member",
-    "blocked": "Blocked"
+    "blocked": "Blocked",
+    "select": "Select role..."
   },
   "venue_member": {
     "not_found": "Member not found",
@@ -213,7 +214,19 @@
     "block_button": "Block User",
     "last_message": "Last Message ({{date}}):",
     "channel_permissions": "Channel Permissions",
-    "no_channels": "No channels in this venue."
+    "no_channels": "No channels in this venue.",
+    "venue_role_section": "Venue Role (Global)",
+    "help_title": "Role Permissions Help",
+    "help_owner_title": "Owner",
+    "help_owner_desc": "Full control over the venue and all its channels. Can promote others to Admin or Owner.",
+    "help_admin_title": "Admin",
+    "help_admin_desc": "Can manage members and channels. Can promote others to Moderator or Member.",
+    "help_moderator_title": "Moderator",
+    "help_moderator_desc": "Can send and manage messages. Cannot change member roles.",
+    "help_member_title": "Member",
+    "help_member_desc": "Can view and send messages if the channel allows.",
+    "apply_to_all_label": "Bulk Action: Set role for all channels",
+    "apply_button": "Apply"
   },
   "profile": {
     "title": "Your Profile",
@@ -373,6 +386,7 @@
     "invite_expired": "Invitation link has expired",
     "already_member": "You are already a member of this venue",
     "owner_cannot_leave": "The original venue owner cannot leave the venue. You must transfer ownership or delete the venue.",
+    "cannot_leave_last_owner": "You are the last owner of this venue. You must promote another member to Owner before leaving.",
     "not_member": "You are not a member of this venue",
     "set_venue_role_forbidden": "Insufficient permissions to set venue roles",
     "admin_role_limit": "Admins can only assign Moderator or Member roles",
@@ -402,7 +416,9 @@
     "device_not_found": "Device not found",
     "delete_node_forbidden": "Only venue owners or channel admins can delete display nodes",
     "rename_node_forbidden": "Only venue owners or channel admins can rename display nodes",
-    "unpair_node_forbidden": "Only the registered device identity can unpair itself."
+    "unpair_node_forbidden": "Only the registered device identity can unpair itself.",
+    "cannot_demote_last_owner": "Cannot demote yourself — you are the last owner of this venue/channel.",
+    "cannot_demote_same_role": "Insufficient permissions to demote another user of the same or higher role rank."
   },
   "settings": {
     "title": "Canal4 Display node Settings",

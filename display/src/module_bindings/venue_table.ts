@@ -13,7 +13,6 @@ import {
 export default __t.row({
   venueId: __t.u64().primaryKey().name("venue_id"),
   name: __t.string(),
-  ownerId: __t.u64().name("owner_id"),
   link: __t.string(),
   createdAt: __t.timestamp().name("created_at"),
 });

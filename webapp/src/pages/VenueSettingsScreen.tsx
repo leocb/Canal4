@@ -13,11 +13,15 @@ export const VenueSettingsScreen = () => {
   const { user } = useAuth();
 
   const [venues] = useTable(tables.Venue);
+  const [venueMembers] = useTable(tables.VenueMember);
   const updateVenue = useReducer(reducers.updateVenue);
   const deleteVenue = useReducer(reducers.deleteVenue);
 
   const venue = venues.find(v => v.link === venueLink);
-  const isOwner = venue?.ownerId === user?.userId;
+  const member = venueMembers.find(m => m.venueId === venue?.venueId && m.userId === user?.userId);
+  const isOwner = member?.role.tag === 'Owner';
+  const isAdmin = member?.role.tag === 'Admin';
+  const hasAccess = isOwner || isAdmin;
 
   const [name, setName] = useState('');
   const [loading, setLoading] = useState(false);
@@ -37,7 +41,7 @@ export const VenueSettingsScreen = () => {
   if (!venue) {
     return <div className="app-container empty-state"><h2>{t('venue_channels.venue_not_found')}</h2></div>;
   }
-  if (!isOwner) {
+  if (!hasAccess) {
     return <div className="app-container empty-state"><h2>{t('venue_channels.access_denied')}</h2></div>;
   }
 
@@ -164,8 +168,9 @@ export const VenueSettingsScreen = () => {
               <button
                 className="danger"
                 onClick={handleDelete}
-                disabled={loading || deleteConfirmationName !== venue.name}
-                style={{ flex: 1 }}
+                disabled={loading || deleteConfirmationName !== venue.name || !isOwner}
+                style={{ flex: 1, opacity: isOwner ? 1 : 0.5 }}
+                title={!isOwner ? t('venue_settings.danger_zone.owner_only') : ''}
               >
                 {t('venue_settings.danger_zone.confirm_delete_button')}
               </button>

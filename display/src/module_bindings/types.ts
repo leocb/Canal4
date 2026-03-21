@@ -139,7 +139,6 @@ export type UserIdentity = __Infer<typeof UserIdentity>;
 export const Venue = __t.object("Venue", {
   venueId: __t.u64(),
   name: __t.string(),
-  ownerId: __t.u64(),
   link: __t.string(),
   createdAt: __t.timestamp(),
 });

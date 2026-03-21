@@ -62,8 +62,10 @@ export const ChannelScreen = () => {
   );
 
   const roleTag: string = isBlocked ? 'member' : (myChannelRole?.role.tag ?? 'member').toLowerCase();
-  const isVenueOwner = !isBlocked && venue?.ownerId === user?.userId;
+  const isVenueOwner = !isBlocked && myVenueMembership?.role.tag === 'Owner';
+  const isVenueAdmin = !isBlocked && myVenueMembership?.role.tag === 'Admin';
   const isOwner = isVenueOwner || roleTag === 'owner';
+  const canUpdate = isOwner || isVenueAdmin;
   const isAdmin = isOwner || roleTag === 'admin';
   const isModerator = isAdmin || roleTag === 'moderator';
 
@@ -307,7 +309,7 @@ export const ChannelScreen = () => {
             </button>
             {showMenu && (
               <div className="dropdown-menu glass-panel" style={{ position: 'absolute', right: 0, top: '48px', zIndex: 100, minWidth: '180px', display: 'flex', flexDirection: 'column' }}>
-                {isOwner && (
+                {canUpdate && (
                   <>
                     <button className="dropdown-item" onClick={() => { setShowMenu(false); navigate(`/venues/${venue.link}/channels/${channel.channelId}/settings`); }}>
                       <Settings size={16} /> {t('channel.settings_button')}
@@ -317,7 +319,7 @@ export const ChannelScreen = () => {
                     </button>
                   </>
                 )}
-                {!isOwner && (
+                {!canUpdate && (
                   <div style={{ padding: '12px 16px', color: 'var(--text-secondary)', fontSize: '0.85rem' }}>
                     {t('channel.no_actions')}
                   </div>

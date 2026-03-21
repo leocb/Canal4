@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { useTable, useReducer } from 'spacetimedb/react';
 import { tables, reducers } from '../module_bindings/index.ts';
-import { ArrowLeft, User as UserIcon } from 'lucide-react';
+import { ArrowLeft, User as UserIcon, HelpCircle, X } from 'lucide-react';
 import { useAuth } from '../hooks/useAuth';
 import { useTranslation } from 'react-i18next';
 
@@ -30,16 +30,22 @@ export const VenueMemberScreen = () => {
   const targetMember = venueMembers.find(m => m.venueId === venue?.venueId && m.userId === memberId);
   const targetUser = users.find(u => u.userId === memberId);
 
+  const myMember = venueMembers.find(m => m.venueId === venue?.venueId && m.userId === user?.userId);
+  const isVenueOwner = myMember?.role.tag === 'Owner';
+  const isVenueAdmin = myMember?.role.tag === 'Admin';
+ 
   // Auth check
   const venueChannels = channels.filter(c => c.venueId === venue?.venueId);
-  const isOwner = venue?.ownerId === user?.userId;
-  const userRolesInVenue = channelRoles.filter(
+  const userChannelRoles = channelRoles.filter(
     (r) => r.userId === user?.userId && venueChannels.some((c) => c.channelId === r.channelId)
   );
-  const isAdmin = userRolesInVenue.some((r) => r.role.tag === 'Admin' || r.role.tag === 'Owner');
+  const isOwner = isVenueOwner;
+  const isAdmin = isVenueAdmin || userChannelRoles.some((r) => r.role.tag === 'Admin' || r.role.tag === 'Owner');
 
   const [loading, setLoading] = useState(false);
   const [errorText, setErrorText] = useState('');
+  const [showHelp, setShowHelp] = useState(false);
+  const [bulkRole, setBulkRole] = useState('');
 
   if (!venue || !targetMember || !targetUser) {
     return <div className="app-container empty-state"><h2>{t('venue_member.not_found')}</h2></div>;
@@ -146,8 +152,53 @@ export const VenueMemberScreen = () => {
     return date.toLocaleString();
   };
 
+  const HelpModal = () => (
+    <div style={{
+      position: 'fixed',
+      top: 0,
+      left: 0,
+      width: '100%',
+      height: '100%',
+      background: 'rgba(0,0,0,0.8)',
+      backdropFilter: 'blur(8px)',
+      display: 'flex',
+      alignItems: 'center',
+      justifyContent: 'center',
+      zIndex: 1000,
+    }} onClick={() => setShowHelp(false)}>
+      <div className="glass-panel" style={{ padding: '32px', maxWidth: '500px', width: '90%', position: 'relative' }} onClick={e => e.stopPropagation()}>
+        <X 
+          size={24} 
+          style={{ position: 'absolute', top: '16px', right: '16px', cursor: 'pointer', color: 'var(--text-secondary)' }} 
+          onClick={() => setShowHelp(false)}
+        />
+        <h2 style={{ marginTop: 0 }}>{t('venue_member.help_title')}</h2>
+        
+        <div className="flex-col" style={{ gap: '20px', marginTop: '24px' }}>
+          <div>
+            <h4 style={{ margin: '0 0 4px 0', color: '#eab308' }}>{t('venue_member.help_owner_title')}</h4>
+            <p style={{ margin: 0, fontSize: '0.9rem', color: 'var(--text-secondary)' }}>{t('venue_member.help_owner_desc')}</p>
+          </div>
+          <div>
+            <h4 style={{ margin: '0 0 4px 0', color: '#38bdf8' }}>{t('venue_member.help_admin_title')}</h4>
+            <p style={{ margin: 0, fontSize: '0.9rem', color: 'var(--text-secondary)' }}>{t('venue_member.help_admin_desc')}</p>
+          </div>
+          <div>
+            <h4 style={{ margin: '0 0 4px 0', color: '#34d399' }}>{t('venue_member.help_moderator_title')}</h4>
+            <p style={{ margin: 0, fontSize: '0.9rem', color: 'var(--text-secondary)' }}>{t('venue_member.help_moderator_desc')}</p>
+          </div>
+          <div>
+            <h4 style={{ margin: '0 0 4px 0', color: 'var(--text-secondary)' }}>{t('venue_member.help_member_title')}</h4>
+            <p style={{ margin: 0, fontSize: '0.9rem', color: 'var(--text-secondary)' }}>{t('venue_member.help_member_desc')}</p>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+
   return (
     <div className="app-container">
+      {showHelp && <HelpModal />}
       <div className="screen-header">
         <div className="flex-col" style={{ gap: '4px' }}>
           <span
@@ -181,36 +232,6 @@ export const VenueMemberScreen = () => {
             <p style={{ margin: '4px 0 0 0', color: 'var(--text-secondary)', fontSize: '0.9rem' }}>
               {t('venue_member.last_seen', { date: formatDate(targetMember.lastSeen) })}
             </p>
-            
-            <div style={{ marginTop: '12px', display: 'flex', flexWrap: 'wrap', alignItems: 'center', gap: '8px' }}>
-              <span style={{ fontSize: '0.9rem', color: 'var(--text-secondary)', fontWeight: 500 }}>{t('venue_member.venue_base_role')}</span>
-              <select 
-                value={targetMember.role.tag.toLowerCase()}
-                onChange={(e) => {
-                  if (e.target.value) handleVenueRoleChange(e.target.value);
-                }}
-                disabled={loading || targetMember.isBlocked}
-                style={{ padding: '6px 12px', fontSize: '0.9rem', borderRadius: '6px', border: '1px solid var(--surface-border)', background: 'var(--surface-color)', textTransform: 'capitalize' }}
-              >
-                {availableRoles.map(r => <option key={r.toLowerCase()} value={r.toLowerCase()}>{t(`roles.${r.toLowerCase()}`)}</option>)}
-              </select>
-
-              <button 
-                className="secondary" 
-                onClick={() => {
-                   const role = prompt(t('venue_member.apply_all_prompt'));
-                   if (role) {
-                      const normalized = role.charAt(0).toUpperCase() + role.slice(1).toLowerCase();
-                      if (availableRoles.includes(normalized)) handleApplyToAllChannels(normalized);
-                      else alert(t('venue_member.apply_all_invalid'));
-                   }
-                }} 
-                style={{ fontSize: '0.8rem', padding: '6px 10px' }}
-                disabled={loading || targetMember.isBlocked}
-              >
-                {t('venue_member.apply_all_button')}
-              </button>
-            </div>
           </div>
           <div>
             <button className={targetMember.isBlocked ? "primary" : "danger"} onClick={toggleBlock} disabled={loading}>
@@ -227,9 +248,66 @@ export const VenueMemberScreen = () => {
         )}
       </div>
 
+      {/* Venue Role Section */}
       <div style={{ marginTop: '32px' }}>
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px' }}>
-          <h3>{t('venue_member.channel_permissions')}</h3>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '16px' }}>
+          <h3 style={{ margin: 0 }}>{t('venue_member.venue_role_section')}</h3>
+          <HelpCircle 
+            size={18} 
+            style={{ cursor: 'pointer', color: 'var(--accent-color)' }} 
+            onClick={() => setShowHelp(true)}
+          />
+        </div>
+        
+        <div className="glass-panel" style={{ padding: '24px', display: 'flex', alignItems: 'center', gap: '12px' }}>
+          <span style={{ fontSize: '1rem', color: 'var(--text-secondary)', fontWeight: 500 }}>{t('venue_member.venue_base_role')}</span>
+          <select 
+            value={targetMember.role.tag.toLowerCase()}
+            onChange={(e) => {
+              if (e.target.value) handleVenueRoleChange(e.target.value);
+            }}
+            disabled={loading || targetMember.isBlocked}
+            style={{ padding: '10px 16px', flex: 1, fontSize: '1rem', borderRadius: '8px', border: '1px solid var(--surface-border)', background: 'var(--surface-color)', textTransform: 'capitalize' }}
+          >
+            {availableRoles.map(r => <option key={r.toLowerCase()} value={r.toLowerCase()}>{t(`roles.${r.toLowerCase()}`)}</option>)}
+          </select>
+        </div>
+      </div>
+
+      <div style={{ marginTop: '32px' }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '16px' }}>
+          <h3 style={{ margin: 0 }}>{t('venue_member.channel_permissions')}</h3>
+          <HelpCircle 
+            size={18} 
+            style={{ cursor: 'pointer', color: 'var(--accent-color)' }} 
+            onClick={() => setShowHelp(true)}
+          />
+        </div>
+
+        {/* Bulk action */}
+        <div className="glass-panel" style={{ padding: '16px 20px', marginBottom: '16px', display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '12px', border: '1px solid var(--accent-color)', background: 'rgba(56, 189, 248, 0.05)' }}>
+          <span style={{ fontSize: '0.9rem', fontWeight: 600 }}>{t('venue_member.apply_to_all_label')}</span>
+          <div className="flex-row" style={{ gap: '8px' }}>
+            <select 
+              value={bulkRole}
+              onChange={(e) => setBulkRole(e.target.value)}
+              disabled={loading || targetMember.isBlocked}
+              style={{ padding: '6px 10px', borderRadius: '6px', border: '1px solid var(--surface-border)', background: 'var(--surface-color)' }}
+            >
+              <option value="">{t('roles.select') || 'Select...'}</option>
+              {availableRoles.map(r => <option key={r} value={r}>{t(`roles.${r.toLowerCase()}`)}</option>)}
+            </select>
+            <button 
+              className="primary" 
+              onClick={() => {
+                if (bulkRole) handleApplyToAllChannels(bulkRole);
+              }}
+              disabled={!bulkRole || loading || targetMember.isBlocked}
+              style={{ padding: '6px 12px', fontSize: '0.8rem' }}
+            >
+              {t('venue_member.apply_button')}
+            </button>
+          </div>
         </div>
 
         <div className="flex-col" style={{ gap: '12px' }}>

@@ -31,6 +31,16 @@ function getUserId(ctx: any): bigint {
   return ui.userId;
 }
 
+function getRoleRank(tag: string): number {
+  switch (tag.toLowerCase()) {
+    case "owner": return 4;
+    case "admin": return 3;
+    case "moderator": return 2;
+    case "member": return 1;
+    default: return 0;
+  }
+}
+
 export const register_new_user_with_passkey = spacetimedb.reducer(
   { credentialId: t.string() },
   (ctx, { credentialId }) => {
@@ -186,7 +196,6 @@ export const create_venue = spacetimedb.reducer(
     const row = ctx.db.Venue.insert({
       venueId: 0n,
       name,
-      ownerId: userId,
       link,
       createdAt: ctx.timestamp,
     });
@@ -208,7 +217,9 @@ export const update_venue = spacetimedb.reducer(
     const userId = getUserId(ctx);
     const venue = ctx.db.Venue.venueId.find(venueId);
     if (!venue) throw new SenderError("api_errors.venue_not_found");
-    if (venue.ownerId !== userId) {
+    
+    const callerMember = [...ctx.db.VenueMember.venue_member_venue_id.filter(venueId)].find(m => m.userId === userId);
+    if (callerMember?.role.tag !== "owner" && callerMember?.role.tag !== "admin") {
       throw new SenderError("api_errors.update_venue_forbidden");
     }
     ctx.db.Venue.venueId.update({ ...venue, name: newName });
@@ -221,9 +232,12 @@ export const delete_venue = spacetimedb.reducer(
     const userId = getUserId(ctx);
     const venue = ctx.db.Venue.venueId.find(venueId);
     if (!venue) throw new SenderError("api_errors.venue_not_found");
-    if (venue.ownerId !== userId) {
+
+    const callerMember = [...ctx.db.VenueMember.venue_member_venue_id.filter(venueId)].find(m => m.userId === userId);
+    if (callerMember?.role.tag !== "owner") {
       throw new SenderError("api_errors.delete_venue_forbidden");
     }
+
     if (venue.name !== confirmationName) {
       throw new SenderError("api_errors.confirmation_venue_mismatch");
     }
@@ -245,12 +259,10 @@ export const create_channel = spacetimedb.reducer(
     const venue = ctx.db.Venue.venueId.find(venueId);
     if (!venue) throw new SenderError("api_errors.venue_not_found");
 
-    const isVenueOwner = venue.ownerId === userId;
-    const members = [...ctx.db.VenueMember.venue_member_venue_id.filter(venueId)];
-    const myMembership = members.find(m => m.userId === userId);
-    const isVenueAdmin = myMembership?.role.tag === "admin";
+    const myMembership = [...ctx.db.VenueMember.venue_member_venue_id.filter(venueId)].find(m => m.userId === userId);
+    const isVenueAdmin = myMembership?.role.tag === "admin" || myMembership?.role.tag === "owner";
 
-    if (!isVenueOwner && !isVenueAdmin) {
+    if (!isVenueAdmin) {
       throw new SenderError("api_errors.create_channel_forbidden");
     }
 
@@ -282,12 +294,13 @@ export const update_channel = spacetimedb.reducer(
     const venue = ctx.db.Venue.venueId.find(channel.venueId);
     if (!venue) throw new SenderError("api_errors.venue_not_found");
 
-    const isVenueOwner = venue.ownerId === userId;
-    const roles = [...ctx.db.ChannelMemberRole.channel_member_role_channel_id.filter(channelId)];
-    const myRole = roles.find(r => r.userId === userId);
-    const isChannelOwner = myRole?.role.tag === "owner";
+    const myVenueMembership = [...ctx.db.VenueMember.venue_member_venue_id.filter(channel.venueId)].find(m => m.userId === userId);
+    const isVenueOwnerOrAdmin = myVenueMembership?.role.tag === "owner" || myVenueMembership?.role.tag === "admin";
+    
+    const myChannelRole = [...ctx.db.ChannelMemberRole.channel_member_role_channel_id.filter(channelId)].find(r => r.userId === userId);
+    const isChannelOwner = myChannelRole?.role.tag === "owner";
 
-    if (!isVenueOwner && !isChannelOwner) {
+    if (!isVenueOwnerOrAdmin && !isChannelOwner) {
       throw new SenderError("api_errors.update_channel_forbidden");
     }
 
@@ -315,10 +328,12 @@ export const delete_channel = spacetimedb.reducer(
     const venue = ctx.db.Venue.venueId.find(channel.venueId);
     if (!venue) throw new SenderError("api_errors.venue_not_found");
 
-    const isVenueOwner = venue.ownerId === userId;
-    const roles = [...ctx.db.ChannelMemberRole.channel_member_role_channel_id.filter(channelId)];
-    const myRole = roles.find(r => r.userId === userId);
-    const isChannelOwner = myRole?.role.tag === "owner";
+    const myVenueMembership = [...ctx.db.VenueMember.venue_member_venue_id.filter(channel.venueId)].find(m => m.userId === userId);
+    const isVenueOwner = myVenueMembership?.role.tag === "owner";
+
+    const allChannelRoles = [...ctx.db.ChannelMemberRole.channel_member_role_channel_id.filter(channelId)];
+    const myChannelRole = allChannelRoles.find(r => r.userId === userId);
+    const isChannelOwner = myChannelRole?.role.tag === "owner";
 
     if (!isVenueOwner && !isChannelOwner) {
       throw new SenderError("api_errors.delete_channel_forbidden");
@@ -331,7 +346,7 @@ export const delete_channel = spacetimedb.reducer(
     for (const tpl of ctx.db.MessageTemplate.message_template_channel_id.filter(channelId)) {
       ctx.db.MessageTemplate.templateId.delete(tpl.templateId);
     }
-    for (const role of roles) {
+    for (const role of allChannelRoles) {
       ctx.db.ChannelMemberRole.delete({ ...role });
     }
     for (const nf of ctx.db.NotificationFilter.notification_filter_channel_id.filter(channelId)) {
@@ -405,14 +420,17 @@ export const leave_venue = spacetimedb.reducer(
     const venue = ctx.db.Venue.venueId.find(venueId);
     if (!venue) throw new SenderError("api_errors.venue_not_found");
 
-    if (venue.ownerId === userId) {
-      throw new SenderError("api_errors.owner_cannot_leave");
+    const allMembers = [...ctx.db.VenueMember.venue_member_venue_id.filter(venueId)];
+    const myMembership = allMembers.find(m => m.userId === userId);
+    if (!myMembership) {
+      throw new SenderError("api_errors.not_member");
     }
 
-    const existingMembers = [...ctx.db.VenueMember.venue_member_venue_id.filter(venueId)];
-    const membership = existingMembers.find(m => m.userId === userId);
-    if (!membership) {
-      throw new SenderError("api_errors.not_member");
+    if (myMembership.role.tag === "owner") {
+      const otherOwnersCount = allMembers.filter(m => m.userId !== userId && m.role.tag === "owner").length;
+      if (otherOwnersCount === 0) {
+        throw new SenderError("api_errors.cannot_leave_last_owner");
+      }
     }
 
     const channels = [...ctx.db.Channel.channel_venue_id.filter(venueId)];
@@ -424,7 +442,7 @@ export const leave_venue = spacetimedb.reducer(
       }
     }
 
-    ctx.db.VenueMember.delete({ ...membership });
+    ctx.db.VenueMember.delete({ ...myMembership });
   }
 );
 
@@ -439,20 +457,41 @@ export const set_venue_role = spacetimedb.reducer(
     const callerMember = allMembers.find(m => m.userId === userId);
     if (!callerMember) throw new SenderError("api_errors.not_member");
 
-    const isVenueOwner = venue.ownerId === userId || callerMember.role.tag === "owner";
-    const isVenueAdmin = callerMember.role.tag === "admin";
+    const callerRole = callerMember.role.tag;
+    const isVenueOwner = callerRole === "owner";
+    const isVenueAdmin = callerRole === "admin";
 
     if (!isVenueOwner && !isVenueAdmin) {
       throw new SenderError("api_errors.set_venue_role_forbidden");
     }
 
-    // Admin cannot grant "owner" or "admin" to others
+    const targetMember = allMembers.find(r => r.userId === targetUserId);
+    if (!targetMember) throw new SenderError("api_errors.target_user_not_found");
+
+    const targetCurrentRole = targetMember.role.tag;
+
+    // RULE: Owners cannot demote another owner
+    if (isVenueOwner && targetUserId !== userId && targetCurrentRole === "owner" && role !== "owner") {
+      throw new SenderError("api_errors.cannot_demote_same_role");
+    }
+
+    // RULE: Admins cannot demote another admin (or owner obviously)
+    if (isVenueAdmin && !isVenueOwner && (getRoleRank(targetCurrentRole) >= getRoleRank("admin"))) {
+       throw new SenderError("api_errors.cannot_demote_same_role");
+    }
+
+    // RULE: Admin cannot grant "owner" or "admin" to others
     if (isVenueAdmin && !isVenueOwner && (role === "owner" || role === "admin")) {
       throw new SenderError("api_errors.admin_role_limit");
     }
 
-    const targetMember = allMembers.find(r => r.userId === targetUserId);
-    if (!targetMember) throw new SenderError("api_errors.target_user_not_found");
+    // RULE: Cannot demote self if last owner
+    if (targetUserId === userId && targetCurrentRole === "owner" && role !== "owner") {
+      const ownersCount = allMembers.filter(m => m.role.tag === "owner").length;
+      if (ownersCount <= 1) {
+        throw new SenderError("api_errors.cannot_demote_last_owner");
+      }
+    }
 
     ctx.db.VenueMember.delete({ ...targetMember });
     ctx.db.VenueMember.insert({
@@ -472,24 +511,48 @@ export const set_channel_role = spacetimedb.reducer(
     const venue = ctx.db.Venue.venueId.find(ch.venueId);
     if (!venue) throw new SenderError("api_errors.venue_not_found");
 
-    const callerRoles = [...ctx.db.ChannelMemberRole.channel_member_role_channel_id.filter(channelId)];
-    const callerRole = callerRoles.find(r => r.userId === userId);
+    const myVenueMembership = [...ctx.db.VenueMember.venue_member_venue_id.filter(ch.venueId)].find(m => m.userId === userId);
+    const isVenueOwner = myVenueMembership?.role.tag === "owner";
 
-    const isVenueOwner = venue.ownerId === userId;
-    const isChannelOwner = callerRole?.role.tag === "owner";
-    const isChannelAdmin = callerRole?.role.tag === "admin";
+    const allChannelRoles = [...ctx.db.ChannelMemberRole.channel_member_role_channel_id.filter(channelId)];
+    const myChannelRoleRow = allChannelRoles.find(r => r.userId === userId);
+    const myChannelRole = myChannelRoleRow?.role.tag || "member";
 
-    if (!isVenueOwner && !isChannelOwner && !isChannelAdmin) {
+    const isChannelOwner = isVenueOwner || myChannelRole === "owner";
+    const isChannelAdmin = isChannelOwner || myChannelRole === "admin";
+
+    if (!isChannelAdmin) {
       throw new SenderError("api_errors.set_channel_role_forbidden");
     }
 
-    if (isChannelAdmin && !isChannelOwner && !isVenueOwner && role !== "moderator" && role !== "member") {
+    const existingTargetRoleRow = allChannelRoles.find(r => r.userId === targetUserId);
+    const targetCurrentRole = existingTargetRoleRow?.role.tag || "member";
+
+    // RULE: Owners cannot demote another owner
+    if (isChannelOwner && targetUserId !== userId && targetCurrentRole === "owner" && role !== "owner") {
+      throw new SenderError("api_errors.cannot_demote_same_role");
+    }
+
+    // RULE: Admins cannot demote another admin
+    if (myChannelRole === "admin" && !isChannelOwner && (getRoleRank(targetCurrentRole) >= getRoleRank("admin"))) {
+       throw new SenderError("api_errors.cannot_demote_same_role");
+    }
+
+    // RULE: Admin cannot grant "owner" or "admin" to others
+    if (myChannelRole === "admin" && !isChannelOwner && (role === "owner" || role === "admin")) {
       throw new SenderError("api_errors.admin_role_limit");
     }
 
-    const existingTargetRole = callerRoles.find(r => r.userId === targetUserId);
-    if (existingTargetRole) {
-      ctx.db.ChannelMemberRole.delete({ ...existingTargetRole });
+    // RULE: Cannot demote self if last owner
+    if (targetUserId === userId && targetCurrentRole === "owner" && role !== "owner") {
+      const ownersCount = allChannelRoles.filter(r => r.role.tag === "owner").length;
+      if (ownersCount <= 1) {
+        throw new SenderError("api_errors.cannot_demote_last_owner");
+      }
+    }
+
+    if (existingTargetRoleRow) {
+      ctx.db.ChannelMemberRole.delete({ ...existingTargetRoleRow });
     }
 
     ctx.db.ChannelMemberRole.insert({
@@ -509,9 +572,7 @@ export const block_user = spacetimedb.reducer(
 
     const allMembers = [...ctx.db.VenueMember.venue_member_venue_id.filter(venueId)];
     const callerMember = allMembers.find(m => m.userId === userId);
-
-    const isVenueOwner = venue.ownerId === userId || callerMember?.role.tag === "owner";
-    const isAdmin = isVenueOwner || callerMember?.role.tag === "admin";
+    const isAdmin = callerMember?.role.tag === "owner" || callerMember?.role.tag === "admin";
 
     if (!isAdmin) throw new SenderError("api_errors.block_user_forbidden");
 
@@ -535,9 +596,7 @@ export const unblock_user = spacetimedb.reducer(
 
     const allMembers = [...ctx.db.VenueMember.venue_member_venue_id.filter(venueId)];
     const callerMember = allMembers.find(m => m.userId === userId);
-
-    const isVenueOwner = venue.ownerId === userId || callerMember?.role.tag === "owner";
-    const isAdmin = isVenueOwner || callerMember?.role.tag === "admin";
+    const isAdmin = callerMember?.role.tag === "owner" || callerMember?.role.tag === "admin";
 
     if (!isAdmin) throw new SenderError("api_errors.unblock_user_forbidden");
 
@@ -556,13 +615,15 @@ function assertChannelManager(ctx: any, channelId: bigint): void {
   const userId = getUserId(ctx);
   const ch = ctx.db.Channel.channelId.find(channelId);
   if (!ch) throw new SenderError("api_errors.channel_not_found");
-  const venue = ctx.db.Venue.venueId.find(ch.venueId);
+  const venueId = ch.venueId;
+  const venue = ctx.db.Venue.venueId.find(venueId);
   if (!venue) throw new SenderError("api_errors.venue_not_found");
-  const isVenueOwner = venue.ownerId === userId;
-  if (isVenueOwner) return;
-  const roles = [...ctx.db.ChannelMemberRole.channel_member_role_channel_id.filter(channelId)];
-  const myRole = roles.find(r => r.userId === userId);
-  if (myRole?.role.tag !== "owner" && myRole?.role.tag !== "admin") {
+  
+  const myVenueMembership = [...ctx.db.VenueMember.venue_member_venue_id.filter(venueId)].find(m => m.userId === userId);
+  if (myVenueMembership?.role.tag === "owner") return;
+
+  const myChannelRoleRow = [...ctx.db.ChannelMemberRole.channel_member_role_channel_id.filter(channelId)].find(r => r.userId === userId);
+  if (myChannelRoleRow?.role.tag !== "owner" && myChannelRoleRow?.role.tag !== "admin") {
     throw new SenderError("api_errors.manage_templates_forbidden");
   }
 }
@@ -620,9 +681,11 @@ export const send_message = spacetimedb.reducer(
       throw new SenderError("api_errors.blocked_from_sending");
     }
 
-    const callerRoles = [...ctx.db.ChannelMemberRole.channel_member_role_channel_id.filter(channelId)];
-    const userRole = callerRoles.find(r => r.userId === userId)?.role.tag;
-    const isOwner = venue.ownerId === userId || userRole === "owner";
+    const myVenueMembership = [...ctx.db.VenueMember.venue_member_venue_id.filter(ch.venueId)].find(m => m.userId === userId);
+    
+    const myChannelRoleRow = [...ctx.db.ChannelMemberRole.channel_member_role_channel_id.filter(channelId)].find(r => r.userId === userId);
+    const userRole = myChannelRoleRow?.role.tag;
+    const isOwner = myVenueMembership?.role.tag === "owner" || userRole === "owner";
 
     if (!isOwner && userRole !== "admin" && userRole !== "moderator") {
       throw new SenderError("api_errors.send_message_forbidden");
@@ -661,11 +724,12 @@ export const delete_message = spacetimedb.reducer(
     const isSender = msg.senderId === userId;
     if (!isSender) {
       const ch = ctx.db.Channel.channelId.find(msg.channelId);
-      const venue = ch ? ctx.db.Venue.venueId.find(ch.venueId) : undefined;
-      const isVenueOwner = venue?.ownerId === userId;
-      const roles = [...ctx.db.ChannelMemberRole.channel_member_role_channel_id.filter(msg.channelId)];
-      const myRole = roles.find(r => r.userId === userId);
-      const isChannelManager = myRole?.role.tag === "owner" || myRole?.role.tag === "admin" || myRole?.role.tag === "moderator";
+      if (!ch) throw new SenderError("api_errors.channel_not_found");
+      const myVenueMember = [...ctx.db.VenueMember.venue_member_venue_id.filter(ch.venueId)].find(m => m.userId === userId);
+      const isVenueOwner = myVenueMember?.role.tag === "owner";
+      const myChannelRoleRow = [...ctx.db.ChannelMemberRole.channel_member_role_channel_id.filter(msg.channelId)].find(r => r.userId === userId);
+      const myChannelRole = myChannelRoleRow?.role.tag;
+      const isChannelManager = myChannelRole === "owner" || myChannelRole === "admin" || myChannelRole === "moderator";
       if (!isVenueOwner && !isChannelManager) {
         throw new SenderError("api_errors.delete_message_forbidden");
       }
@@ -698,9 +762,11 @@ export const repeat_message = spacetimedb.reducer(
     if (!member) throw new SenderError("api_errors.member_of_venue_required");
     if (member.isBlocked) throw new SenderError("api_errors.blocked_in_venue");
     const roles = [...ctx.db.ChannelMemberRole.channel_member_role_channel_id.filter(msg.channelId)];
-    const myRole = roles.find(r => r.userId === userId)?.role.tag;
-    const isVenueOwner = venue?.ownerId === userId;
-    if (!isVenueOwner && myRole !== "owner" && myRole !== "admin" && myRole !== "moderator") {
+    const myVenueMember = [...ctx.db.VenueMember.venue_member_venue_id.filter(ch.venueId)].find(m => m.userId === userId);
+    const isVenueOwner = myVenueMember?.role.tag === "owner";
+    const myChannelRoleRow = [...ctx.db.ChannelMemberRole.channel_member_role_channel_id.filter(msg.channelId)].find(r => r.userId === userId);
+    const myChannelRole = myChannelRoleRow?.role.tag;
+    if (!isVenueOwner && myChannelRole !== "owner" && myChannelRole !== "admin" && myChannelRole !== "moderator") {
       throw new SenderError("api_errors.repeat_message_forbidden");
     }
 
@@ -758,7 +824,7 @@ export const register_display_to_venue = spacetimedb.reducer(
     // Only venue owner or channel-level owners/admins can register nodes
     const venue = ctx.db.Venue.venueId.find(venueId);
     if (!venue) throw new SenderError("api_errors.venue_not_found");
-    const isVenueOwner = venue.ownerId === userId;
+    const isVenueOwner = callerMembership.role.tag === "owner";
     if (!isVenueOwner) {
       const channels = [...ctx.db.Channel.channel_venue_id.filter(venueId)];
       const myRolesInVenue = channels.flatMap(ch =>
@@ -911,9 +977,8 @@ export const delete_display_device = spacetimedb.reducer(
     if (!device) throw new SenderError("api_errors.device_not_found");
 
     // Must be venue owner or admin to delete nodes
-    const venue = ctx.db.Venue.venueId.find(device.venueId);
-    if (!venue) throw new SenderError("api_errors.venue_not_found");
-    const isVenueOwner = venue.ownerId === userId;
+    const callerMember = [...ctx.db.VenueMember.venue_member_venue_id.filter(device.venueId)].find(m => m.userId === userId);
+    const isVenueOwner = callerMember?.role.tag === "owner";
 
     if (!isVenueOwner) {
       const channels = [...ctx.db.Channel.channel_venue_id.filter(device.venueId)];
@@ -922,7 +987,7 @@ export const delete_display_device = spacetimedb.reducer(
           .filter(r => r.userId === userId)
       );
       const isAdmin = myRolesInVenue.some(r => r.role.tag === "owner" || r.role.tag === "admin");
-      if (!isAdmin) throw new SenderError("api_errors.delete_node_forbidden");
+      if (!isVenueOwner && !isAdmin) throw new SenderError("api_errors.delete_node_forbidden");
     }
 
     ctx.db.DisplayDevice.displayId.delete(displayId);
@@ -944,7 +1009,9 @@ export const update_display_name = spacetimedb.reducer(
 
     const venue = ctx.db.Venue.venueId.find(device.venueId);
     if (!venue) throw new SenderError("api_errors.venue_not_found");
-    const isVenueOwner = venue.ownerId === userId;
+
+    const callerMember = [...ctx.db.VenueMember.venue_member_venue_id.filter(device.venueId)].find(m => m.userId === userId);
+    const isVenueOwner = callerMember?.role.tag === "owner";
 
     if (!isVenueOwner) {
       const channels = [...ctx.db.Channel.channel_venue_id.filter(device.venueId)];
@@ -953,7 +1020,7 @@ export const update_display_name = spacetimedb.reducer(
           .filter(r => r.userId === userId)
       );
       const isAdmin = myRolesInVenue.some(r => r.role.tag === "owner" || r.role.tag === "admin");
-      if (!isAdmin) throw new SenderError("api_errors.rename_node_forbidden");
+      if (!isVenueOwner && !isAdmin) throw new SenderError("api_errors.rename_node_forbidden");
     }
 
     ctx.db.DisplayDevice.displayId.update({

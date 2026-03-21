@@ -33,8 +33,9 @@ export const ChannelSettingsScreen = () => {
     (r: any) => r.userId === user?.userId && r.channelId === channel?.channelId
   )?.role.tag;
 
-  const isVenueOwner = venue?.ownerId === user?.userId || myVenueRole?.toLowerCase() === 'owner';
-  const isChannelOwner = isVenueOwner || myChannelRole?.toLowerCase() === 'owner';
+  const isVenueOwner = myVenueRole?.toLowerCase() === 'owner';
+  const isVenueAdmin = myVenueRole?.toLowerCase() === 'admin';
+  const canUpdate = isVenueOwner || isVenueAdmin || myChannelRole?.toLowerCase() === 'owner';
 
   const [name, setName] = useState('');
   const [description, setDescription] = useState('');
@@ -67,7 +68,7 @@ export const ChannelSettingsScreen = () => {
   if (!isLoggedIn || !user || !connected) return null;
   if (!venue || !channel) return null;
 
-  if (!isChannelOwner) {
+  if (!canUpdate) {
     return (
       <div className="app-container empty-state">
         <h2>{t('venue_channels.access_denied')}</h2>

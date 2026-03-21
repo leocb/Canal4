@@ -13,8 +13,7 @@ export const DesktopDisplaySyncScreen = () => {
   const { user } = useAuth();
   
   const [venues] = useTable(tables.Venue);
-  const [channels] = useTable(tables.Channel);
-  const [channelRoles] = useTable(tables.ChannelMemberRole);
+  const [venueMembers] = useTable(tables.VenueMember);
   const [displayDevices] = useTable(tables.DisplayDevice);
   
   const deleteDevice = useReducer(reducers.deleteDisplayDevice);
@@ -30,7 +29,6 @@ export const DesktopDisplaySyncScreen = () => {
   const venue = venues.find(v => v.link === venueLink);
   const venueIdBigInt = venue ? venue.venueId : 0n;
   
-  const venueChannels = channels.filter(c => c.venueId === venueIdBigInt);
   const venueDevices = displayDevices.filter(d => d.venueId === venueIdBigInt);
 
   if (!venue) {
@@ -43,13 +41,10 @@ export const DesktopDisplaySyncScreen = () => {
   }
 
   // Ensure user has permissions to view this screen
-  const isOwner = venue.ownerId === user?.userId;
-  const userRolesInVenue = channelRoles.filter(r => 
-    r.userId === user?.userId && 
-    venueChannels.some(c => c.channelId === r.channelId)
-  );
-  const isAdmin = userRolesInVenue.some(r => r.role.tag === 'Admin' || r.role.tag === 'Owner');
-  const canManageDisplays = isOwner || isAdmin;
+  const myMember = venueMembers.find(m => m.venueId === venueIdBigInt && m.userId === user?.userId);
+  const isVenueOwner = myMember?.role.tag === 'Owner';
+  const isVenueAdmin = myMember?.role.tag === 'Admin';
+  const canManageDisplays = isVenueOwner || isVenueAdmin;
 
   if (!canManageDisplays) {
     return (
