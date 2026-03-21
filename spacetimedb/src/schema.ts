@@ -25,7 +25,14 @@ export const DeliveryStatus = t.enum("DeliveryStatus", {
 
 // Tables
 export const User = table(
-  { name: "user", public: true },
+  {
+    name: "user",
+    public: true,
+    indexes: [
+      { name: "user_passkey_credential_id", accessor: "user_passkey_credential_id", algorithm: "btree", columns: ["passkeyCredentialId"] },
+      { name: "user_name", accessor: "user_name", algorithm: "btree", columns: ["name"] },
+    ] as const,
+  },
   {
     userId: t.u64().primaryKey().autoInc(),
     email: t.string().optional(),
@@ -52,7 +59,14 @@ export const UserIdentity = table(
 
 
 export const Venue = table(
-  { name: "venue", public: true },
+  {
+    name: "venue",
+    public: true,
+    indexes: [
+      { name: "venue_link", accessor: "venue_link", algorithm: "btree", columns: ["link"] },
+      { name: "venue_name", accessor: "venue_name", algorithm: "btree", columns: ["name"] },
+    ] as const,
+  },
   {
     venueId: t.u64().primaryKey().autoInc(),
     name: t.string(),
@@ -65,7 +79,10 @@ export const Channel = table(
   {
     name: "channel",
     public: true,
-    indexes: [{ name: "channel_venue_id", accessor: "channel_venue_id", algorithm: "btree", columns: ["venueId"] }] as const,
+    indexes: [
+      { name: "channel_venue_id", accessor: "channel_venue_id", algorithm: "btree", columns: ["venueId"] },
+      { name: "channel_name", accessor: "channel_name", algorithm: "btree", columns: ["name"] },
+    ] as const,
   },
   {
     channelId: t.u64().primaryKey().autoInc(),
@@ -85,6 +102,7 @@ export const VenueMember = table(
     indexes: [
       { name: "venue_member_venue_id", accessor: "venue_member_venue_id", algorithm: "btree", columns: ["venueId"] },
       { name: "venue_member_user_id", accessor: "venue_member_user_id", algorithm: "btree", columns: ["userId"] },
+      { name: "venue_member_composite", accessor: "venue_member_composite", algorithm: "btree", columns: ["venueId", "userId"] },
     ] as const,
   },
   {
@@ -104,6 +122,7 @@ export const ChannelMemberRole = table(
     indexes: [
       { name: "channel_member_role_channel_id", accessor: "channel_member_role_channel_id", algorithm: "btree", columns: ["channelId"] },
       { name: "channel_member_role_user_id", accessor: "channel_member_role_user_id", algorithm: "btree", columns: ["userId"] },
+      { name: "channel_member_role_composite", accessor: "channel_member_role_composite", algorithm: "btree", columns: ["channelId", "userId"] },
     ] as const,
   },
   {
@@ -120,6 +139,7 @@ export const NotificationFilter = table(
     indexes: [
       { name: "notification_filter_channel_id", accessor: "notification_filter_channel_id", algorithm: "btree", columns: ["channelId"] },
       { name: "notification_filter_user_id", accessor: "notification_filter_user_id", algorithm: "btree", columns: ["userId"] },
+      { name: "notification_filter_composite", accessor: "notification_filter_composite", algorithm: "btree", columns: ["channelId", "userId"] },
     ] as const,
   },
   {
@@ -149,7 +169,10 @@ export const Message = table(
   {
     name: "message",
     public: true,
-    indexes: [{ name: "message_channel_id", accessor: "message_channel_id", algorithm: "btree", columns: ["channelId"] }] as const,
+    indexes: [
+      { name: "message_channel_id", accessor: "message_channel_id", algorithm: "btree", columns: ["channelId"] },
+      { name: "message_sender_id", accessor: "message_sender_id", algorithm: "btree", columns: ["senderId"] },
+    ] as const,
   },
   {
     messageId: t.u64().primaryKey().autoInc(),
@@ -168,6 +191,7 @@ export const DisplayDevice = table(
     indexes: [
       { name: "display_device_uid", accessor: "display_device_uid", algorithm: "btree", columns: ["uid"] },
       { name: "display_device_venue_id", accessor: "display_device_venue_id", algorithm: "btree", columns: ["venueId"] },
+      { name: "display_device_identity", accessor: "display_device_identity", algorithm: "btree", columns: ["identity"] },
     ] as const,
   },
   {
@@ -198,6 +222,7 @@ export const MessageDeliveryStatus = table(
     indexes: [
       { name: "delivery_status_message_id", accessor: "delivery_status_message_id", algorithm: "btree", columns: ["messageId"] },
       { name: "delivery_status_display_id", accessor: "delivery_status_display_id", algorithm: "btree", columns: ["displayId"] },
+      { name: "delivery_status_composite", accessor: "delivery_status_composite", algorithm: "btree", columns: ["messageId", "displayId"] },
     ] as const,
   },
   {

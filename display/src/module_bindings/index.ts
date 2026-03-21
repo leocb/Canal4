@@ -97,6 +97,9 @@ const tablesSchema = __schema({
       { accessor: 'channelId', name: 'channel_channel_id_idx_btree', algorithm: 'btree', columns: [
         'channelId',
       ] },
+      { accessor: 'channel_name', name: 'channel_name_idx_btree', algorithm: 'btree', columns: [
+        'name',
+      ] },
       { accessor: 'channel_venue_id', name: 'channel_venue_id_idx_btree', algorithm: 'btree', columns: [
         'venueId',
       ] },
@@ -111,6 +114,10 @@ const tablesSchema = __schema({
       { accessor: 'channel_member_role_channel_id', name: 'channel_member_role_channel_id_idx_btree', algorithm: 'btree', columns: [
         'channelId',
       ] },
+      { accessor: 'channel_member_role_composite', name: 'channel_member_role_channel_id_user_id_idx_btree', algorithm: 'btree', columns: [
+        'channelId',
+        'userId',
+      ] },
       { accessor: 'channel_member_role_user_id', name: 'channel_member_role_user_id_idx_btree', algorithm: 'btree', columns: [
         'userId',
       ] },
@@ -123,6 +130,9 @@ const tablesSchema = __schema({
     indexes: [
       { accessor: 'displayId', name: 'display_device_display_id_idx_btree', algorithm: 'btree', columns: [
         'displayId',
+      ] },
+      { accessor: 'display_device_identity', name: 'display_device_identity_idx_btree', algorithm: 'btree', columns: [
+        'identity',
       ] },
       { accessor: 'display_device_uid', name: 'display_device_uid_idx_btree', algorithm: 'btree', columns: [
         'uid',
@@ -155,6 +165,9 @@ const tablesSchema = __schema({
       { accessor: 'messageId', name: 'message_message_id_idx_btree', algorithm: 'btree', columns: [
         'messageId',
       ] },
+      { accessor: 'message_sender_id', name: 'message_sender_id_idx_btree', algorithm: 'btree', columns: [
+        'senderId',
+      ] },
     ],
     constraints: [
       { name: 'message_message_id_key', constraint: 'unique', columns: ['messageId'] },
@@ -164,6 +177,10 @@ const tablesSchema = __schema({
     name: 'message_delivery_status',
     indexes: [
       { accessor: 'delivery_status_display_id', name: 'message_delivery_status_display_id_idx_btree', algorithm: 'btree', columns: [
+        'displayId',
+      ] },
+      { accessor: 'delivery_status_composite', name: 'message_delivery_status_message_id_display_id_idx_btree', algorithm: 'btree', columns: [
+        'messageId',
         'displayId',
       ] },
       { accessor: 'delivery_status_message_id', name: 'message_delivery_status_message_id_idx_btree', algorithm: 'btree', columns: [
@@ -197,6 +214,10 @@ const tablesSchema = __schema({
       { accessor: 'notification_filter_channel_id', name: 'notification_filter_channel_id_idx_btree', algorithm: 'btree', columns: [
         'channelId',
       ] },
+      { accessor: 'notification_filter_composite', name: 'notification_filter_channel_id_user_id_idx_btree', algorithm: 'btree', columns: [
+        'channelId',
+        'userId',
+      ] },
       { accessor: 'notification_filter_user_id', name: 'notification_filter_user_id_idx_btree', algorithm: 'btree', columns: [
         'userId',
       ] },
@@ -207,6 +228,12 @@ const tablesSchema = __schema({
   User: __table({
     name: 'user',
     indexes: [
+      { accessor: 'user_name', name: 'user_name_idx_btree', algorithm: 'btree', columns: [
+        'name',
+      ] },
+      { accessor: 'user_passkey_credential_id', name: 'user_passkey_credential_id_idx_btree', algorithm: 'btree', columns: [
+        'passkeyCredentialId',
+      ] },
       { accessor: 'userId', name: 'user_user_id_idx_btree', algorithm: 'btree', columns: [
         'userId',
       ] },
@@ -232,6 +259,12 @@ const tablesSchema = __schema({
   Venue: __table({
     name: 'venue',
     indexes: [
+      { accessor: 'venue_link', name: 'venue_link_idx_btree', algorithm: 'btree', columns: [
+        'link',
+      ] },
+      { accessor: 'venue_name', name: 'venue_name_idx_btree', algorithm: 'btree', columns: [
+        'name',
+      ] },
       { accessor: 'venueId', name: 'venue_venue_id_idx_btree', algorithm: 'btree', columns: [
         'venueId',
       ] },
@@ -262,6 +295,10 @@ const tablesSchema = __schema({
       ] },
       { accessor: 'venue_member_venue_id', name: 'venue_member_venue_id_idx_btree', algorithm: 'btree', columns: [
         'venueId',
+      ] },
+      { accessor: 'venue_member_composite', name: 'venue_member_venue_id_user_id_idx_btree', algorithm: 'btree', columns: [
+        'venueId',
+        'userId',
       ] },
     ],
     constraints: [
