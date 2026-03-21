@@ -8,6 +8,7 @@ import { useAuth } from './hooks/useAuth';
 import NavBar from './components/NavBar';
 import ReconnectingOverlay from './components/ReconnectingOverlay';
 import ProtectedRoute from './components/ProtectedRoute';
+import { Breadcrumbs } from './components/Breadcrumbs';
 
 // Named imports for screen components
 import { LoginScreen } from './pages/LoginScreen';
@@ -56,6 +57,7 @@ function AppContent() {
   return (
     <>
       <NavBar />
+      <Breadcrumbs />
       <Routes>
         <Route path="/login" element={<LoginScreen />} />
         <Route element={<ProtectedRoute />}>

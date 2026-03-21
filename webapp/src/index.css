@@ -221,6 +221,70 @@ button.danger:hover {
   z-index: 50;
 }
 
+/* Breadcrumbs */
+.breadcrumbs-container {
+  padding: 8px 24px;
+  background: rgba(11, 14, 20, 0.4);
+  border-bottom: 1px solid var(--surface-border);
+  backdrop-filter: blur(8px);
+  display: flex;
+  align-items: center;
+  z-index: 40;
+}
+
+.breadcrumbs-content {
+  max-width: 800px;
+  width: 100%;
+  margin: 0 auto;
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 4px;
+  row-gap: 8px;
+  font-size: 0.85rem;
+  font-weight: 500;
+}
+
+.breadcrumb-wrapper {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.breadcrumb-item {
+  color: var(--text-secondary);
+  transition: all var(--transition-fast);
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  line-height: 1.4;
+}
+
+.breadcrumb-item:hover {
+  color: var(--accent-color);
+}
+
+.breadcrumb-item.active {
+  color: var(--text-primary);
+  pointer-events: none;
+}
+
+.breadcrumb-item.home {
+  padding: 4px;
+  border-radius: 4px;
+}
+
+.breadcrumb-item.home:hover {
+  background: var(--surface-hover);
+}
+
+.breadcrumb-separator {
+  color: var(--text-secondary);
+  opacity: 0.8;
+  flex-shrink: 0;
+  margin: 0 2px;
+}
+
 /* Icon Button */
 button.icon-button {
   background: transparent !important;

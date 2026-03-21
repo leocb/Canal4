@@ -55,6 +55,17 @@
     "times": "times",
     "connection_error": "Connection Error"
   },
+  "breadcrumb": {
+    "new_venue": "New Venue",
+    "settings": "Settings",
+    "permissions": "Permissions",
+    "new_channel": "New Channel",
+    "send_message": "Send Message",
+    "templates": "Templates",
+    "displays": "Displays",
+    "new_node": "New Node",
+    "join": "Join/Invite"
+  },
   "languages": {
     "en": "English",
     "pt-BR": "Português (Brasil)"

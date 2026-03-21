@@ -55,6 +55,17 @@
     "times": "vezes",
     "connection_error": "Erro de Conexão"
   },
+  "breadcrumb": {
+    "new_venue": "Novo Local",
+    "settings": "Configurações",
+    "permissions": "Permissões",
+    "new_channel": "Novo Canal",
+    "send_message": "Enviar Mensagem",
+    "templates": "Modelos",
+    "displays": "Displays",
+    "new_node": "Novo Nó",
+    "join": "Entrar/Convite"
+  },
   "languages": {
     "en": "English",
     "pt-BR": "Português (Brasil)"
