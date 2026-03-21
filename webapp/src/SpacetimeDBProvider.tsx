@@ -35,8 +35,8 @@ export const SpacetimeDBProvider = ({ children }: { children: ReactNode }) => {
   const token = localStorage.getItem("auth_token") || undefined;
 
   // Prefer window.CONFIG (runtime injected by Nginx) over import.meta.env (build-time)
-  const uri = (window as any).CONFIG?.SPACETIMEDB_URI || import.meta.env.VITE_SPACETIMEDB_URI || import.meta.env.VITE_SPACETIMEDB_URI_DEV || "http://localhost:3000";
-  const DB_NAME = (window as any).CONFIG?.SPACETIMEDB_NAME || import.meta.env.VITE_SPACETIMEDB_NAME || import.meta.env.VITE_SPACETIMEDB_MODULE_NAME || "canal4";
+  const uri = (window as any).CONFIG?.SPACETIMEDB_URI || import.meta.env.SPACETIMEDB_URI || "http://localhost:3000";
+  const DB_NAME = (window as any).CONFIG?.SPACETIMEDB_NAME || import.meta.env.SPACETIMEDB_NAME || "canal4-dev";
 
   // Ensure URI doesn't have double slashes if it ends with one
   let resolvedUri = uri.endsWith("/") ? uri.slice(0, -1) : uri;
