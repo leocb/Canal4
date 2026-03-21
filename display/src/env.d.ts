@@ -11,6 +11,7 @@ interface Window {
     showTicker: () => void,
     hideTicker: () => void,
     updateTickerPosition: (position: 'top' | 'bottom') => void,
+    updateTray: (params: { settingsLabel: string; quitLabel: string; tooltip: string }) => void,
   }
 }
 declare module '*?asset' {

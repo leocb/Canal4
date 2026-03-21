@@ -2,16 +2,28 @@ import { Routes, Route, Navigate } from "react-router-dom";
 import { useEffect, useState } from "react";
 import { useTable, useReducer } from "spacetimedb/react";
 import { tables, reducers } from "./module_bindings/index";
+import { useTranslation } from "react-i18next";
 import { SettingsScreen } from "./pages/SettingsScreen";
 import { TickerScreen } from "./pages/TickerScreen";
 import { ErrorBoundary } from "./ErrorBoundary";
 import { useConnectivity } from "./SpacetimeDBProvider";
 
 function App() {
+  const { t, i18n } = useTranslation();
   const { status, setHeartbeatError } = useConnectivity();
   const connected = status === 'online';
   const displayConnect = useReducer(reducers.displayConnect);
   const [machineUid, setMachineUid] = useState<string>('');
+
+  useEffect(() => {
+    if (window.api?.updateTray) {
+      window.api.updateTray({
+        settingsLabel: t('tray.settings'),
+        quitLabel: t('tray.quit'),
+        tooltip: t('tray.tooltip')
+      });
+    }
+  }, [i18n.language, t]);
 
   useEffect(() => {
     if (window.api?.getMachineId) {

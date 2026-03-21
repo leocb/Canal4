@@ -13,6 +13,7 @@ const api = {
   showTicker: () => ipcRenderer.send('show-ticker'),
   hideTicker: () => ipcRenderer.send('hide-ticker'),
   updateTickerPosition: (position: 'top' | 'bottom') => ipcRenderer.send('update-ticker-position', position),
+  updateTray: (params: { settingsLabel: string; quitLabel: string; tooltip: string }) => ipcRenderer.send('update-tray', params),
 }
 
 // Use `contextBridge` APIs to expose Electron APIs to

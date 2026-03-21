@@ -4,6 +4,11 @@
     "desktop_name": "Canal4 Display node",
     "default_node_name": "Display Node ({{id}})"
   },
+  "tray": {
+    "settings": "Settings",
+    "quit": "Quit Canal4",
+    "tooltip": "Canal4 Display node"
+  },
   "login": {
     "title": "Canal4",
     "signin_email": "Sign-in via passkey",

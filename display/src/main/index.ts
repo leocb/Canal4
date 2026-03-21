@@ -99,7 +99,6 @@ function createTray() {
 
   tray = new Tray(trayIcon)
   const contextMenu = Menu.buildFromTemplate([
-    { label: 'Log', click: () => createSettingsWindow('logs') },
     { label: 'Settings', click: () => createSettingsWindow('settings') },
     { type: 'separator' },
     { label: 'Quit Canal4', click: () => { app.quit() } }
@@ -107,6 +106,17 @@ function createTray() {
   tray.setToolTip('Canal4 Display node')
   tray.setContextMenu(contextMenu)
 }
+
+ipcMain.on('update-tray', (_event, { settingsLabel, quitLabel, tooltip }) => {
+  if (!tray) return;
+  const contextMenu = Menu.buildFromTemplate([
+    { label: settingsLabel, click: () => createSettingsWindow('settings') },
+    { type: 'separator' },
+    { label: quitLabel, click: () => { app.quit() } }
+  ])
+  tray.setToolTip(tooltip)
+  tray.setContextMenu(contextMenu)
+});
 
 app.whenReady().then(() => {
   electronApp.setAppUserModelId('org.canal4.displaynode')

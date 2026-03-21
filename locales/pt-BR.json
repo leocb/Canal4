@@ -4,6 +4,11 @@
     "desktop_name": "Nó de Display Canal4",
     "default_node_name": "Nó de Exibição ({{id}})"
   },
+  "tray": {
+    "settings": "Configurações",
+    "quit": "Sair do Canal4",
+    "tooltip": "Nó de Display Canal4"
+  },
   "login": {
     "title": "Canal4",
     "signin_email": "Entrar via passkey",
