@@ -12,7 +12,7 @@ export const AddNodeScreen = () => {
   const navigate = useNavigate();
   const { user, isLoggedIn } = useAuth();
 
-  const [venues] = useTable(tables.Venue);
+  const [venues] = useTable(tables.VenueView);
   const registerDisplay = useReducer(reducers.registerDisplayToVenue);
 
   const [nodeName, setNodeName] = useState('');

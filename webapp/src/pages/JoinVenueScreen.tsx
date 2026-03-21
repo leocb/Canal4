@@ -15,8 +15,8 @@ export const JoinVenueScreen = () => {
 
   // useReadyTable latches ready=true permanently once the first snapshot arrives,
   // preventing flicker when other webapps trigger subscription re-evaluations
-  const [venues, venuesReady] = useReadyTable(tables.Venue);
-  const [venueMembers] = useTable(tables.VenueMember);
+  const [venues, venuesReady] = useReadyTable(tables.VenueView);
+  const [venueMembers] = useTable(tables.VenueMemberView);
   const joinVenue = useReducer(reducers.joinVenue);
 
   const [loading, setLoading] = useState(false);

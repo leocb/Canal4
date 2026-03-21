@@ -12,7 +12,7 @@ export const NewChannelScreen = () => {
   const navigate = useNavigate();
   const { user, isLoggedIn } = useAuth();
 
-  const [venues] = useTable(tables.Venue);
+  const [venues] = useTable(tables.VenueView);
   const createChannel = useReducer(reducers.createChannel);
 
   const [name, setName] = useState('');

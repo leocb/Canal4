@@ -12,9 +12,9 @@ export const DesktopDisplaySyncScreen = () => {
   const navigate = useNavigate();
   const { user } = useAuth();
   
-  const [venues] = useTable(tables.Venue);
-  const [venueMembers] = useTable(tables.VenueMember);
-  const [displayDevices] = useTable(tables.DisplayDevice);
+  const [venues] = useTable(tables.VenueView);
+  const [venueMembers] = useTable(tables.VenueMemberView);
+  const [displayDevices] = useTable(tables.DisplayDeviceView);
   
   const deleteDevice = useReducer(reducers.deleteDisplayDevice);
   const updateDeviceName = useReducer(reducers.updateDisplayName);

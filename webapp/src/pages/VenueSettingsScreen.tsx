@@ -12,8 +12,8 @@ export const VenueSettingsScreen = () => {
   const navigate = useNavigate();
   const { user } = useAuth();
 
-  const [venues] = useTable(tables.Venue);
-  const [venueMembers] = useTable(tables.VenueMember);
+  const [venues] = useTable(tables.VenueView);
+  const [venueMembers] = useTable(tables.VenueMemberView);
   const updateVenue = useReducer(reducers.updateVenue);
   const deleteVenue = useReducer(reducers.deleteVenue);
 

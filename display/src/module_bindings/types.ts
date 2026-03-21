@@ -32,6 +32,9 @@ export const ChannelMemberRole = __t.object("ChannelMemberRole", {
 });
 export type ChannelMemberRole = __Infer<typeof ChannelMemberRole>;
 
+export const ChannelMemberRoleView = __t.object("ChannelMemberRoleView", {});
+export type ChannelMemberRoleView = __Infer<typeof ChannelMemberRoleView>;
+
 // The tagged union or sum type for the algebraic type `ChannelRole`.
 export const ChannelRole = __t.enum("ChannelRole", {
   Owner: __t.string(),
@@ -40,6 +43,9 @@ export const ChannelRole = __t.enum("ChannelRole", {
   Member: __t.string(),
 });
 export type ChannelRole = __Infer<typeof ChannelRole>;
+
+export const ChannelView = __t.object("ChannelView", {});
+export type ChannelView = __Infer<typeof ChannelView>;
 
 // The tagged union or sum type for the algebraic type `DeliveryStatus`.
 export const DeliveryStatus = __t.enum("DeliveryStatus", {
@@ -63,6 +69,9 @@ export const DisplayDevice = __t.object("DisplayDevice", {
 });
 export type DisplayDevice = __Infer<typeof DisplayDevice>;
 
+export const DisplayDeviceView = __t.object("DisplayDeviceView", {});
+export type DisplayDeviceView = __Infer<typeof DisplayDeviceView>;
+
 export const DisplayPairingPin = __t.object("DisplayPairingPin", {
   pin: __t.string(),
   displayUid: __t.string(),
@@ -70,6 +79,9 @@ export const DisplayPairingPin = __t.object("DisplayPairingPin", {
   expiresAt: __t.timestamp(),
 });
 export type DisplayPairingPin = __Infer<typeof DisplayPairingPin>;
+
+export const DisplayPairingPinView = __t.object("DisplayPairingPinView", {});
+export type DisplayPairingPinView = __Infer<typeof DisplayPairingPinView>;
 
 export const Message = __t.object("Message", {
   messageId: __t.u64(),
@@ -92,6 +104,9 @@ export const MessageDeliveryStatus = __t.object("MessageDeliveryStatus", {
 });
 export type MessageDeliveryStatus = __Infer<typeof MessageDeliveryStatus>;
 
+export const MessageDeliveryStatusView = __t.object("MessageDeliveryStatusView", {});
+export type MessageDeliveryStatusView = __Infer<typeof MessageDeliveryStatusView>;
+
 export const MessageTemplate = __t.object("MessageTemplate", {
   templateId: __t.u64(),
   channelId: __t.u64(),
@@ -100,6 +115,12 @@ export const MessageTemplate = __t.object("MessageTemplate", {
   fieldsJson: __t.string(),
 });
 export type MessageTemplate = __Infer<typeof MessageTemplate>;
+
+export const MessageTemplateView = __t.object("MessageTemplateView", {});
+export type MessageTemplateView = __Infer<typeof MessageTemplateView>;
+
+export const MessageView = __t.object("MessageView", {});
+export type MessageView = __Infer<typeof MessageView>;
 
 export const NotificationFilter = __t.object("NotificationFilter", {
   channelId: __t.u64(),
@@ -119,6 +140,9 @@ export const NotificationFilterType = __t.enum("NotificationFilterType", {
 });
 export type NotificationFilterType = __Infer<typeof NotificationFilterType>;
 
+export const NotificationFilterView = __t.object("NotificationFilterView", {});
+export type NotificationFilterView = __Infer<typeof NotificationFilterView>;
+
 export const User = __t.object("User", {
   userId: __t.u64(),
   email: __t.option(__t.string()),
@@ -136,6 +160,12 @@ export const UserIdentity = __t.object("UserIdentity", {
 });
 export type UserIdentity = __Infer<typeof UserIdentity>;
 
+export const UserIdentityView = __t.object("UserIdentityView", {});
+export type UserIdentityView = __Infer<typeof UserIdentityView>;
+
+export const UserView = __t.object("UserView", {});
+export type UserView = __Infer<typeof UserView>;
+
 export const Venue = __t.object("Venue", {
   venueId: __t.u64(),
   name: __t.string(),
@@ -152,6 +182,9 @@ export const VenueInviteToken = __t.object("VenueInviteToken", {
 });
 export type VenueInviteToken = __Infer<typeof VenueInviteToken>;
 
+export const VenueInviteTokenView = __t.object("VenueInviteTokenView", {});
+export type VenueInviteTokenView = __Infer<typeof VenueInviteTokenView>;
+
 export const VenueMember = __t.object("VenueMember", {
   venueId: __t.u64(),
   userId: __t.u64(),
@@ -163,4 +196,10 @@ export const VenueMember = __t.object("VenueMember", {
   },
 });
 export type VenueMember = __Infer<typeof VenueMember>;
+
+export const VenueMemberView = __t.object("VenueMemberView", {});
+export type VenueMemberView = __Infer<typeof VenueMemberView>;
+
+export const VenueView = __t.object("VenueView", {});
+export type VenueView = __Infer<typeof VenueView>;
 

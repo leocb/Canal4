@@ -135,16 +135,16 @@ export const SettingsScreen = () => {
     setStDb
   } = useConnectivity();
   const connected = status === 'online';
-  const [messages] = useTable(tables.Message);
-  const [venues] = useTable(tables.Venue);
-  const [channels] = useTable(tables.Channel);
-  const [templates] = useTable(tables.MessageTemplate);
-  const [devices] = useTable(tables.DisplayDevice);
-  const [users] = useTable(tables.User);
-  const [deliveryStatuses] = useTable(tables.MessageDeliveryStatus);
+  const [messages] = useTable(tables.MessageView);
+  const [venues] = useTable(tables.VenueView);
+  const [channels] = useTable(tables.ChannelView);
+  const [templates] = useTable(tables.MessageTemplateView);
+  const [devices] = useTable(tables.DisplayDeviceView);
+  const [users] = useTable(tables.UserView);
+  const [deliveryStatuses] = useTable(tables.MessageDeliveryStatusView);
 
   const [machineUid, setMachineUid] = useState<string>('Loading...');
-  const [pins] = useTable(tables.DisplayPairingPin);
+  const [pins] = useTable(tables.DisplayPairingPinView);
   const { tab } = useParams<{ tab: string }>();
   const navigate = useNavigate();
   const activeTab: Tab = (tab as Tab) || 'pairing';

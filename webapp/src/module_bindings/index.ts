@@ -75,17 +75,30 @@ import UpdateVenueReducer from "./update_venue_reducer";
 // Import all table schema definitions
 import ChannelRow from "./channel_table";
 import ChannelMemberRoleRow from "./channel_member_role_table";
+import ChannelMemberRoleViewRow from "./channel_member_role_view_table";
+import ChannelViewRow from "./channel_view_table";
 import DisplayDeviceRow from "./display_device_table";
+import DisplayDeviceViewRow from "./display_device_view_table";
 import DisplayPairingPinRow from "./display_pairing_pin_table";
+import DisplayPairingPinViewRow from "./display_pairing_pin_view_table";
 import MessageRow from "./message_table";
 import MessageDeliveryStatusRow from "./message_delivery_status_table";
+import MessageDeliveryStatusViewRow from "./message_delivery_status_view_table";
 import MessageTemplateRow from "./message_template_table";
+import MessageTemplateViewRow from "./message_template_view_table";
+import MessageViewRow from "./message_view_table";
 import NotificationFilterRow from "./notification_filter_table";
+import NotificationFilterViewRow from "./notification_filter_view_table";
 import UserRow from "./user_table";
 import UserIdentityRow from "./user_identity_table";
+import UserIdentityViewRow from "./user_identity_view_table";
+import UserViewRow from "./user_view_table";
 import VenueRow from "./venue_table";
 import VenueInviteTokenRow from "./venue_invite_token_table";
+import VenueInviteTokenViewRow from "./venue_invite_token_view_table";
 import VenueMemberRow from "./venue_member_table";
+import VenueMemberViewRow from "./venue_member_view_table";
+import VenueViewRow from "./venue_view_table";
 
 /** Type-only namespace exports for generated type groups. */
 
@@ -304,6 +317,97 @@ const tablesSchema = __schema({
     constraints: [
     ],
   }, VenueMemberRow),
+  ChannelMemberRoleView: __table({
+    name: 'channel_member_role_view',
+    indexes: [
+    ],
+    constraints: [
+    ],
+  }, ChannelMemberRoleViewRow),
+  ChannelView: __table({
+    name: 'channel_view',
+    indexes: [
+    ],
+    constraints: [
+    ],
+  }, ChannelViewRow),
+  DisplayDeviceView: __table({
+    name: 'display_device_view',
+    indexes: [
+    ],
+    constraints: [
+    ],
+  }, DisplayDeviceViewRow),
+  DisplayPairingPinView: __table({
+    name: 'display_pairing_pin_view',
+    indexes: [
+    ],
+    constraints: [
+    ],
+  }, DisplayPairingPinViewRow),
+  MessageDeliveryStatusView: __table({
+    name: 'message_delivery_status_view',
+    indexes: [
+    ],
+    constraints: [
+    ],
+  }, MessageDeliveryStatusViewRow),
+  MessageTemplateView: __table({
+    name: 'message_template_view',
+    indexes: [
+    ],
+    constraints: [
+    ],
+  }, MessageTemplateViewRow),
+  MessageView: __table({
+    name: 'message_view',
+    indexes: [
+    ],
+    constraints: [
+    ],
+  }, MessageViewRow),
+  NotificationFilterView: __table({
+    name: 'notification_filter_view',
+    indexes: [
+    ],
+    constraints: [
+    ],
+  }, NotificationFilterViewRow),
+  UserIdentityView: __table({
+    name: 'user_identity_view',
+    indexes: [
+    ],
+    constraints: [
+    ],
+  }, UserIdentityViewRow),
+  UserView: __table({
+    name: 'user_view',
+    indexes: [
+    ],
+    constraints: [
+    ],
+  }, UserViewRow),
+  VenueInviteTokenView: __table({
+    name: 'venue_invite_token_view',
+    indexes: [
+    ],
+    constraints: [
+    ],
+  }, VenueInviteTokenViewRow),
+  VenueMemberView: __table({
+    name: 'venue_member_view',
+    indexes: [
+    ],
+    constraints: [
+    ],
+  }, VenueMemberViewRow),
+  VenueView: __table({
+    name: 'venue_view',
+    indexes: [
+    ],
+    constraints: [
+    ],
+  }, VenueViewRow),
 });
 
 /** The schema information for all reducers in this module. This is defined the same way as the reducers would have been defined in the server, except the body of the reducer is omitted in code generation. */

@@ -41,7 +41,7 @@ export const NewVenueScreen = () => {
   const navigate = useNavigate();
   const { user, isLoggedIn } = useAuth();
 
-  const [venues] = useTable(tables.Venue);
+  const [venues] = useTable(tables.VenueView);
   const createVenue = useReducer(reducers.createVenue);
 
   const [newVenueName, setNewVenueName] = useState('');

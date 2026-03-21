@@ -13,14 +13,14 @@ export const ChannelScreen = () => {
   const navigate = useNavigate();
   const { user } = useAuth();
 
-  const [venues, venuesReady] = useReadyTable(tables.Venue);
-  const [channels] = useTable(tables.Channel);
-  const [messages] = useTable(tables.Message);
-  const [venueMembers, membersReady] = useReadyTable(tables.VenueMember);
-  const [channelRoles] = useTable(tables.ChannelMemberRole);
-  const [users] = useTable(tables.User);
-  const [displayDevices] = useTable(tables.DisplayDevice);
-  const [deliveryStatuses] = useTable(tables.MessageDeliveryStatus);
+  const [venues, venuesReady] = useReadyTable(tables.VenueView);
+  const [channels] = useTable(tables.ChannelView);
+  const [messages] = useTable(tables.MessageView);
+  const [venueMembers, membersReady] = useReadyTable(tables.VenueMemberView);
+  const [channelRoles] = useTable(tables.ChannelMemberRoleView);
+  const [users] = useTable(tables.UserView);
+  const [displayDevices] = useTable(tables.DisplayDeviceView);
+  const [deliveryStatuses] = useTable(tables.MessageDeliveryStatusView);
 
   const deleteMessage = useReducer(reducers.deleteMessage);
   const repeatMessage = useReducer(reducers.repeatMessage);

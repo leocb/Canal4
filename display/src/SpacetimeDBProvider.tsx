@@ -1,6 +1,6 @@
 import { useMemo, useEffect, useRef, useState, createContext, useContext, useCallback, type ReactNode } from "react";
 import { SpacetimeDBProvider as Provider } from "spacetimedb/react";
-import { DbConnection } from "./module_bindings/index";
+import { DbConnection, tables } from "./module_bindings/index";
 
 export type ConnectivityStatus = "online" | "offline" | "error";
 
@@ -209,18 +209,18 @@ export const SpacetimeDBProvider = ({ children }: { children: ReactNode }) => {
 
         const sub = connection.subscriptionBuilder();
         sub.subscribe([
-          "SELECT * FROM User",
-          "SELECT * FROM Venue",
-          "SELECT * FROM Channel",
-          "SELECT * FROM VenueMember",
-          "SELECT * FROM ChannelMemberRole",
-          "SELECT * FROM MessageTemplate",
-          "SELECT * FROM Message",
-          "SELECT * FROM NotificationFilter",
-          "SELECT * FROM DisplayDevice",
-          "SELECT * FROM DisplayPairingPin",
-          "SELECT * FROM MessageDeliveryStatus",
-          "SELECT * FROM UserIdentity"
+          tables.UserView,
+          tables.VenueView,
+          tables.ChannelView,
+          tables.VenueMemberView,
+          tables.ChannelMemberRoleView,
+          tables.MessageTemplateView,
+          tables.MessageView,
+          tables.NotificationFilterView,
+          tables.DisplayDeviceView,
+          tables.DisplayPairingPinView,
+          tables.MessageDeliveryStatusView,
+          tables.UserIdentityView
         ]);
       })
       .onConnectError((_ctx, err: any) => {

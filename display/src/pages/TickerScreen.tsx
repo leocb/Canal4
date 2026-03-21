@@ -15,9 +15,9 @@ function getAlphaFromColor(color: string): number {
 }
 
 export const TickerScreen = () => {
-    const [messages] = useTable(tables.Message);
-    const [devices] = useTable(tables.DisplayDevice);
-    const [statuses] = useTable(tables.MessageDeliveryStatus);
+    const [messages] = useTable(tables.MessageView);
+    const [devices] = useTable(tables.DisplayDeviceView);
+    const [statuses] = useTable(tables.MessageDeliveryStatusView);
     const { status } = useConnectivity();
     const connected = status === 'online';
     

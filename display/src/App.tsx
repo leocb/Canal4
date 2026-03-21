@@ -23,7 +23,7 @@ function App() {
     }
   }, []);
 
-  const [devices] = useTable(tables.DisplayDevice);
+  const [devices] = useTable(tables.DisplayDeviceView);
   const myDevicesCount = devices.filter(d => d.uid === machineUid).length;
 
   // Heartbeat to keep lastConnectedAt fresh in the database

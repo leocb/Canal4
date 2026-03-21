@@ -1,4 +1,19 @@
 import spacetimedb from "./schema";
+export {
+  UserView,
+  UserIdentityView,
+  VenueView,
+  ChannelView,
+  VenueMemberView,
+  ChannelMemberRoleView,
+  NotificationFilterView,
+  MessageTemplateView,
+  MessageView,
+  DisplayDeviceView,
+  DisplayPairingPinView,
+  MessageDeliveryStatusView,
+  VenueInviteTokenView,
+} from "./schema";
 import { t, SenderError } from "spacetimedb/server";
 import { Timestamp } from "spacetimedb";
 

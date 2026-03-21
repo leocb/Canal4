@@ -8,10 +8,10 @@ export const Breadcrumbs = () => {
   const { t } = useTranslation();
   const location = useLocation();
   
-  const [venues] = useTable(tables.Venue);
-  const [channels] = useTable(tables.Channel);
-  const [users] = useTable(tables.User);
-  const [templates] = useTable(tables.MessageTemplate);
+  const [venues] = useTable(tables.VenueView);
+  const [channels] = useTable(tables.ChannelView);
+  const [users] = useTable(tables.UserView);
+  const [templates] = useTable(tables.MessageTemplateView);
 
   // Don't show on login or home (redirects anyway)
   if (location.pathname === '/login' || location.pathname === '/') {

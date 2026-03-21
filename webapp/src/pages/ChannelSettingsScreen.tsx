@@ -14,10 +14,10 @@ export const ChannelSettingsScreen = () => {
   const navigate = useNavigate();
   const { user, isLoggedIn, connected } = useAuth();
 
-  const [venues] = useTable(tables.Venue);
-  const [channels] = useTable(tables.Channel);
-  const [channelRoles] = useTable(tables.ChannelMemberRole);
-  const [venueMembers] = useTable(tables.VenueMember);
+  const [venues] = useTable(tables.VenueView);
+  const [channels] = useTable(tables.ChannelView);
+  const [channelRoles] = useTable(tables.ChannelMemberRoleView);
+  const [venueMembers] = useTable(tables.VenueMemberView);
 
   const updateChannel = useReducer(reducers.updateChannel);
   const deleteChannel = useReducer(reducers.deleteChannel);

@@ -12,12 +12,12 @@ export const VenueMemberScreen = () => {
   const navigate = useNavigate();
   const { user } = useAuth();
 
-  const [venues] = useTable(tables.Venue);
-  const [channels] = useTable(tables.Channel);
-  const [channelRoles] = useTable(tables.ChannelMemberRole);
-  const [venueMembers] = useTable(tables.VenueMember);
-  const [users] = useTable(tables.User);
-  const [messages] = useTable(tables.Message);
+  const [venues] = useTable(tables.VenueView);
+  const [channels] = useTable(tables.ChannelView);
+  const [channelRoles] = useTable(tables.ChannelMemberRoleView);
+  const [venueMembers] = useTable(tables.VenueMemberView);
+  const [users] = useTable(tables.UserView);
+  const [messages] = useTable(tables.MessageView);
 
   const setChannelRole = useReducer(reducers.setChannelRole);
   const setVenueRole = useReducer(reducers.setVenueRole);

@@ -8,8 +8,8 @@ export const VenuesListScreen = () => {
   const { t } = useTranslation();
   const navigate = useNavigate();
   const { user, isLoggedIn } = useAuth();
-  const [venues] = useTable(tables.Venue);
-  const [venueMembers] = useTable(tables.VenueMember);
+  const [venues] = useTable(tables.VenueView);
+  const [venueMembers] = useTable(tables.VenueMemberView);
 
   // Not logged in guard handled top-level or softly here
   if (!isLoggedIn || !user) {

@@ -26,11 +26,11 @@ export const ChannelTemplateEditScreen = () => {
   const navigate = useNavigate();
   const { user, isLoggedIn, connected } = useAuth();
 
-  const [venues] = useTable(tables.Venue);
-  const [channels] = useTable(tables.Channel);
-  const [channelRoles] = useTable(tables.ChannelMemberRole);
-  const [venueMembers] = useTable(tables.VenueMember);
-  const [templates] = useTable(tables.MessageTemplate);
+  const [venues] = useTable(tables.VenueView);
+  const [channels] = useTable(tables.ChannelView);
+  const [channelRoles] = useTable(tables.ChannelMemberRoleView);
+  const [venueMembers] = useTable(tables.VenueMemberView);
+  const [templates] = useTable(tables.MessageTemplateView);
 
   const createTemplate = useReducer(reducers.createMessageTemplate);
   const updateTemplate = useReducer(reducers.updateMessageTemplate);
