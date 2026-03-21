@@ -3,7 +3,7 @@
   "version": "1.0.0",
   "description": "",
   "scripts": {
-    "build": "spacetime build && spacetime generate --yes --lang typescript --out-dir ../webapp/src/module_bindings && spacetime generate --yes --lang typescript --out-dir ../display/src/module_bindings",
+    "build": "spacetime build && spacetime generate --yes --include-private --lang typescript --out-dir ../webapp/src/module_bindings && spacetime generate --yes --include-private --lang typescript --out-dir ../display/src/module_bindings",
     "build:bundle": "spacetime build",
     "publish-local": "spacetime publish -s local canal4-dev --yes",
     "publish-cloud": "spacetime publish -s maincloud canal4-dev --yes",

@@ -27,7 +27,7 @@ export const DeliveryStatus = t.enum("DeliveryStatus", {
 export const User = table(
   {
     name: "user",
-    public: true,
+    public: false,
     indexes: [
       { name: "user_passkey_credential_id", accessor: "user_passkey_credential_id", algorithm: "btree", columns: ["passkeyCredentialId"] },
       { name: "user_name", accessor: "user_name", algorithm: "btree", columns: ["name"] },
@@ -46,7 +46,7 @@ export const User = table(
 export const UserIdentity = table(
   {
     name: "user_identity",
-    public: true,
+    public: false,
     indexes: [{ name: "user_identity_user_id", accessor: "user_identity_user_id", algorithm: "btree", columns: ["userId"] }] as const,
   },
   {
@@ -135,7 +135,7 @@ export const ChannelMemberRole = table(
 export const NotificationFilter = table(
   {
     name: "notification_filter",
-    public: true,
+    public: false,
     indexes: [
       { name: "notification_filter_channel_id", accessor: "notification_filter_channel_id", algorithm: "btree", columns: ["channelId"] },
       { name: "notification_filter_user_id", accessor: "notification_filter_user_id", algorithm: "btree", columns: ["userId"] },
@@ -168,7 +168,7 @@ export const MessageTemplate = table(
 export const Message = table(
   {
     name: "message",
-    public: true,
+    public: false,
     indexes: [
       { name: "message_channel_id", accessor: "message_channel_id", algorithm: "btree", columns: ["channelId"] },
       { name: "message_sender_id", accessor: "message_sender_id", algorithm: "btree", columns: ["senderId"] },
@@ -218,7 +218,7 @@ export const DisplayPairingPin = table(
 export const MessageDeliveryStatus = table(
   {
     name: "message_delivery_status",
-    public: true,
+    public: false,
     indexes: [
       { name: "delivery_status_message_id", accessor: "delivery_status_message_id", algorithm: "btree", columns: ["messageId"] },
       { name: "delivery_status_display_id", accessor: "delivery_status_display_id", algorithm: "btree", columns: ["displayId"] },
@@ -237,7 +237,7 @@ export const MessageDeliveryStatus = table(
 export const VenueInviteToken = table(
   {
     name: "venue_invite_token",
-    public: true,
+    public: false,
     indexes: [
       { name: "venue_invite_token_venue_id", accessor: "venue_invite_token_venue_id", algorithm: "btree", columns: ["venueId"] },
     ] as const,
@@ -266,5 +266,37 @@ const spacetimedb = schema({
   MessageDeliveryStatus,
   VenueInviteToken,
 });
+
+export const security = spacetimedb.clientVisibilityFilter.sql(`
+    -- User Visibility: You can see your own data, and the data of anyone who shares a venue with you.
+    ON user SELECT WHERE 
+        userId = (SELECT userId FROM user_identity WHERE identity = @sender)
+        OR EXISTS (
+            SELECT 1 FROM venue_member vm1 
+            JOIN venue_member vm2 ON vm1.venueId = vm2.venueId
+            WHERE vm1.userId = user.userId 
+            AND vm2.userId = (SELECT userId FROM user_identity WHERE identity = @sender)
+        );
+
+    -- Identity Visibility: Only see your own identity mapping.
+    ON user_identity SELECT WHERE identity = @sender;
+
+    -- Message Visibility: Only see messages from channels in venues you are a member of.
+    ON message SELECT WHERE EXISTS (
+        SELECT 1 FROM venue_member vm 
+        JOIN user_identity ui ON vm.userId = ui.userId 
+        JOIN channel c ON c.venueId = vm.venueId 
+        WHERE ui.identity = @sender AND c.channelId = message.channelId
+    );
+
+    -- Delivery Status Visibility: Accessible for any message you can see.
+    ON message_delivery_status SELECT WHERE EXISTS (
+        SELECT 1 FROM message m 
+        WHERE m.messageId = message_delivery_status.messageId
+    );
+
+    -- Notification Filter: Only see your own filters.
+    ON notification_filter SELECT WHERE userId = (SELECT userId FROM user_identity WHERE identity = @sender);
+`);
 
 export default spacetimedb;
