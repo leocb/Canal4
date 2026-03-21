@@ -6,19 +6,31 @@ import { useAuth } from '../hooks/useAuth';
 import { AlertTriangle, ArrowLeft } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 
-const ADJECTIVES = ['fast', 'happy', 'clever', 'brave', 'calm', 'eager', 'gentle', 'proud', 'witty', 'bold', 'kind', 'neat', 'wise', 'zesty', 'wild', 'super', 'lucky', 'swift', 'merry', 'light'];
-const NOUNS = ['bunny', 'tiger', 'eagle', 'dolphin', 'fox', 'bear', 'lion', 'wolf', 'hawk', 'owl', 'seal', 'deer', 'swan', 'dove', 'frog', 'duck', 'goose', 'pup', 'cub', 'kit'];
+import { uniqueNamesGenerator, adjectives, animals } from 'unique-names-generator';
+
+const NAME_CONFIG = {
+  dictionaries: [adjectives, animals],
+  separator: '-',
+  length: 2,
+};
 
 function generateRandomPassphrase(): string {
-  const adj = ADJECTIVES[Math.floor(Math.random() * ADJECTIVES.length)];
-  const noun = NOUNS[Math.floor(Math.random() * NOUNS.length)];
-  return `${adj}-${noun}`;
+  return uniqueNamesGenerator(NAME_CONFIG);
 }
 
 function generateUniqueLink(existingLinks: Set<string>): string {
   let link = generateRandomPassphrase();
+  // If the 2-word name is taken, try a 3-word name (adj-adj-noun)
+  if (existingLinks.has(link)) {
+    link = uniqueNamesGenerator({
+      ...NAME_CONFIG,
+      dictionaries: [adjectives, adjectives, animals],
+      length: 3,
+    });
+  }
+  // If still taken, keep adding adjectives until unique
   while (existingLinks.has(link)) {
-    const extraAdj = ADJECTIVES[Math.floor(Math.random() * ADJECTIVES.length)];
+    const extraAdj = uniqueNamesGenerator({ dictionaries: [adjectives], length: 1 });
     link = `${extraAdj}-${link}`;
   }
   return link;
