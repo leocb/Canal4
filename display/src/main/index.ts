@@ -156,6 +156,12 @@ app.whenReady().then(() => {
   // Handle IPC requests
   ipcMain.handle('get-machine-id', () => displayData.id);
   ipcMain.handle('get-token', () => displayData.token);
+  ipcMain.handle('get-displays', () => {
+    return screen.getAllDisplays().map((d) => ({
+      id: d.id,
+      name: d.label
+    }));
+  });
 
   ipcMain.on('set-token', (event, token) => {
     // We allow empty string/null to clear the token, only skip if strictly undefined or same as current
@@ -195,13 +201,14 @@ app.whenReady().then(() => {
     tickerWindow?.hide();
   });
 
-  ipcMain.on('update-ticker-position', (_event, position: 'top' | 'bottom') => {
+  ipcMain.on('update-ticker-position', (_event, params: { position: 'top' | 'bottom', displayId?: number }) => {
     if (!tickerWindow) return;
-    const primaryDisplay = screen.getPrimaryDisplay();
-    const { width, x: startX } = primaryDisplay.bounds;
-    const { height, y: offsetY } = primaryDisplay.workArea;
+    const displays = screen.getAllDisplays();
+    const targetDisplay = displays.find(d => d.id === params.displayId) || screen.getPrimaryDisplay();
+    const { width, x: startX } = targetDisplay.bounds;
+    const { height, y: offsetY } = targetDisplay.workArea;
     const windowHeight = 80;
-    const y = position === 'top' ? offsetY : offsetY + height - windowHeight;
+    const y = params.position === 'top' ? offsetY : offsetY + height - windowHeight;
     tickerWindow.setBounds({ x: startX, y, width, height: windowHeight });
   });
 

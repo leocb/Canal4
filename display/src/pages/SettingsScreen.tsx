@@ -9,9 +9,9 @@ import { useTranslation } from 'react-i18next';
 
 type Tab = 'logs' | 'pairing' | 'settings';
 
-// --- Ticker Settings (persisted to localStorage) ---
 export interface TickerSettings {
   position: 'top' | 'bottom';
+  displayId?: number;
   fontFamily: string;
   fontSize: number;
   fontWeight: '400' | '600' | '700';
@@ -23,6 +23,7 @@ export interface TickerSettings {
 
 const DEFAULT_TICKER_SETTINGS: TickerSettings = {
   position: 'bottom',
+  displayId: 0,
   fontFamily: 'monospace',
   fontSize: 28,
   fontWeight: '600',
@@ -161,9 +162,9 @@ export const SettingsScreen = () => {
   }, [stUri, stDb]);
 
   // Ticker position settings IPC
-  const [displays, setDisplays] = useState<{ id: number; label: string }[]>([{ id: 0, label: 'Primary Display' }]);
+  const [displays, setDisplays] = useState<{ id: number; name: string }[]>([{ id: 0, name: 'Primary Display' }]);
   const [selectedDisplay, setSelectedDisplay] = useState<number>(
-    parseInt(localStorage.getItem('ticker_display') || '0', 10)
+    tickerSettings.displayId || 0
   );
 
   const previewRef = useRef<HTMLDivElement>(null);
@@ -194,8 +195,10 @@ export const SettingsScreen = () => {
         setMachineUid(id);
       }
     }
-    // Suppress unused warning — displays would be populated via IPC in production
-    setDisplays(d => d);
+    
+    if (window.api?.getDisplays) {
+      window.api.getDisplays().then(setDisplays);
+    }
   }, []);
 
   const activePin = useMemo(() => {
@@ -777,15 +780,20 @@ export const SettingsScreen = () => {
               <label style={labelStyle}>{t('settings.display.monitor')}</label>
               <select
                 value={selectedDisplay}
+                onFocus={() => {
+                  window.api?.getDisplays?.().then(setDisplays);
+                }}
                 onChange={e => {
                   const v = parseInt(e.target.value);
                   setSelectedDisplay(v);
-                  localStorage.setItem('ticker_display', String(v));
+                  updateTickerSetting('displayId', v);
                 }}
                 style={selectStyle}
               >
-                {displays.map(d => (
-                  <option key={d.id} value={d.id}>{d.label}</option>
+                {displays.map((d, i) => (
+                  <option key={d.id} value={d.id}>
+                    {d.name ? t('settings.display.monitor_name', { num: i + 1, name: d.name }) : t('settings.display.monitor_fallback', { num: i + 1 })}
+                  </option>
                 ))}
               </select>
 

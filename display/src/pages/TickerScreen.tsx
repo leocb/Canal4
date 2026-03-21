@@ -92,10 +92,10 @@ export const TickerScreen = () => {
 
     useEffect(() => {
         if (window.api?.updateTickerPosition) {
-            console.log("[Ticker] Updating window position to:", settings.position);
-            window.api.updateTickerPosition(settings.position);
+            console.log("[Ticker] Updating window position to:", settings.position, "Display:", settings.displayId);
+            window.api.updateTickerPosition(settings.position, settings.displayId);
         }
-    }, [settings.position]);
+    }, [settings.position, settings.displayId]);
 
     // Recalculate animation duration whenever message or settings change
     useEffect(() => {

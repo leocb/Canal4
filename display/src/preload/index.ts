@@ -5,6 +5,7 @@ import { electronAPI } from '@electron-toolkit/preload'
 const api = {
   getMachineId: () => ipcRenderer.invoke('get-machine-id'),
   getToken: () => ipcRenderer.invoke('get-token'),
+  getDisplays: () => ipcRenderer.invoke('get-displays'),
   setToken: (token: string) => ipcRenderer.send('set-token', token),
   resetIdentity: () => ipcRenderer.invoke('reset-identity'),
   onTokenUpdated: (callback: (token: string) => void) => {
@@ -12,7 +13,7 @@ const api = {
   },
   showTicker: () => ipcRenderer.send('show-ticker'),
   hideTicker: () => ipcRenderer.send('hide-ticker'),
-  updateTickerPosition: (position: 'top' | 'bottom') => ipcRenderer.send('update-ticker-position', position),
+  updateTickerPosition: (position: 'top' | 'bottom', displayId?: number) => ipcRenderer.send('update-ticker-position', { position, displayId }),
   updateTray: (params: { settingsLabel: string; quitLabel: string; tooltip: string }) => ipcRenderer.send('update-tray', params),
 }
 

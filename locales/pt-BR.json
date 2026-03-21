@@ -509,6 +509,8 @@
       "test_message_sample": "Mensagem de Exemplo: Testando configurações! ({{time}})",
       "test_banner": "Exibir mensagem de teste",
       "monitor": "Monitor",
+      "monitor_name": "Monitor {{num}} ({{name}})",
+      "monitor_fallback": "Monitor {{num}}",
       "screen_position": "Posição na Tela",
       "typography": "Tipografia",
       "colors": "Cores",
