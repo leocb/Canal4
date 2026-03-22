@@ -33,6 +33,10 @@ RUN echo 'server { \
 
 EXPOSE 80
 
+# Health check to ensure Nginx is serving the app
+HEALTHCHECK --interval=30s --timeout=5s --start-period=10s --retries=3 \
+    CMD wget -qO- http://localhost:80/ || exit 1
+
 # Generate a config.js file on startup to inject runtime environment variables
 # into the browser-side code. This makes the image portable.
 CMD ["sh", "-c", "echo \"window.CONFIG = { SPACETIMEDB_NAME: '$SPACETIMEDB_NAME', SPACETIMEDB_URI: '$SPACETIMEDB_URI' };\" > /usr/share/nginx/html/config.js && exec nginx -g 'daemon off;'"]
