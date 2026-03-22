@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { useTable, useReducer } from 'spacetimedb/react';
 import { tables, reducers } from '../module_bindings/index.ts';
-import { ArrowLeft, User as UserIcon, HelpCircle, X } from 'lucide-react';
+import { ArrowLeft, User as UserIcon, HelpCircle, X, AlertTriangle } from 'lucide-react';
 import { useAuth } from '../hooks/useAuth';
 import { useTranslation } from 'react-i18next';
 
@@ -31,8 +31,8 @@ export const VenueMemberScreen = () => {
   const targetUser = users.find(u => u.userId === memberId);
 
   const myMember = venueMembers.find(m => m.venueId === venue?.venueId && m.userId === user?.userId);
-  const isVenueOwner = myMember?.role.tag === 'Owner';
-  const isVenueAdmin = myMember?.role.tag === 'Admin';
+  const isVenueOwner = myMember?.role.tag.toLowerCase() === 'owner';
+  const isVenueAdmin = myMember?.role.tag.toLowerCase() === 'admin';
  
   // Auth check
   const venueChannels = channels.filter(c => c.venueId === venue?.venueId);
@@ -44,6 +44,7 @@ export const VenueMemberScreen = () => {
 
   const [loading, setLoading] = useState(false);
   const [errorText, setErrorText] = useState('');
+  const [showErrorModal, setShowErrorModal] = useState(false);
   const [showHelp, setShowHelp] = useState(false);
   const [bulkRole, setBulkRole] = useState('');
 
@@ -75,6 +76,7 @@ export const VenueMemberScreen = () => {
     } catch (err: unknown) {
       const message = err instanceof Error ? err.message : String(err);
       setErrorText(t(message) || t('venue_member.error_update_role'));
+      setShowErrorModal(true);
     } finally {
       setLoading(false);
     }
@@ -95,6 +97,7 @@ export const VenueMemberScreen = () => {
     } catch (err: unknown) {
       const message = err instanceof Error ? err.message : String(err);
       setErrorText(t(message) || t('venue_member.error_update_roles'));
+      setShowErrorModal(true);
     } finally {
       setLoading(false);
     }
@@ -112,6 +115,7 @@ export const VenueMemberScreen = () => {
     } catch (err: unknown) {
       const message = err instanceof Error ? err.message : String(err);
       setErrorText(t(message) || t('venue_member.error_update_venue_role'));
+      setShowErrorModal(true);
     } finally {
       setLoading(false);
     }
@@ -128,6 +132,7 @@ export const VenueMemberScreen = () => {
         await unblockUser({ venueId: venue.venueId, targetUserId: memberId });
       } catch (err: unknown) {
         setErrorText(t(err instanceof Error ? err.message : String(err)));
+        setShowErrorModal(true);
       } finally {
         setLoading(false);
       }
@@ -139,6 +144,7 @@ export const VenueMemberScreen = () => {
         await blockUser({ venueId: venue.venueId, targetUserId: memberId });
       } catch (err: unknown) {
         setErrorText(t(err instanceof Error ? err.message : String(err)));
+        setShowErrorModal(true);
       } finally {
         setLoading(false);
       }
@@ -201,8 +207,35 @@ export const VenueMemberScreen = () => {
     </div>
   );
 
+  const ErrorModal = () => (
+    <div style={{
+      position: 'fixed',
+      top: 0, left: 0, width: '100%', height: '100%',
+      background: 'rgba(0,0,0,0.8)',
+      backdropFilter: 'blur(8px)',
+      display: 'flex', alignItems: 'center', justifyContent: 'center',
+      zIndex: 1100,
+    }} onClick={() => setShowErrorModal(false)}>
+      <div className="glass-panel" style={{ padding: '32px', maxWidth: '400px', width: '90%', border: '1px solid var(--error-color)' }} onClick={e => e.stopPropagation()}>
+        <div className="flex-col" style={{ alignItems: 'center', textAlign: 'center', gap: '16px' }}>
+          <AlertTriangle size={48} color="var(--error-color)" />
+          <h2 style={{ margin: 0 }}>{t('common.error')}</h2>
+          <p style={{ margin: 0, color: 'var(--text-secondary)', lineHeight: 1.5 }}>{errorText}</p>
+          <button 
+            className="primary" 
+            style={{ width: '100%', marginTop: '8px' }}
+            onClick={() => setShowErrorModal(false)}
+          >
+            {t('common.close')}
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+
   return (
     <div className="app-container">
+      {showErrorModal && <ErrorModal />}
       {showHelp && <HelpModal />}
       <div className="screen-header">
         <div className="flex-col" style={{ gap: '4px' }}>

@@ -58,12 +58,15 @@ export const ChannelTemplateEditScreen = () => {
   const templateIdBigInt = !isNew && templateId ? BigInt(templateId) : undefined;
   const existingTemplate = templateIdBigInt ? templates.find(t => t.templateId === templateIdBigInt) : null;
 
+  const [loaded, setLoaded] = useState(false);
   const [name, setName] = useState('');
   const [description, setDescription] = useState('');
   const [fields, setFields] = useState<TemplateField[]>([]);
   
   const [loading, setLoading] = useState(false);
   const [errorText, setErrorText] = useState('');
+  const [showErrorModal, setShowErrorModal] = useState(false);
+  const [invalidFieldIds, setInvalidFieldIds] = useState<string[]>([]);
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
 
   useEffect(() => {
@@ -76,20 +79,26 @@ export const ChannelTemplateEditScreen = () => {
       return;
     }
 
-    if (existingTemplate && name === '') {
-      setName(existingTemplate.name);
-      setDescription(existingTemplate.description);
-      try {
-        const parsedFields = JSON.parse(existingTemplate.fieldsJson);
-        setFields(parsedFields);
-      } catch (e) {
-        setFields([]);
+    if (!loaded) {
+      if (existingTemplate) {
+        setName(existingTemplate.name);
+        setDescription(existingTemplate.description);
+        try {
+          const parsedFields = JSON.parse(existingTemplate.fieldsJson);
+          setFields(parsedFields);
+        } catch (e) {
+          setFields([]);
+        }
+        setLoaded(true);
+      } else if (isNew) {
+        // Only if it's new and we haven't added the default field
+        if (fields.length === 0) {
+          handleAddField();
+        }
+        setLoaded(true);
       }
-    } else if (isNew && fields.length === 0) {
-      // Add a simple default field for purely structural convenience
-      handleAddField();
     }
-  }, [isLoggedIn, navigate, venueLink, channelId, templateId, existingTemplate, name, isNew]);
+  }, [isLoggedIn, navigate, venueLink, channelId, templateId, existingTemplate, isNew, loaded, fields.length]);
 
   if (!isLoggedIn || !user || !connected) return null;
   if (!venue || !channel) return null;
@@ -126,7 +135,20 @@ export const ChannelTemplateEditScreen = () => {
 
   const handleChangeField = (index: number, key: keyof TemplateField, value: string | boolean) => {
     const newFields = [...fields];
-    newFields[index] = { ...newFields[index], [key]: value };
+    const updatedField = { ...newFields[index], [key]: value };
+    
+    // Clear regex logic if the field is made optional to prevent hidden validation
+    if (key === 'isOptional' && value === true) {
+      updatedField.regexPattern = '';
+      updatedField.regexErrorMsg = '';
+    }
+
+    // Clear invalid state for this field if it was marked
+    if (invalidFieldIds.includes(updatedField.id)) {
+      setInvalidFieldIds(prev => prev.filter(id => id !== updatedField.id));
+    }
+    
+    newFields[index] = updatedField;
     setFields(newFields);
   };
 
@@ -149,7 +171,7 @@ export const ChannelTemplateEditScreen = () => {
     
     let result = '';
     fields.forEach((f, idx) => {
-      let textVal = f.isNumericOnly ? "123" : `[Sample ${f.name}]`;
+      let textVal = f.isNumericOnly ? "123" : t('template_edit.sample_field', { name: f.name || `Field ${idx + 1}` });
       // If optional, and empty? Typically we skip, but for preview we show it exists
       result += `${f.prefix || ''}${textVal}${f.suffix || ''}`;
       if (idx !== fields.length - 1) result += ' '; // minor spacing heuristic
@@ -169,6 +191,18 @@ export const ChannelTemplateEditScreen = () => {
 
     setLoading(true);
     setErrorText('');
+    setInvalidFieldIds([]);
+
+    // If field is not optional, a validation regex must be provided
+    const missingRegexFields = fields.filter(f => !f.isOptional && !f.regexPattern?.trim());
+    if (missingRegexFields.length > 0) {
+      const fieldNames = missingRegexFields.map(f => f.name || f.id).join(', ');
+      setErrorText(t('template_edit.mandatory_regex_error', { name: fieldNames }));
+      setInvalidFieldIds(missingRegexFields.map(f => f.id));
+      setShowErrorModal(true);
+      setLoading(false);
+      return;
+    }
 
     try {
       const payloadString = JSON.stringify(fields);
@@ -192,6 +226,7 @@ export const ChannelTemplateEditScreen = () => {
       navigate(`/venues/${venue.link}/channels/${channel.channelId}/templates`);
     } catch (err: unknown) {
       setErrorText(t(err instanceof Error ? err.message : String(err)));
+      setShowErrorModal(true);
       setLoading(false);
     }
   };
@@ -209,8 +244,35 @@ export const ChannelTemplateEditScreen = () => {
     }
   };
 
+  const ErrorModal = () => (
+    <div style={{
+      position: 'fixed',
+      top: 0, left: 0, width: '100%', height: '100%',
+      background: 'rgba(0,0,0,0.8)',
+      backdropFilter: 'blur(8px)',
+      display: 'flex', alignItems: 'center', justifyContent: 'center',
+      zIndex: 1000,
+    }} onClick={() => setShowErrorModal(false)}>
+      <div className="glass-panel" style={{ padding: '32px', maxWidth: '400px', width: '90%', border: '1px solid var(--error-color)' }} onClick={e => e.stopPropagation()}>
+        <div className="flex-col" style={{ alignItems: 'center', textAlign: 'center', gap: '16px' }}>
+          <AlertTriangle size={48} color="var(--error-color)" />
+          <h2 style={{ margin: 0 }}>{t('common.error')}</h2>
+          <p style={{ margin: 0, color: 'var(--text-secondary)', lineHeight: 1.5 }}>{errorText}</p>
+          <button 
+            className="primary" 
+            style={{ width: '100%', marginTop: '8px' }}
+            onClick={() => setShowErrorModal(false)}
+          >
+            {t('common.close')}
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+
   return (
     <div className="app-container">
+      {showErrorModal && <ErrorModal />}
       <div className="screen-header">
         <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
           <button 
@@ -235,24 +297,11 @@ export const ChannelTemplateEditScreen = () => {
       <div className="content-area" style={{ flex: 1, padding: '16px', overflowY: 'auto' }}>
         <form onSubmit={handleSave} className="flex-col" style={{ gap: '24px', maxWidth: '600px', margin: '0 auto', paddingBottom: '60px' }}>
           
-          {errorText && (
-            <div style={{
-              color: 'var(--error-color)',
-              fontSize: '0.9rem',
-              padding: '10px 14px',
-              background: 'rgba(255,80,80,0.1)',
-              borderRadius: '8px',
-              border: '1px solid var(--error-color)',
-              display: 'flex',
-              alignItems: 'center',
-              gap: '8px'
-            }}>
-              <AlertTriangle size={18} style={{ flexShrink: 0 }} /> {errorText}
-            </div>
-          )}
+          
+
 
           <div className="glass-panel" style={{ padding: '24px' }}>
-            <h3 style={{ marginBottom: '16px', color: 'var(--accent-color)' }}>{t('template_edit.fields_title')}</h3>
+            <h3 style={{ marginBottom: '16px', color: 'var(--accent-color)' }}>{t('template_edit.config_title')}</h3>
             
             <div style={{ marginBottom: '16px' }}>
               <label style={{ display: 'block', marginBottom: '8px', fontWeight: 500, fontSize: '0.9rem' }}>{t('template_edit.name_label')}</label>
@@ -262,7 +311,6 @@ export const ChannelTemplateEditScreen = () => {
                 onChange={(e) => setName(e.target.value)}
                 required
                 disabled={loading}
-                placeholder={t('template_edit.name_placeholder')}
                 style={{ width: '100%' }}
               />
             </div>
@@ -274,7 +322,6 @@ export const ChannelTemplateEditScreen = () => {
                 value={description}
                 onChange={(e) => setDescription(e.target.value)}
                 disabled={loading}
-                placeholder={t('template_edit.desc_placeholder')}
                 style={{ width: '100%' }}
               />
             </div>
@@ -295,7 +342,11 @@ export const ChannelTemplateEditScreen = () => {
                  <div 
                    key={field.id}
                    className="glass-panel" 
-                   style={{ padding: '16px', borderLeft: '4px solid var(--accent-color)' }}
+                    style={{ 
+                      padding: '16px', 
+                      borderLeft: '4px solid var(--accent-color)',
+                      border: invalidFieldIds.includes(field.id) ? '2px solid var(--error-color)' : undefined
+                    }}
                  >
                    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '16px' }}>
                      <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
@@ -307,7 +358,7 @@ export const ChannelTemplateEditScreen = () => {
                          className="icon-button"
                          onClick={() => handleMoveUp(idx)}
                          disabled={idx === 0}
-                         title="Move Up"
+                         title={t('common.move_up')}
                        >
                          <ArrowUp size={16} />
                        </button>
@@ -316,7 +367,7 @@ export const ChannelTemplateEditScreen = () => {
                          className="icon-button"
                          onClick={() => handleMoveDown(idx)}
                          disabled={idx === fields.length - 1}
-                         title="Move Down"
+                         title={t('common.move_down')}
                        >
                          <ArrowDown size={16} />
                        </button>
@@ -324,7 +375,7 @@ export const ChannelTemplateEditScreen = () => {
                          type="button"
                          className="icon-button danger"
                          onClick={() => handleRemoveField(idx)}
-                         title="Remove Field"
+                         title={t('template_edit.remove_field')}
                        >
                          <Trash2 size={16} />
                        </button>
@@ -350,7 +401,6 @@ export const ChannelTemplateEditScreen = () => {
                            type="text" 
                            value={field.prefix}
                            onChange={(e) => handleChangeField(idx, 'prefix', e.target.value)}
-                           placeholder="e.g. Total: $"
                            style={{ width: '100%' }}
                          />
                        </div>
@@ -361,7 +411,6 @@ export const ChannelTemplateEditScreen = () => {
                            type="text" 
                            value={field.suffix}
                            onChange={(e) => handleChangeField(idx, 'suffix', e.target.value)}
-                           placeholder="e.g. .00"
                            style={{ width: '100%' }}
                          />
                        </div>
@@ -390,28 +439,28 @@ export const ChannelTemplateEditScreen = () => {
                           </label>
                        </div>
                        
-                       <div style={{ display: 'flex', gap: '16px', flexWrap: 'wrap' }}>
-                         <div style={{ flex: 1, minWidth: '150px' }}>
-                           <label style={{ display: 'block', marginBottom: '8px', fontSize: '0.9rem', color: 'var(--text-secondary)' }}>{t('template_edit.field.regex_pattern')}</label>
-                           <input 
-                             type="text" 
-                             value={field.regexPattern || ''}
-                             onChange={(e) => handleChangeField(idx, 'regexPattern', e.target.value)}
-                             placeholder="e.g. ^[A-Z]{3}$"
-                             style={{ width: '100%', fontFamily: 'monospace' }}
-                           />
+                       {!field.isOptional && (
+                         <div style={{ display: 'flex', gap: '16px', flexWrap: 'wrap' }}>
+                           <div style={{ flex: 1, minWidth: '150px' }}>
+                             <label style={{ display: 'block', marginBottom: '8px', fontSize: '0.9rem', color: 'var(--text-secondary)' }}>{t('template_edit.field.regex_pattern')}</label>
+                             <input 
+                               type="text" 
+                               value={field.regexPattern || ''}
+                               onChange={(e) => handleChangeField(idx, 'regexPattern', e.target.value)}
+                               style={{ width: '100%', fontFamily: 'monospace' }}
+                             />
+                           </div>
+                           <div style={{ flex: 1, minWidth: '150px' }}>
+                             <label style={{ display: 'block', marginBottom: '8px', fontSize: '0.9rem', color: 'var(--text-secondary)' }}>{t('template_edit.field.regex_error')}</label>
+                             <input 
+                               type="text" 
+                               value={field.regexErrorMsg || ''}
+                               onChange={(e) => handleChangeField(idx, 'regexErrorMsg', e.target.value)}
+                               style={{ width: '100%' }}
+                             />
+                           </div>
                          </div>
-                         <div style={{ flex: 1, minWidth: '150px' }}>
-                           <label style={{ display: 'block', marginBottom: '8px', fontSize: '0.9rem', color: 'var(--text-secondary)' }}>{t('template_edit.field.regex_error')}</label>
-                           <input 
-                             type="text" 
-                             value={field.regexErrorMsg || ''}
-                             onChange={(e) => handleChangeField(idx, 'regexErrorMsg', e.target.value)}
-                             placeholder="e.g. Must be 3 capital letters"
-                             style={{ width: '100%' }}
-                           />
-                         </div>
-                       </div>
+                       )}
                      </div>
                      
 
@@ -429,7 +478,6 @@ export const ChannelTemplateEditScreen = () => {
                              type="text" 
                              value={field.secondaryRegexTrigger || ''}
                              onChange={(e) => handleChangeField(idx, 'secondaryRegexTrigger', e.target.value)}
-                             placeholder="e.g. ^[0-9]+$"
                              style={{ width: '100%', fontFamily: 'monospace' }}
                            />
                          </div>
@@ -485,13 +533,31 @@ export const ChannelTemplateEditScreen = () => {
              </div>
           </div>
 
-          <div className="glass-panel" style={{ display: 'flex', gap: '12px', marginTop: '16px', position: 'sticky', bottom: '-16px', padding: '16px', zIndex: 10, margin: '0 -16px -16px -16px', borderLeft: 'none', borderRight: 'none', borderBottom: 'none', borderRadius: '0' }}>
-            <button type="button" className="secondary" style={{ flex: 1 }} onClick={() => navigate(-1)} disabled={loading}>
-              {t('common.cancel')}
-            </button>
-            <button type="submit" disabled={loading || !name.trim()} style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px' }} >
-              <Check size={18} /> {loading ? t('template_edit.saving') : t('template_edit.save_template')}
-            </button>
+          <div className="glass-panel" style={{ display: 'flex', gap: '12px', marginTop: '16px', position: 'sticky', bottom: '-16px', padding: '16px', zIndex: 10, margin: '0 -16px -16px -16px', borderLeft: 'none', borderRight: 'none', borderBottom: 'none', borderRadius: '0', flexDirection: 'column' }}>
+            <div className="flex-row" style={{ gap: '12px', width: '100%' }}>
+              <button type="button" className="secondary" style={{ flex: 1 }} onClick={() => navigate(-1)} disabled={loading}>
+                {t('common.cancel')}
+              </button>
+              <button type="submit" disabled={loading || !name.trim()} style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px' }} >
+                <Check size={18} /> {loading ? t('template_edit.saving') : t('template_edit.save_template')}
+              </button>
+            </div>
+            {errorText && (
+              <div style={{
+                color: 'var(--error-color)',
+                fontSize: '0.9rem',
+                padding: '10px 14px',
+                background: 'rgba(255,80,80,0.1)',
+                borderRadius: '8px',
+                border: '1px solid var(--error-color)',
+                display: 'flex',
+                alignItems: 'center',
+                gap: '8px',
+                marginTop: '12px'
+              }}>
+                <AlertTriangle size={18} style={{ flexShrink: 0 }} /> {errorText}
+              </div>
+            )}
           </div>
 
         </form>

@@ -48,7 +48,7 @@ export const SendMessageScreen = () => {
   );
 
   const roleTag: string = isBlocked ? 'member' : (myChannelRole?.role.tag ?? 'member').toLowerCase();
-  const isVenueOwner = !isBlocked && venue?.ownerId === user?.userId;
+  const isVenueOwner = !isBlocked && myVenueMembership?.role?.tag?.toLowerCase() === 'owner';
   const isOwner = isVenueOwner || roleTag === 'owner';
   const isAdmin = isOwner || roleTag === 'admin';
   const isModerator = isAdmin || roleTag === 'moderator';
@@ -116,9 +116,22 @@ export const SendMessageScreen = () => {
 
   const handleFieldChange = (fieldId: string, value: string) => {
     setFieldValues(prev => ({ ...prev, [fieldId]: value }));
-    // Clear error for this field
-    if (fieldErrors[fieldId]) {
-      setFieldErrors(prev => ({ ...prev, [fieldId]: '' }));
+    
+    // Immediate validation
+    const field = parsedFields.find(f => f.id === fieldId);
+    if (field) {
+      let error = '';
+      if (value && field.isNumericOnly && !/^\d+$/.test(value)) {
+        error = t('send_message.field_numeric_only');
+      } else if (value && field.regexPattern) {
+        try {
+          const rx = new RegExp(field.regexPattern);
+          if (!rx.test(value)) {
+            error = field.regexErrorMsg || t('send_message.field_invalid_format');
+          }
+        } catch (e) { }
+      }
+      setFieldErrors(prev => ({ ...prev, [fieldId]: error }));
     }
   };
 

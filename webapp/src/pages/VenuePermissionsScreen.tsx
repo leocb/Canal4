@@ -28,8 +28,8 @@ export const VenuePermissionsScreen = () => {
   // Permissions check
   const venueChannels = channels.filter(c => c.venueId === venueIdBigInt);
   const userVenueMember = venueMembers.find(m => m.venueId === venueIdBigInt && m.userId === user?.userId);
-  const isVenueOwner = userVenueMember?.role.tag === 'Owner';
-  const isVenueAdmin = userVenueMember?.role.tag === 'Admin';
+  const isVenueOwner = userVenueMember?.role.tag.toLowerCase() === 'owner';
+  const isVenueAdmin = userVenueMember?.role.tag.toLowerCase() === 'admin';
   
   // Also check channel-level admin roles
   const userChannelRoles = channelRoles.filter(
@@ -65,9 +65,9 @@ export const VenuePermissionsScreen = () => {
 
   const getHighestRole = (userId: bigint): { level: number, name: string } => {
     const venueMember = venueMembers.find(m => m.venueId === venueIdBigInt && m.userId === userId);
-    const venueRole = venueMember?.role.tag;
-    if (venueRole === 'Owner') return { level: 4, name: 'owner' };
-    if (venueRole === 'Admin') return { level: 3.5, name: 'admin_global' };
+    const venueRole = venueMember?.role.tag.toLowerCase();
+    if (venueRole === 'owner') return { level: 4, name: 'owner' };
+    if (venueRole === 'admin') return { level: 3.5, name: 'admin_global' };
     
     const roles = channelRoles.filter(r => r.userId === userId && venueChannels.some(c => c.channelId === r.channelId));
     
