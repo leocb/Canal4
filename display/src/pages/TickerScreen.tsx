@@ -81,7 +81,7 @@ export const TickerScreen = () => {
     // Window Visibility Control
     useEffect(() => {
         if (window.api?.showTicker && window.api?.hideTicker) {
-            if (activeMessage && connected) {
+            if (activeMessage && (connected || activeMessage.isTest)) {
                 console.log("[Ticker] Showing window for message");
                 window.api.showTicker();
             } else {
@@ -89,7 +89,7 @@ export const TickerScreen = () => {
                 window.api.hideTicker();
             }
         }
-    }, [!!activeMessage, connected]);
+    }, [!!activeMessage, connected, activeMessage?.isTest]);
 
     useEffect(() => {
         // Delay to allow DOM update for the hidden measuring element
@@ -302,7 +302,7 @@ export const TickerScreen = () => {
         </span>
     );
 
-    if (!activeMessage || !connected) {
+    if (!activeMessage || (!connected && !activeMessage.isTest)) {
         return hiddenMeasureElement;
     }
 
