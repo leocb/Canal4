@@ -507,6 +507,7 @@
       "font_georgia": "Georgia",
       "font_impact": "Impact",
       "font_courier": "Courier New",
+      "system_fonts": "--- System Fonts ---",
       "test_message_sample": "Sample Message: Testing ticker settings! ({{time}})",
       "test_banner": "Show sample message",
       "monitor": "Display Monitor",

@@ -6,6 +6,7 @@ const api = {
   getMachineId: () => ipcRenderer.invoke('get-machine-id'),
   getToken: () => ipcRenderer.invoke('get-token'),
   getDisplays: () => ipcRenderer.invoke('get-displays'),
+  getFonts: () => ipcRenderer.invoke('get-fonts'),
   setToken: (token: string) => ipcRenderer.send('set-token', token),
   resetIdentity: () => ipcRenderer.invoke('reset-identity'),
   onTokenUpdated: (callback: (token: string) => void) => {

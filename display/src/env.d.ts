@@ -6,6 +6,7 @@ interface Window {
     getMachineId: () => Promise<string>,
     getToken: () => Promise<string>,
     getDisplays: () => Promise<{ id: number; name: string }[]>,
+    getFonts: () => Promise<string[]>,
     setToken: (token: string) => void,
     resetIdentity: () => Promise<string>,
     onTokenUpdated: (callback: (token: string) => void) => void,

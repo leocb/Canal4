@@ -506,6 +506,7 @@
       "font_georgia": "Georgia",
       "font_impact": "Impact",
       "font_courier": "Courier New",
+      "system_fonts": "--- Fontes do Sistema ---",
       "test_message_sample": "Mensagem de Exemplo: Testando configurações! ({{time}})",
       "test_banner": "Exibir mensagem de teste",
       "monitor": "Monitor",

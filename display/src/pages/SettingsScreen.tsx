@@ -181,6 +181,7 @@ export const SettingsScreen = () => {
 
   // Track previously-known device count to detect newly paired venues
   const [prevDeviceIds, setPrevDeviceIds] = useState<Set<string>>(new Set());
+  const [systemFonts, setSystemFonts] = useState<string[]>([]);
 
   useEffect(() => {
     if (window.api?.getMachineId) {
@@ -198,6 +199,12 @@ export const SettingsScreen = () => {
     
     if (window.api?.getDisplays) {
       window.api.getDisplays().then(setDisplays);
+    }
+
+    if (window.api?.getFonts) {
+      window.api.getFonts().then(fonts => {
+        setSystemFonts(fonts.sort());
+      }).catch(err => console.error("Could not fetch fonts:", err));
     }
   }, []);
 
@@ -311,6 +318,20 @@ export const SettingsScreen = () => {
     { value: 'Impact, sans-serif', label: t('settings.display.font_impact') },
     { value: 'Courier New, monospace', label: t('settings.display.font_courier') },
   ];
+
+  const allFonts = useMemo(() => {
+    const opts: { value: string; label: string; disabled?: boolean }[] = [...FONT_OPTIONS];
+    if (systemFonts.length > 0) {
+      opts.push({ value: '---', label: t('settings.display.system_fonts'), disabled: true });
+      for (const font of systemFonts) {
+        // We use double quotes to handle spaces in font names
+        const fontValue = `"${font}", sans-serif`;
+        // In case native array output had double quotes, normalize (should be removed by disableQuoting)
+        opts.push({ value: fontValue.replace(/""/g, '"'), label: font });
+      }
+    }
+    return opts;
+  }, [systemFonts, t]);
 
   const handleSaveSpacetimeSettings = () => {
     setStUri(tempStUri);
@@ -830,7 +851,7 @@ export const SettingsScreen = () => {
                 onChange={e => updateTickerSetting('fontFamily', e.target.value)}
                 style={selectStyle}
               >
-                {FONT_OPTIONS.map(f => <option key={f.value} value={f.value}>{f.label}</option>)}
+                {allFonts.map(f => <option key={f.value} value={f.value} disabled={f.disabled}>{f.label}</option>)}
               </select>
 
               <div style={{ display: 'flex', gap: '12px', marginTop: '14px' }}>

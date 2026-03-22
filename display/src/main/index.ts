@@ -163,6 +163,17 @@ app.whenReady().then(() => {
     }));
   });
 
+  ipcMain.handle('get-fonts', async () => {
+    const fontList = require('font-list');
+    try {
+      const fonts = await fontList.getFonts({ disableQuoting: true });
+      return fonts;
+    } catch (err) {
+      console.error('Failed to get fonts:', err);
+      return [];
+    }
+  });
+
   ipcMain.on('set-token', (event, token) => {
     // We allow empty string/null to clear the token, only skip if strictly undefined or same as current
     if (token === undefined || token === displayData.token) return;
