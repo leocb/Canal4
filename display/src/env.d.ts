@@ -12,7 +12,7 @@ interface Window {
     onTokenUpdated: (callback: (token: string) => void) => void,
     showTicker: () => void,
     hideTicker: () => void,
-    updateTickerPosition: (position: 'top' | 'bottom', displayId?: number) => void,
+    updateTickerPosition: (position: 'top' | 'bottom', displayId?: number, height?: number) => void,
     updateTray: (params: { settingsLabel: string; quitLabel: string; tooltip: string }) => void,
   }
 }

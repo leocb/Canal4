@@ -14,7 +14,7 @@ const api = {
   },
   showTicker: () => ipcRenderer.send('show-ticker'),
   hideTicker: () => ipcRenderer.send('hide-ticker'),
-  updateTickerPosition: (position: 'top' | 'bottom', displayId?: number) => ipcRenderer.send('update-ticker-position', { position, displayId }),
+  updateTickerPosition: (position: 'top' | 'bottom', displayId?: number, height?: number) => ipcRenderer.send('update-ticker-position', { position, displayId, height }),
   updateTray: (params: { settingsLabel: string; quitLabel: string; tooltip: string }) => ipcRenderer.send('update-tray', params),
 }
 

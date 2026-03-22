@@ -858,7 +858,7 @@ export const SettingsScreen = () => {
                 <div style={{ flex: 1 }}>
                   <label style={labelStyle}>{t('settings.display.font_size')}</label>
                   <input
-                    type="number" min={12} max={80}
+                    type="number" min={12} max={999}
                     value={tickerSettings.fontSize}
                     onChange={e => updateTickerSetting('fontSize', parseInt(e.target.value))}
                     style={inputStyle}

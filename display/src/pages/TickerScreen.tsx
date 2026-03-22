@@ -20,20 +20,21 @@ export const TickerScreen = () => {
     const [statuses] = useTable(tables.MessageDeliveryStatusView);
     const { status } = useConnectivity();
     const connected = status === 'online';
-    
+
     const updateStatus = useReducer(reducers.updateMessageDeliveryStatus);
     const skipMissedMessages = useReducer(reducers.skipMissedMessages);
-    
+
     const [machineUid, setMachineUid] = useState<string>('');
     const [activeMessage, setActiveMessage] = useState<{ id: bigint; displayId: bigint; text: string; repeat: number; totalRepeats: number; isTest?: boolean } | null>(null);
     const isAnimating = useRef(false);
     const [settings, setSettings] = useState(loadTickerSettings());
     const marqueeRef = useRef<HTMLDivElement>(null);
+    const textMeasureRef = useRef<HTMLSpanElement>(null);
     const [animationDuration, setAnimationDuration] = useState<number>(10); // fallback
 
     // Fix 1: Record start time with a generous buffer (5s behind) to avoid clock sync issues
     const [appStartTime] = useState<number>(() => Date.now());
-    
+
     // Guard against race conditions where a message is finished but hasn't updated to 'Shown' in DB yet
     const effectivelyShownIds = useRef<Set<string>>(new Set());
 
@@ -91,11 +92,20 @@ export const TickerScreen = () => {
     }, [!!activeMessage, connected]);
 
     useEffect(() => {
-        if (window.api?.updateTickerPosition) {
-            console.log("[Ticker] Updating window position to:", settings.position, "Display:", settings.displayId);
-            window.api.updateTickerPosition(settings.position, settings.displayId);
-        }
-    }, [settings.position, settings.displayId]);
+        // Delay to allow DOM update for the hidden measuring element
+        setTimeout(() => {
+            if (window.api?.updateTickerPosition && textMeasureRef.current) {
+                const fontHeight = textMeasureRef.current.getBoundingClientRect().height;
+                const margin = Math.ceil(fontHeight * 0.10); // proportional 10% margin
+                const finalMargin = Math.max(margin, 4); // minimum 4px
+                const windowHeight = Math.ceil(fontHeight + finalMargin * 2) + 2; // +2px for border
+
+                console.log("[Ticker] Measured font height:", fontHeight, "Calculated window height:", windowHeight);
+                console.log("[Ticker] Updating window position to:", settings.position, "Display:", settings.displayId);
+                window.api.updateTickerPosition(settings.position, settings.displayId, windowHeight);
+            }
+        }, 50);
+    }, [settings.position, settings.displayId, settings.fontSize, settings.fontFamily]);
 
     // Recalculate animation duration whenever message or settings change
     useEffect(() => {
@@ -112,7 +122,7 @@ export const TickerScreen = () => {
     useEffect(() => {
         const myDevices = devices.filter(d => d.uid === machineUid);
         const myDisplayIds = myDevices.map(d => BigInt(d.displayId));
-        
+
         for (const idStr of effectivelyShownIds.current) {
             const id = BigInt(idStr);
             const status = Array.from(statuses).find(s => {
@@ -120,7 +130,7 @@ export const TickerScreen = () => {
                 const smid = BigInt(s.displayId);
                 return sid === id && myDisplayIds.some(mid => mid === smid);
             });
-            
+
             if (!status || status.status.tag === 'Shown') {
                 console.log("[Ticker] DB reflect 'Shown' for:", idStr);
                 effectivelyShownIds.current.delete(idStr);
@@ -146,8 +156,8 @@ export const TickerScreen = () => {
                 return isMine && isPending && notRecentlyShown;
             })
             .map(status => ({
-               statusRec: status,
-               msg: messages.find(m => BigInt(m.messageId) === BigInt(status.messageId))
+                statusRec: status,
+                msg: messages.find(m => BigInt(m.messageId) === BigInt(status.messageId))
             }))
             .filter(({ msg, statusRec }) => {
                 if (!msg) return false;
@@ -161,7 +171,7 @@ export const TickerScreen = () => {
             .sort((a, b) => {
                 if (a.statusRec.status.tag === 'InProgress' && b.statusRec.status.tag === 'Queued') return -1;
                 if (a.statusRec.status.tag === 'Queued' && b.statusRec.status.tag === 'InProgress') return 1;
-                
+
                 const tA = BigInt(a.msg!.sentAt.microsSinceUnixEpoch);
                 const tB = BigInt(b.msg!.sentAt.microsSinceUnixEpoch);
                 if (tA < tB) return -1;
@@ -172,22 +182,22 @@ export const TickerScreen = () => {
         if (pendingQueue.length > 0) {
             const next = pendingQueue[0];
             const repeatCount = settings.repeatCount;
-            
+
             console.log("[Ticker] STARTING message:", next.msg!.content, "ID:", next.msg!.messageId.toString());
-            
-            setActiveMessage({ 
-                id: next.msg!.messageId, 
+
+            setActiveMessage({
+                id: next.msg!.messageId,
                 displayId: next.statusRec.displayId,
-                text: next.msg!.content, 
-                repeat: 0, 
-                totalRepeats: repeatCount 
+                text: next.msg!.content,
+                repeat: 0,
+                totalRepeats: repeatCount
             });
             isAnimating.current = true;
-            
+
             // Mark as InProgress in DB
-            updateStatus({ 
-                uid: machineUid, 
-                messageId: next.msg!.messageId, 
+            updateStatus({
+                uid: machineUid,
+                messageId: next.msg!.messageId,
                 statusTag: 'InProgress'
             }).catch(err => {
                 console.error("[Ticker] updateStatus(InProgress) failed for ID:", next.msg!.messageId.toString(), "Error:", err);
@@ -202,11 +212,11 @@ export const TickerScreen = () => {
 
         // Convert ms to micros for SpacetimeDB
         const appStartTimeMicros = BigInt(appStartTime) * 1000n;
-        
+
         console.log(`[Ticker] Requesting bulk skip for messages before ${appStartTime}ms`);
-        skipMissedMessages({ 
-            uid: machineUid, 
-            appStartTimeMicros 
+        skipMissedMessages({
+            uid: machineUid,
+            appStartTimeMicros
         }).catch(err => {
             console.error("[Ticker] skipMissedMessages failed:", err);
         });
@@ -229,30 +239,30 @@ export const TickerScreen = () => {
 
         const msgExists = messages.some(m => BigInt(m.messageId) === BigInt(activeMessage.id));
         const deviceExists = devices.some(d => BigInt(d.displayId) === BigInt(activeMessage.displayId));
-        
+
         if (!msgExists || !deviceExists) {
             console.log("[Ticker] Message or device disappeared, stopping.");
             setActiveMessage(null);
             isAnimating.current = false;
             return;
         }
-        
+
         const nextRepeat = activeMessage.repeat + 1;
         console.log("[Ticker] Iteration end:", nextRepeat, "/", activeMessage.totalRepeats);
-        
+
         if (nextRepeat < activeMessage.totalRepeats) {
             setActiveMessage(prev => prev ? { ...prev, repeat: nextRepeat } : null);
         } else {
             console.log("[Ticker] FINISHED message:", activeMessage.id.toString());
             const finalIdStr = activeMessage.id.toString();
             effectivelyShownIds.current.add(finalIdStr);
-            
-            updateStatus({ 
-                uid: machineUid, 
-                messageId: activeMessage.id, 
+
+            updateStatus({
+                uid: machineUid,
+                messageId: activeMessage.id,
                 statusTag: 'Shown'
             }).catch(err => console.error("[Ticker] Failed to update status to Shown:", err));
-            
+
             setActiveMessage(null);
             isAnimating.current = false;
         }
@@ -261,9 +271,9 @@ export const TickerScreen = () => {
     // Stop message if cancelled remotely
     useEffect(() => {
         if (!activeMessage || activeMessage.isTest) return;
-        
-        const currentStatus = Array.from(statuses).find(s => 
-            BigInt(s.messageId) === BigInt(activeMessage.id) && 
+
+        const currentStatus = Array.from(statuses).find(s =>
+            BigInt(s.messageId) === BigInt(activeMessage.id) &&
             BigInt(s.displayId) === BigInt(activeMessage.displayId)
         );
 
@@ -274,48 +284,71 @@ export const TickerScreen = () => {
         }
     }, [statuses, activeMessage]);
 
-    if (!activeMessage || !connected) return null;
+    const hiddenMeasureElement = (
+        <span
+            ref={textMeasureRef}
+            style={{
+                position: 'absolute',
+                visibility: 'hidden',
+                top: '-9999px',
+                fontFamily: settings.fontFamily,
+                fontSize: `${settings.fontSize}px`,
+                fontWeight: settings.fontWeight,
+                lineHeight: 'normal',
+                whiteSpace: 'nowrap'
+            }}
+        >
+            Mj
+        </span>
+    );
+
+    if (!activeMessage || !connected) {
+        return hiddenMeasureElement;
+    }
 
     return (
-        <div style={{
-            width: '100vw',
-            height: '100vh',
-            display: 'flex',
-            alignItems: 'center',
-            background: settings.bgColor,
-            borderTop: (settings.position === 'bottom') ? '2px solid rgba(59,130,246,0.6)' : 'none',
-            borderBottom: (settings.position === 'top') ? '2px solid rgba(59,130,246,0.6)' : 'none',
-            overflow: 'hidden',
-            fontFamily: settings.fontFamily,
-            color: settings.fgColor,
-            fontSize: `${settings.fontSize}px`,
-            fontWeight: settings.fontWeight,
-            whiteSpace: 'nowrap'
-        }}>
-           <div
-               ref={marqueeRef}
-               className="marquee"
-               onAnimationIteration={handleAnimationIteration}
-               style={{ 
-                   textShadow: `1px 1px 4px rgba(0,0,0,${0.8 * getAlphaFromColor(settings.fgColor)})`,
-                   animationDuration: `${animationDuration}s`
-               }}
-           >
-               {activeMessage.text}
-           </div>
-           
-           <style>{`
-             .marquee {
-               display: inline-block;
-               padding-left: 100%;
-               animation: marquee linear infinite;
-             }
-             
-             @keyframes marquee {
-               0%   { transform: translate(0, 0); }
-               100% { transform: translate(-100%, 0); }
-             }
-           `}</style>
-        </div>
+        <>
+            {hiddenMeasureElement}
+            <div style={{
+                width: '100vw',
+                height: '100vh',
+                display: 'flex',
+                alignItems: 'center',
+                background: settings.bgColor,
+                borderTop: (settings.position === 'bottom') ? '2px solid rgba(59,130,246,0.6)' : 'none',
+                borderBottom: (settings.position === 'top') ? '2px solid rgba(59,130,246,0.6)' : 'none',
+                overflow: 'hidden',
+                fontFamily: settings.fontFamily,
+                color: settings.fgColor,
+                fontSize: `${settings.fontSize}px`,
+                fontWeight: settings.fontWeight,
+                whiteSpace: 'nowrap'
+            }}>
+                <div
+                    ref={marqueeRef}
+                    className="marquee"
+                    onAnimationIteration={handleAnimationIteration}
+                    style={{
+                        textShadow: `1px 1px 4px rgba(0,0,0,${0.8 * getAlphaFromColor(settings.fgColor)})`,
+                        animationDuration: `${animationDuration}s`
+                    }}
+                >
+                    {activeMessage.text}
+                </div>
+
+                <style>{`
+                 .marquee {
+                   display: inline-block;
+                   padding-left: 100%;
+                   animation: marquee linear infinite;
+                 }
+                 
+                 @keyframes marquee {
+                   0%   { transform: translate(0, 0); }
+                   100% { transform: translate(-100%, 0); }
+                 }
+               `}</style>
+            </div>
+        </>
     );
 };

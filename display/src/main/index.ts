@@ -212,13 +212,13 @@ app.whenReady().then(() => {
     tickerWindow?.hide();
   });
 
-  ipcMain.on('update-ticker-position', (_event, params: { position: 'top' | 'bottom', displayId?: number }) => {
+  ipcMain.on('update-ticker-position', (_event, params: { position: 'top' | 'bottom', displayId?: number, height?: number }) => {
     if (!tickerWindow) return;
     const displays = screen.getAllDisplays();
     const targetDisplay = displays.find(d => d.id === params.displayId) || screen.getPrimaryDisplay();
     const { width, x: startX } = targetDisplay.bounds;
     const { height, y: offsetY } = targetDisplay.workArea;
-    const windowHeight = 80;
+    const windowHeight = params.height || 80;
     const y = params.position === 'top' ? offsetY : offsetY + height - windowHeight;
     tickerWindow.setBounds({ x: startX, y, width, height: windowHeight });
   });
