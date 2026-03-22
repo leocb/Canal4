@@ -154,7 +154,7 @@ export const ProfileScreen = () => {
               }}
               onClick={() => setShowLangMenu(!showLangMenu)}
             >
-              <span>{i18n.language === 'en' ? t('languages.en') : t('languages.pt-BR')}</span>
+              <span>{i18n.resolvedLanguage === 'en' ? t('languages.en') : t('languages.pt-BR')}</span>
               <ChevronDown size={18} style={{ transform: showLangMenu ? 'rotate(180deg)' : 'none', transition: 'transform 0.2s' }} />
             </button>
 
@@ -172,8 +172,8 @@ export const ProfileScreen = () => {
                   type="button"
                   className="dropdown-item"
                   style={{
-                    color: i18n.language === 'en' ? 'var(--accent-color)' : 'inherit',
-                    fontWeight: i18n.language === 'en' ? 600 : 400
+                    color: i18n.resolvedLanguage === 'en' ? 'var(--accent-color)' : 'inherit',
+                    fontWeight: i18n.resolvedLanguage === 'en' ? 600 : 400
                   }}
                   onClick={() => { i18n.changeLanguage('en'); setShowLangMenu(false); }}
                 >
@@ -183,8 +183,8 @@ export const ProfileScreen = () => {
                   type="button"
                   className="dropdown-item"
                   style={{
-                    color: i18n.language === 'pt-BR' ? 'var(--accent-color)' : 'inherit',
-                    fontWeight: i18n.language === 'pt-BR' ? 600 : 400
+                    color: i18n.resolvedLanguage === 'pt-BR' ? 'var(--accent-color)' : 'inherit',
+                    fontWeight: i18n.resolvedLanguage === 'pt-BR' ? 600 : 400
                   }}
                   onClick={() => { i18n.changeLanguage('pt-BR'); setShowLangMenu(false); }}
                 >

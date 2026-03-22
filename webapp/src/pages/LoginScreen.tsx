@@ -221,7 +221,7 @@ export const LoginScreen = () => {
           >
             <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
               <Languages size={18} />
-              <span>{i18n.language === 'en' ? t('languages.en') : t('languages.pt-BR')}</span>
+              <span>{i18n.resolvedLanguage === 'en' ? t('languages.en') : t('languages.pt-BR')}</span>
             </div>
             <ChevronDown size={16} style={{ 
               transform: showMenu ? 'rotate(180deg)' : 'none', 
@@ -243,8 +243,8 @@ export const LoginScreen = () => {
               <button
                 className="dropdown-item"
                 style={{
-                  color: i18n.language === 'en' ? 'var(--accent-color)' : 'inherit',
-                  fontWeight: i18n.language === 'en' ? 600 : 400
+                  color: i18n.resolvedLanguage === 'en' ? 'var(--accent-color)' : 'inherit',
+                  fontWeight: i18n.resolvedLanguage === 'en' ? 600 : 400
                 }}
                 onClick={() => { i18n.changeLanguage('en'); setShowMenu(false); }}
               >
@@ -253,8 +253,8 @@ export const LoginScreen = () => {
               <button
                 className="dropdown-item"
                 style={{
-                  color: i18n.language === 'pt-BR' ? 'var(--accent-color)' : 'inherit',
-                  fontWeight: i18n.language === 'pt-BR' ? 600 : 400
+                  color: i18n.resolvedLanguage === 'pt-BR' ? 'var(--accent-color)' : 'inherit',
+                  fontWeight: i18n.resolvedLanguage === 'pt-BR' ? 600 : 400
                 }}
                 onClick={() => { i18n.changeLanguage('pt-BR'); setShowMenu(false); }}
               >
