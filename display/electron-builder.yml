@@ -1,5 +1,5 @@
 appId: org.canal4.displaynode
-productName: Canal4 Display node
+productName: Canal4
 copyright: Copyright © 2026 Canal4
 directories:
   buildResources: build
@@ -49,7 +49,7 @@ dmg:
 # ─── Windows ──────────────────────────────────────────────────────────────────
 win:
   icon: build/icon.ico
-  executableName: canal4-display-node
+  executableName: Canal4
   target:
     - target: nsis
       arch:
