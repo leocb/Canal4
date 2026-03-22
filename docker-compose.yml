@@ -1,9 +1,9 @@
 # Canal4 — Docker Compose
 #
 # Services:
-#   spacetimedb  — SpacetimeDB server (clockworklabs/spacetime)
-#   module-init  — One-shot container that publishes the SpacetimeDB module on first boot
-#   webapp       — Express + Vite SPA (Canal4 web webapp)
+#   spacetimedb  — SpacetimeDB server
+#   module-init  — One-shot container that publishes the SpacetimeDB module on first boot, can be removed later
+#   webapp       — Canal4 web webapp
 #
 # Usage:
 #   1. Copy .env.example to .env and fill in your values
@@ -12,11 +12,9 @@
 # SpacetimeDB Cloud (spacetimedb.com):
 #   If you are hosting your database on SpacetimeDB Cloud instead of locally:
 #   1. Set `SPACETIMEDB_URI` in .env to `wss://maincloud.spacetimedb.com`
-#   2. You can comment out or remove the `spacetimedb` service below.
-#   3. Use the module-init below to publish the bundle safely. This also auto updates the database if you use watchtower.
-#
-# Note: The module must be re-published when schema/reducer changes are made.
-#   Run:  docker compose run --rm module-init
+#   2. Set `SPACETIMEDB_SERVER` in .env to `https://maincloud.spacetimedb.com`
+#   3. You can comment out or remove the `spacetimedb` service below.
+#   4. Use the module-init below to publish the bundle safely. This also auto updates the database if you use watchtower.
 
 services:
 
@@ -30,12 +28,6 @@ services:
     volumes:
       - spacetimedb_data:/var/lib/spacetimedb
     restart: unless-stopped
-    healthcheck:
-      test: [ "CMD", "wget", "-qO-", "http://localhost:3000/v1/info" ]
-      interval: 10s
-      timeout: 5s
-      retries: 10
-      start_period: 15s
 
   # ─── Module publisher (one-shot) ────────────────────────────────────────────
   # Publishes compiled logic into the running SpacetimeDB instance.
@@ -90,12 +82,6 @@ services:
       spacetimedb:
         condition: service_healthy
     restart: unless-stopped
-    healthcheck:
-      test: [ "CMD", "wget", "-qO-", "http://localhost:80/" ]
-      interval: 30s
-      timeout: 5s
-      retries: 3
-      start_period: 10s
 
 volumes:
   spacetimedb_data:
