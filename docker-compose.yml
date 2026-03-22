@@ -69,7 +69,8 @@ services:
           --server "$$SPACETIMEDB_SERVER" \
           --js-path /module/bundle.js \
           --yes \
-          # --delete-data \ # Uncomment this line for breaking dev changes !DANGER! wipes everything!
+          # Uncomment the line bellow for breaking dev changes !DANGER! wipes everything!
+          # --delete-data \
           "$$SPACETIMEDB_NAME"
 
         echo "Module published successfully."
