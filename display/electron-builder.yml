@@ -1,6 +1,6 @@
-appId: org.canal4.displaynode
+appId: org.canal4.display
 productName: Canal4
-copyright: Copyright © 2026 Canal4
+copyright: Copyright © 2026 - github.com/leocb
 directories:
   buildResources: build
   output: dist
@@ -72,7 +72,7 @@ linux:
   target:
     - AppImage
     - deb
-  maintainer: Canal4
+  maintainer: github.com/leocb
   category: Utility
 
 appImage:

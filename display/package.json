@@ -1,9 +1,9 @@
 {
-  "name": "canal4-display-node",
-  "version": "1.0.0-rc1",
+  "name": "canal4-display",
+  "version": "1.0.0",
   "description": "Canal4 Display node application",
   "main": "./out/main/index.js",
-  "author": "Canal4",
+  "author": "github.com/leocb",
   "homepage": "https://github.com/leocb/canal4",
   "scripts": {
     "format": "prettier --write .",
