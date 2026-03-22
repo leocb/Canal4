@@ -4,7 +4,7 @@ import { useTable, useReducer } from 'spacetimedb/react';
 import { tables, reducers } from '../module_bindings/index.ts';
 import { useAuth } from '../hooks/useAuth';
 import { useReadyTable } from '../hooks/useReadyTable';
-import { Search, CheckCircle, Building2, AlertTriangle } from 'lucide-react';
+import { CheckCircle, Building2, AlertTriangle } from 'lucide-react';
 import { useTranslation, Trans } from 'react-i18next';
 
 export const JoinVenueScreen = () => {
@@ -52,25 +52,6 @@ export const JoinVenueScreen = () => {
     m => m.venueId === venue.venueId && m.userId === user.userId
   ) : false;
 
-  if (!venue) {
-    return (
-      <div className="app-container" style={{ alignItems: 'center', justifyContent: 'center' }}>
-        <div className="glass-panel" style={{ padding: '48px', textAlign: 'center', maxWidth: '400px', width: '100%' }}>
-          <div style={{ color: 'var(--text-secondary)', marginBottom: '16px' }}>
-            <Search size={48} />
-          </div>
-          <h2 style={{ marginBottom: '12px' }}>{t('join_venue.not_found_title')}</h2>
-          <p style={{ color: 'var(--text-secondary)', marginBottom: '24px' }}>
-            {t('join_venue.not_found_text')}
-          </p>
-          <button onClick={() => navigate('/venues')} style={{ width: '100%' }}>
-            {t('join_venue.go_to_venues')}
-          </button>
-        </div>
-      </div>
-    );
-  }
-
   if (isMember) {
     return (
       <div className="app-container" style={{ alignItems: 'center', justifyContent: 'center' }}>
@@ -98,7 +79,7 @@ export const JoinVenueScreen = () => {
     try {
       if (!token) throw new Error(t('join_venue.error_missing_token'));
       await joinVenue({ token });
-      navigate(`/venues/${venue.link}`);
+      navigate(`/venues/${venue?.link || venueLink}`);
     } catch (err: unknown) {
       const message = err instanceof Error ? err.message : String(err);
       setErrorText(t(message) || t('join_venue.error_failed'));
@@ -115,7 +96,7 @@ export const JoinVenueScreen = () => {
         <p style={{ color: 'var(--text-secondary)', marginBottom: '8px', fontSize: '0.9rem' }}>
           {t('join_venue.invited_to')}
         </p>
-        <h2 style={{ marginBottom: '8px', fontSize: '1.8rem' }}>{venue.name}</h2>
+        <h2 style={{ marginBottom: '8px', fontSize: '1.8rem' }}>{venue?.name || venueLink}</h2>
         <p style={{ color: 'var(--text-secondary)', marginBottom: '32px', fontSize: '0.85rem' }}>
           <Trans i18nKey="join_venue.joining_as" values={{ name: user.name }}>
             Joining as <strong style={{ color: 'var(--text-primary)' }}>{user.name}</strong>

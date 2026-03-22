@@ -134,8 +134,15 @@ export const SpacetimeDBProvider = ({ children }: { children: ReactNode }) => {
         if (b !== currentBuilderRef.current) return;
 
         console.error("[STDB] Connection error:", err);
+        const errMsg = err?.message || String(err);
+        
+        if (errMsg.includes("Unauthorized")) {
+          console.warn("[STDB] Token unauthorized, clearing from storage.");
+          localStorage.removeItem("auth_token");
+        }
+
         setStatus("error");
-        setError(err?.message || String(err));
+        setError(errMsg);
         scheduleRetry();
       })
       .onDisconnect((_ctx, _err) => {

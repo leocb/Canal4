@@ -493,25 +493,8 @@ export const MessageDeliveryStatusView = spacetimedb.view({ name: "message_deliv
   return results;
 });
 
-export const VenueInviteTokenView = spacetimedb.view({ name: "venue_invite_token_view", public: true }, t.array(VenueInviteToken.rowType), (ctx) => {
-  const venueIds = new Set<bigint>();
-  const ui = ctx.db.UserIdentity.identity.find(ctx.sender);
-  if (ui) {
-    for (const m of ctx.db.VenueMember.venue_member_user_id.filter(ui.userId)) {
-      venueIds.add(m.venueId);
-    }
-  }
-  for (const d of ctx.db.DisplayDevice.display_device_identity.filter(ctx.sender)) {
-    venueIds.add(d.venueId);
-  }
-  
-  const results = [];
-  for (const vid of venueIds) {
-    for (const token of ctx.db.VenueInviteToken.venue_invite_token_venue_id.filter(vid)) {
-      results.push(token);
-    }
-  }
-  return results;
+export const VenueInviteTokenView = spacetimedb.anonymousView({ name: "venue_invite_token_view", public: true }, t.array(VenueInviteToken.rowType), (ctx) => {
+  return ctx.from.VenueInviteToken;
 });
 
 export default spacetimedb;
