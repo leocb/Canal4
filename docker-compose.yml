@@ -63,17 +63,16 @@ services:
         fi
 
         # 2. Publish the module using the built JS bundle directly
+        # !Dangerous! add "--delete-data \" line after the "--yes" if you want to wipe everything
         echo "Publishing $$SPACETIMEDB_NAME to $$SPACETIMEDB_SERVER..."
         spacetime publish \
           --no-config \
           --server "$$SPACETIMEDB_SERVER" \
           --js-path /module/bundle.js \
           --yes \
-          # Uncomment the line bellow for breaking dev changes !DANGER! wipes everything!
-          # --delete-data \
           "$$SPACETIMEDB_NAME"
 
-        echo "Module published successfully."
+        echo "SpacetimeDB deployment script end."
     restart: "no"
 
   # ─── Web app ────────────────────────────────────────────────────────────────
