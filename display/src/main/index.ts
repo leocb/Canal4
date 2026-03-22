@@ -19,7 +19,7 @@ function createTickerWindow(): void {
     height: 80, // Height of the ticker tape
     x: startX,
     y: offsetY + height - 80, // Position at bottom of screen
-    show: false,
+    show: true,
     frame: false,
     transparent: true,
     backgroundColor: '#00000000',
