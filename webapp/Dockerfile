@@ -4,11 +4,13 @@ FROM node:22-alpine AS builder
 WORKDIR /app
 
 # Install dependencies first (better layer caching)
-COPY package.json package-lock.json ./
+COPY webapp/package.json webapp/package-lock.json ./webapp/
+WORKDIR /app/webapp
 RUN npm ci
 
 # Copy source and build
-COPY . .
+COPY locales /app/locales
+COPY webapp /app/webapp
 RUN npm run build
 
 
@@ -16,7 +18,7 @@ RUN npm run build
 FROM nginx:alpine AS runner
 
 # Copy the built frontend from the builder stage
-COPY --from=builder /app/dist /usr/share/nginx/html
+COPY --from=builder /app/webapp/dist /usr/share/nginx/html
 
 # Optional: Add a custom nginx config if needed for SPA routing
 # (React Router needs all paths to serve index.html)
