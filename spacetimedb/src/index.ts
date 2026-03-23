@@ -57,14 +57,14 @@ function getRoleRank(tag: string): number {
 }
 
 export const register_new_user_with_passkey = spacetimedb.reducer(
-  { credentialId: t.string() },
-  (ctx, { credentialId }) => {
-    // 1. Create a new user with empty name
+  { credentialId: t.string(), name: t.string() },
+  (ctx, { credentialId, name }) => {
+    // 1. Create a new user with the provided name
     const user = ctx.db.User.insert({
       userId: 0n,
       email: undefined,
       passkeyCredentialId: credentialId,
-      name: "", // We will ask for the name later
+      name: name.trim(),
       pushToken: undefined,
       createdAt: ctx.timestamp,
     });
@@ -79,10 +79,10 @@ export const register_new_user_with_passkey = spacetimedb.reducer(
   }
 );
 
-
 export const extend_session = spacetimedb.reducer(
   {},
   (ctx) => {
+
     getUserId(ctx); // This will update lastLogin via side-effect in getUserId
   }
 );

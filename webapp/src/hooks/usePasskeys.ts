@@ -5,7 +5,7 @@ export const usePasskeys = () => {
   const registerNewUser = useReducer(reducers.registerNewUserWithPasskey);
   const loginWithPasskey = useReducer(reducers.loginWithPasskey);
 
-  const createPasskey = async () => {
+  const createPasskey = async (name: string) => {
     if (!window.PublicKeyCredential) {
       throw new Error('login.passkey_not_supported');
     }
@@ -26,8 +26,8 @@ export const usePasskeys = () => {
       },
       user: {
         id: userID,
-        name: "canal4-user",
-        displayName: "Canal4 User",
+        name: name,
+        displayName: name,
       },
       pubKeyCredParams: [
         { alg: -7, type: "public-key" }, // ES256
@@ -50,9 +50,10 @@ export const usePasskeys = () => {
       throw new Error('login.passkey_cancelled');
     }
 
-    await registerNewUser({ credentialId: credential.id });
+    await registerNewUser({ credentialId: credential.id, name });
     return credential.id;
   };
+
 
   const authenticatePasskey = async () => {
     if (!window.PublicKeyCredential) {

@@ -46,20 +46,7 @@ export const LoginScreen = () => {
 
   const handleNewUser = async () => {
     setErrorText('');
-    setLoading(true);
-    try {
-      await createPasskey();
-      // usePasskeys calls register_new_user_with_passkey
-      // Once it returns, SpaceTimeDB should sync the identity and isLoggedIn will be true
-      // The name will be empty so it will stay in the selection -> name transition
-      setView('name');
-    } catch (err: any) {
-      if (err.message !== 'login.passkey_cancelled') {
-        setErrorText(t(err.message) || t('login.error_passkey'));
-      }
-    } finally {
-      setLoading(false);
-    }
+    setView('name');
   };
 
   const handleHaveAccount = async () => {
@@ -79,20 +66,26 @@ export const LoginScreen = () => {
 
   const handleNameSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!fullName.trim() || !user) return;
+    if (!fullName.trim()) return;
     setErrorText('');
     setLoading(true);
 
     try {
-      await updateUserName({
-        userId: user.userId,
-        newName: fullName.trim()
-      });
-      
-      // Success: useAuth will have updated user.name, useEffect will navigate
+      if (isLoggedIn && user) {
+        // Already logged in, just updating name (legacy or fallback)
+        await updateUserName({
+          userId: user.userId,
+          newName: fullName.trim()
+        });
+      } else {
+        // New user: create passkey with this name
+        await createPasskey(fullName.trim());
+      }
     } catch (err: any) {
       setLoading(false);
-      setErrorText(t(err.message) || t('login.error_update_name'));
+      if (err.message !== 'login.passkey_cancelled') {
+        setErrorText(t(err.message) || t('login.error_passkey') || t('login.error_update_name'));
+      }
     }
   };
 
@@ -193,13 +186,27 @@ export const LoginScreen = () => {
               autoFocus
             />
 
-            <button type="submit" disabled={loading || !fullName.trim()} style={{ marginTop: '16px' }}>
-              {loading ? (
-                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px' }}>
-                  <Loader2 className="animate-spin" size={18} /> {t('login.saving')}
-                </div>
-              ) : t('login.complete_signup')}
-            </button>
+            <div style={{ display: 'flex', gap: '12px', marginTop: '16px' }}>
+              {!isLoggedIn && (
+                <button
+                  type="button"
+                  className="secondary"
+                  style={{ flex: 1 }}
+                  onClick={() => setView('selection')}
+                  disabled={loading}
+                >
+                  {t('common.cancel')}
+                </button>
+              )}
+              <button type="submit" disabled={loading || !fullName.trim()} style={{ flex: 1 }}>
+                {loading ? (
+                  <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px' }}>
+                    <Loader2 className="animate-spin" size={18} /> {t('login.saving')}
+                  </div>
+                ) : t('login.complete_signup')}
+              </button>
+            </div>
+
           </form>
         )}
       </div>
