@@ -12,7 +12,7 @@ export const LoginScreen = () => {
   const navigate = useNavigate();
   const location = useLocation();
   const redirect = new URLSearchParams(location.search).get('redirect') || '/venues';
-  const { user, isLoggedIn, connected } = useAuth();
+  const { user, isLoggedIn, connected, identity } = useAuth();
   const [fullName, setFullName] = useState('');
   const [loading, setLoading] = useState(false);
   const [errorText, setErrorText] = useState('');
@@ -53,7 +53,7 @@ export const LoginScreen = () => {
     setErrorText('');
     setLoading(true);
     try {
-      await authenticatePasskey();
+      await authenticatePasskey(identity);
       // once it returns, if successful, useEffect will handle navigation
     } catch (err: any) {
       if (err.message !== 'login.passkey_cancelled') {
@@ -79,9 +79,11 @@ export const LoginScreen = () => {
         });
       } else {
         // New user: create passkey with this name
-        await createPasskey(fullName.trim());
+        console.log(`[Login] Creating passkey for new user: ${fullName.trim()}`);
+        await createPasskey(fullName.trim(), identity);
       }
     } catch (err: any) {
+      console.error("[Login] Error during name submission/passkey creation:", err);
       setLoading(false);
       if (err.message !== 'login.passkey_cancelled') {
         setErrorText(t(err.message) || t('login.error_passkey') || t('login.error_update_name'));

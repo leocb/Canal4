@@ -12,4 +12,7 @@ import {
 
 export default {
   credentialId: __t.string(),
+  authenticatorData: __t.string(),
+  clientDataJson: __t.string(),
+  signature: __t.string(),
 };

@@ -12,4 +12,5 @@ import {
 
 export default {
   credentialId: __t.string(),
+  attestationObject: __t.string(),
 };

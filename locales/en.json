@@ -24,6 +24,7 @@
     "name_placeholder": "Your Full Name",
     "complete_signup": "Create Access Key",
     "saving": "Saving...",
+    "new_passkey_name": "New Passkey",
     "loading": "Synchronizing...",
     "error_login": "Error during login",
     "error_update_name": "Error updating name"
@@ -377,6 +378,8 @@
   },
   "api_errors": {
     "not_logged_in": "Not logged in",
+    "identity_already_registered": "This device is already linked to another account.",
+    "passkey_already_registered": "This passkey is already registered to another account.",
     "session_expired": "Session expired. Please log in again.",
     "invalid_pin": "This PIN is invalid or has expired",
     "change_name_forbidden": "You are only permitted to change your own name.",
@@ -432,7 +435,10 @@
     "cannot_demote_last_owner": "Cannot demote yourself — you are the last owner of this venue/channel.",
     "cannot_demote_same_role": "Insufficient permissions to demote another user of the same or higher role rank.",
     "cannot_block_owner": "You cannot block an owner.",
-    "cannot_unblock_self": "You cannot unblock yourself."
+    "cannot_unblock_self": "You cannot unblock yourself.",
+    "invalid_attestation": "Invalid Passkey data",
+    "invalid_challenge": "The security challenge has expired or is invalid. Please try again.",
+    "invalid_signature": "Passkey verification failed."
   },
   "settings": {
     "title": "Canal4 Display Settings",

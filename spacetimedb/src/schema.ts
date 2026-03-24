@@ -29,19 +29,33 @@ export const User = table(
     name: "user",
     public: false,
     indexes: [
-      { name: "user_passkey_credential_id", accessor: "user_passkey_credential_id", algorithm: "btree", columns: ["passkeyCredentialId"] },
       { name: "user_name", accessor: "user_name", algorithm: "btree", columns: ["name"] },
     ] as const,
   },
   {
     userId: t.u64().primaryKey().autoInc(),
     email: t.string().optional(),
-    passkeyCredentialId: t.string().optional(),
+    passkeyCredentialId: t.string().optional(), // left in so I don't have to delete the database, but nothing should be stored here
     name: t.string(),
     pushToken: t.string().optional(),
     createdAt: t.timestamp(),
   }
 );
+
+
+export const UserAuth = table(
+  {
+    name: "user_auth",
+    public: false,
+    indexes: [{ name: "user_auth_credential_id", accessor: "user_auth_credential_id", algorithm: "btree", columns: ["passkeyCredentialId"] }] as const,
+  },
+  {
+    userId: t.u64().primaryKey(),
+    passkeyCredentialId: t.string(),
+    passkeyPublicKey: t.string(),
+  }
+);
+
 
 export const UserIdentity = table(
   {
@@ -250,9 +264,9 @@ export const VenueInviteToken = table(
   }
 );
 
-// Final Export Module
 const spacetimedb = schema({
   User,
+  UserAuth,
   UserIdentity,
   Venue,
   Channel,
@@ -267,10 +281,12 @@ const spacetimedb = schema({
   VenueInviteToken,
 });
 
+
+
 // Views
 export const UserView = spacetimedb.view({ name: "user_view", public: true }, t.array(User.rowType), (ctx) => {
   const results = new Map<bigint, any>();
-  
+
   // User Case
   const ui = ctx.db.UserIdentity.identity.find(ctx.sender);
   if (ui) {
@@ -285,7 +301,7 @@ export const UserView = spacetimedb.view({ name: "user_view", public: true }, t.
       }
     }
   }
-  
+
   // Display Case
   for (const d of ctx.db.DisplayDevice.display_device_identity.filter(ctx.sender)) {
     for (const vm of ctx.db.VenueMember.venue_member_venue_id.filter(d.venueId)) {
@@ -295,7 +311,7 @@ export const UserView = spacetimedb.view({ name: "user_view", public: true }, t.
       }
     }
   }
-  
+
   return Array.from(results.values());
 });
 
@@ -306,18 +322,18 @@ export const UserIdentityView = spacetimedb.view({ name: "user_identity_view", p
 
 export const VenueView = spacetimedb.view({ name: "venue_view", public: true }, t.array(Venue.rowType), (ctx) => {
   const results = new Set<bigint>();
-  
+
   const ui = ctx.db.UserIdentity.identity.find(ctx.sender);
   if (ui) {
     for (const m of ctx.db.VenueMember.venue_member_user_id.filter(ui.userId)) {
       results.add(m.venueId);
     }
   }
-  
+
   for (const d of ctx.db.DisplayDevice.display_device_identity.filter(ctx.sender)) {
     results.add(d.venueId);
   }
-  
+
   const finalVenues = [];
   for (const id of results) {
     const v = ctx.db.Venue.venueId.find(id);
@@ -337,7 +353,7 @@ export const ChannelView = spacetimedb.view({ name: "channel_view", public: true
   for (const d of ctx.db.DisplayDevice.display_device_identity.filter(ctx.sender)) {
     venueIds.add(d.venueId);
   }
-  
+
   const results = [];
   for (const id of venueIds) {
     for (const c of ctx.db.Channel.channel_venue_id.filter(id)) {
@@ -358,7 +374,7 @@ export const VenueMemberView = spacetimedb.view({ name: "venue_member_view", pub
   for (const d of ctx.db.DisplayDevice.display_device_identity.filter(ctx.sender)) {
     venueIds.add(d.venueId);
   }
-  
+
   const results = [];
   for (const id of venueIds) {
     for (const m of ctx.db.VenueMember.venue_member_venue_id.filter(id)) {
@@ -379,7 +395,7 @@ export const ChannelMemberRoleView = spacetimedb.view({ name: "channel_member_ro
   for (const d of ctx.db.DisplayDevice.display_device_identity.filter(ctx.sender)) {
     venueIds.add(d.venueId);
   }
-  
+
   const results = [];
   for (const vid of venueIds) {
     for (const ch of ctx.db.Channel.channel_venue_id.filter(vid)) {
@@ -408,7 +424,7 @@ export const MessageTemplateView = spacetimedb.view({ name: "message_template_vi
   for (const d of ctx.db.DisplayDevice.display_device_identity.filter(ctx.sender)) {
     venueIds.add(d.venueId);
   }
-  
+
   const results = [];
   for (const vid of venueIds) {
     for (const ch of ctx.db.Channel.channel_venue_id.filter(vid)) {
@@ -431,7 +447,7 @@ export const MessageView = spacetimedb.view({ name: "message_view", public: true
   for (const d of ctx.db.DisplayDevice.display_device_identity.filter(ctx.sender)) {
     venueIds.add(d.venueId);
   }
-  
+
   const results = [];
   for (const vid of venueIds) {
     for (const ch of ctx.db.Channel.channel_venue_id.filter(vid)) {
@@ -454,7 +470,7 @@ export const DisplayDeviceView = spacetimedb.view({ name: "display_device_view",
   for (const d of ctx.db.DisplayDevice.display_device_identity.filter(ctx.sender)) {
     venueIds.add(d.venueId);
   }
-  
+
   const results = [];
   for (const vid of venueIds) {
     for (const device of ctx.db.DisplayDevice.display_device_venue_id.filter(vid)) {
@@ -479,7 +495,7 @@ export const MessageDeliveryStatusView = spacetimedb.view({ name: "message_deliv
   for (const d of ctx.db.DisplayDevice.display_device_identity.filter(ctx.sender)) {
     venueIds.add(d.venueId);
   }
-  
+
   const results = [];
   for (const vid of venueIds) {
     for (const ch of ctx.db.Channel.channel_venue_id.filter(vid)) {

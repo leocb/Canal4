@@ -10,8 +10,8 @@ import {
   type Infer as __Infer,
 } from "spacetimedb";
 
-export default {
-  credentialId: __t.string(),
-  attestationObject: __t.string(),
-  name: __t.string(),
-};
+export default __t.row({
+  userId: __t.u64().primaryKey().name("user_id"),
+  passkeyCredentialId: __t.string().name("passkey_credential_id"),
+  passkeyPublicKey: __t.string().name("passkey_public_key"),
+});

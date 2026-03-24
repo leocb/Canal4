@@ -153,6 +153,13 @@ export const User = __t.object("User", {
 });
 export type User = __Infer<typeof User>;
 
+export const UserAuth = __t.object("UserAuth", {
+  userId: __t.u64(),
+  passkeyCredentialId: __t.string(),
+  passkeyPublicKey: __t.string(),
+});
+export type UserAuth = __Infer<typeof UserAuth>;
+
 export const UserIdentity = __t.object("UserIdentity", {
   identity: __t.identity(),
   userId: __t.u64(),

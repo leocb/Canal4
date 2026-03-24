@@ -1,4 +1,23 @@
 import spacetimedb from "./schema";
+import { t, SenderError, type ReducerCtx } from "spacetimedb/server";
+
+import { 
+    decodeClientDataJSON, 
+    decodeAttestationObject,
+    parseAuthenticatorData,
+    isoBase64URL, 
+    isoUint8Array,
+    isoCBOR
+} from "@simplewebauthn/server/helpers";
+import { p256 } from "@noble/curves/nist.js";
+import { sha256 } from "@noble/hashes/sha2.js";
+
+import { Timestamp } from "spacetimedb";
+
+
+
+
+
 export {
   UserView,
   UserIdentityView,
@@ -14,10 +33,9 @@ export {
   MessageDeliveryStatusView,
   VenueInviteTokenView,
 } from "./schema";
-import { t, SenderError } from "spacetimedb/server";
-import { Timestamp } from "spacetimedb";
 
 /*** USER AUTHENTICATION & MANAGEMENT ***/
+
 
 const THIRTY_DAYS_MICROS = 30n * 24n * 3600n * 1000000n;
 
@@ -57,27 +75,55 @@ function getRoleRank(tag: string): number {
 }
 
 export const register_new_user_with_passkey = spacetimedb.reducer(
-  { credentialId: t.string(), name: t.string() },
-  (ctx, { credentialId, name }) => {
-    // 1. Create a new user with the provided name
+  { credentialId: t.string(), attestationObject: t.string(), name: t.string() },
+  (ctx, { credentialId, attestationObject, name }) => {
+    // 1. Extract COSE Public Key from Attestation Object using libraries
+    const attestationBytes = isoBase64URL.toBuffer(attestationObject);
+    const decodedAttestation = decodeAttestationObject(attestationBytes) as Map<string, any>;
+    const authData = decodedAttestation.get('authData');
+    if (!authData) throw new SenderError("api_errors.invalid_attestation");
+    const parsedAuthData = parseAuthenticatorData(authData);
+
+
+    
+    if (!parsedAuthData.credentialPublicKey) {
+        throw new SenderError("api_errors.invalid_attestation");
+    }
+    const publicKeyBase64 = isoBase64URL.fromBuffer(parsedAuthData.credentialPublicKey);
+
+    // 2. Check if identity already has a user
+    const existingIdentity = ctx.db.UserIdentity.identity.find(ctx.sender);
+    if (existingIdentity) {
+      const existingUser = ctx.db.User.userId.find(existingIdentity.userId);
+      if (existingUser) throw new SenderError("api_errors.identity_already_registered");
+      ctx.db.UserIdentity.identity.delete(ctx.sender);
+    }
+
+    // 3. Create user and auth
     const user = ctx.db.User.insert({
       userId: 0n,
       email: undefined,
-      passkeyCredentialId: credentialId,
+      passkeyCredentialId: undefined,
       name: name.trim(),
       pushToken: undefined,
       createdAt: ctx.timestamp,
     });
 
-    // 2. Link this identity
+    ctx.db.UserAuth.insert({
+      userId: user.userId,
+      passkeyCredentialId: credentialId,
+      passkeyPublicKey: publicKeyBase64,
+    });
+
     ctx.db.UserIdentity.insert({
       identity: ctx.sender,
       userId: user.userId,
       lastLogin: ctx.timestamp,
     });
-    console.log(`[STDB] New user registered with passkey. Assigned ID: ${user.userId}`);
+    console.log(`[STDB] User registered successfully: "${user.name}"`);
   }
 );
+
 
 export const extend_session = spacetimedb.reducer(
   {},
@@ -149,48 +195,92 @@ export const delete_user_account = spacetimedb.reducer(
       ctx.db.ChannelMemberRole.delete({ ...r });
     }
 
+    // Delete user auth
+    ctx.db.UserAuth.userId.delete(userId);
+
     // Finally delete the user
     ctx.db.User.userId.delete(userId);
   }
 );
 
 export const register_passkey = spacetimedb.reducer(
-  { credentialId: t.string() },
-  (ctx, { credentialId }) => {
-    const userId = getUserId(ctx);
-    const user = ctx.db.User.userId.find(userId);
-    if (!user) throw new SenderError("api_errors.user_not_found");
-    ctx.db.User.userId.update({
-      ...user,
-      passkeyCredentialId: credentialId,
-    });
-  }
+    { credentialId: t.string(), attestationObject: t.string() },
+    (ctx, { credentialId, attestationObject }) => {
+      const userId = getUserId(ctx);
+      
+      const attestationBytes = isoBase64URL.toBuffer(attestationObject);
+      const decodedAttestation = decodeAttestationObject(attestationBytes) as Map<string, any>;
+      const authData = decodedAttestation.get('authData');
+      if (!authData) throw new SenderError("api_errors.invalid_attestation");
+      const parsedAuthData = parseAuthenticatorData(authData);
+
+
+      
+      if (!parsedAuthData.credentialPublicKey) throw new SenderError("api_errors.invalid_attestation");
+      const publicKeyBase64 = isoBase64URL.fromBuffer(parsedAuthData.credentialPublicKey);
+  
+      ctx.db.UserAuth.insert({
+        userId,
+        passkeyCredentialId: credentialId,
+        passkeyPublicKey: publicKeyBase64,
+      });
+    }
 );
 
+
+
 export const login_with_passkey = spacetimedb.reducer(
-  { credentialId: t.string() },
-  (ctx, { credentialId }) => {
-    const expectedUser = [...ctx.db.User.iter()].find((u) => u.passkeyCredentialId === credentialId);
-    if (!expectedUser) {
-      throw new SenderError("api_errors.passkey_not_found");
-    }
-    // With UserIdentity pattern we just link identity if valid.
+  { credentialId: t.string(), authenticatorData: t.string(), clientDataJson: t.string(), signature: t.string() },
+  (ctx, { credentialId, authenticatorData, clientDataJson, signature }) => {
+    const authRecord = [...ctx.db.UserAuth.iter()].find((u) => u.passkeyCredentialId === credentialId);
+    if (!authRecord) throw new SenderError("api_errors.passkey_not_found");
+
+    const expectedUser = ctx.db.User.userId.find(authRecord.userId);
+    if (!expectedUser) throw new SenderError("api_errors.user_not_found");
+
+    // 1. Decode inputs using SimpleWebAuthn helpers
+    const clientData = decodeClientDataJSON(clientDataJson);
+    const authDataBuffer = isoBase64URL.toBuffer(authenticatorData);
+    const signatureBytes = isoBase64URL.toBuffer(signature);
+    const publicKeyBytes = isoBase64URL.toBuffer(authRecord.passkeyPublicKey);
+
+    // 2. Verify Challenge
+    const { challenge } = clientData;
+    const expectedChallenge = isoBase64URL.fromBuffer(ctx.sender.toUint8Array() as any);
+    if (challenge !== expectedChallenge) throw new SenderError("api_errors.invalid_challenge");
+
+    // 3. Reconstruct Public Key Point (0x04 + X + Y) from COSE Map
+    const coseMap = isoCBOR.decodeFirst(publicKeyBytes) as Map<number, any>;
+    const x = coseMap.get(-2); // COSEKEYS.x (X coord)
+    const y = coseMap.get(-3); // COSEKEYS.y (Y coord)
+    const rawPublicKey = isoUint8Array.concat([new Uint8Array([0x04]), x, y]);
+
+    // 4. Verify Signature using Noble library (synchronous)
+    const clientDataBytes = isoBase64URL.toBuffer(clientDataJson);
+    const clientDataHash = sha256(clientDataBytes);
+    const signedPayload = isoUint8Array.concat([authDataBuffer, clientDataHash]);
+
+    
+    // Noble handles DER format parsing internally with the 'der' option
+    const isValid = p256.verify(signatureBytes, signedPayload, rawPublicKey, { format: 'der' });
+
+    if (!isValid) throw new SenderError("api_errors.invalid_signature");
+
+    // Link identity
     const existingIdentity = ctx.db.UserIdentity.identity.find(ctx.sender);
-    if (!existingIdentity) {
+    if (!existingIdentity || existingIdentity.userId !== expectedUser.userId) {
+      if (existingIdentity) ctx.db.UserIdentity.identity.delete(ctx.sender);
       ctx.db.UserIdentity.insert({
         identity: ctx.sender,
         userId: expectedUser.userId,
         lastLogin: ctx.timestamp,
       });
-    } else if (existingIdentity.userId !== expectedUser.userId) {
-      ctx.db.UserIdentity.identity.update({
-        identity: ctx.sender,
-        userId: expectedUser.userId,
-        lastLogin: ctx.timestamp,
-      });
     }
+    console.log(`[STDB] Login successful and verified for user "${expectedUser.name}"`);
   }
 );
+
+
 
 export const update_push_token = spacetimedb.reducer(
   { token: t.string() },
@@ -232,7 +322,7 @@ export const update_venue = spacetimedb.reducer(
     const userId = getUserId(ctx);
     const venue = ctx.db.Venue.venueId.find(venueId);
     if (!venue) throw new SenderError("api_errors.venue_not_found");
-    
+
     const callerMember = [...ctx.db.VenueMember.venue_member_venue_id.filter(venueId)].find(m => m.userId === userId);
     if (callerMember?.role.tag !== "owner" && callerMember?.role.tag !== "admin") {
       throw new SenderError("api_errors.update_venue_forbidden");
@@ -311,7 +401,7 @@ export const update_channel = spacetimedb.reducer(
 
     const myVenueMembership = [...ctx.db.VenueMember.venue_member_venue_id.filter(channel.venueId)].find(m => m.userId === userId);
     const isVenueOwner = myVenueMembership?.role.tag === "owner";
-    
+
     const myChannelRole = [...ctx.db.ChannelMemberRole.channel_member_role_channel_id.filter(channelId)].find(r => r.userId === userId);
     const isChannelOwner = myChannelRole?.role.tag === "owner";
     const isChannelAdmin = myChannelRole?.role.tag === "admin";
@@ -493,7 +583,7 @@ export const set_venue_role = spacetimedb.reducer(
 
     // RULE: Admins cannot demote another admin (or owner obviously)
     if (isVenueAdmin && !isVenueOwner && (getRoleRank(targetCurrentRole) >= getRoleRank("admin"))) {
-       throw new SenderError("api_errors.cannot_demote_same_role");
+      throw new SenderError("api_errors.cannot_demote_same_role");
     }
 
     // RULE: Admin cannot grant "owner" or "admin" to others
@@ -551,7 +641,7 @@ export const set_channel_role = spacetimedb.reducer(
 
     // RULE: Admins cannot demote another admin
     if (myChannelRole === "admin" && !isChannelOwner && (getRoleRank(targetCurrentRole) >= getRoleRank("admin"))) {
-       throw new SenderError("api_errors.cannot_demote_same_role");
+      throw new SenderError("api_errors.cannot_demote_same_role");
     }
 
     // RULE: Admin cannot grant "owner" or "admin" to others
@@ -645,7 +735,7 @@ function assertChannelManager(ctx: any, channelId: bigint): void {
   const venueId = ch.venueId;
   const venue = ctx.db.Venue.venueId.find(venueId);
   if (!venue) throw new SenderError("api_errors.venue_not_found");
-  
+
   const myVenueMembership = [...ctx.db.VenueMember.venue_member_venue_id.filter(venueId)].find(m => m.userId === userId);
   if (myVenueMembership?.role.tag === "owner") return;
 
@@ -709,7 +799,7 @@ export const send_message = spacetimedb.reducer(
     }
 
     const myVenueMembership = [...ctx.db.VenueMember.venue_member_venue_id.filter(ch.venueId)].find(m => m.userId === userId);
-    
+
     const myChannelRoleRow = [...ctx.db.ChannelMemberRole.channel_member_role_channel_id.filter(channelId)].find(r => r.userId === userId);
     const userRole = myChannelRoleRow?.role.tag;
     const isOwner = myVenueMembership?.role.tag === "owner" || userRole === "owner";
@@ -974,7 +1064,7 @@ export const skip_missed_messages = spacetimedb.reducer(
     if (myDevices.length === 0) return;
 
     const myDisplayIds = myDevices.map(d => d.displayId);
-    
+
     // 2. Find all 'Queued' statuses for these displays that were sent before the app started
     // We use a small buffer (1s = 1,000,000 micros) to avoid racing with messages sent exactly at startup
     const buffer = 1000000n;

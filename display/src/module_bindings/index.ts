@@ -90,6 +90,7 @@ import MessageViewRow from "./message_view_table";
 import NotificationFilterRow from "./notification_filter_table";
 import NotificationFilterViewRow from "./notification_filter_view_table";
 import UserRow from "./user_table";
+import UserAuthRow from "./user_auth_table";
 import UserIdentityRow from "./user_identity_table";
 import UserIdentityViewRow from "./user_identity_view_table";
 import UserViewRow from "./user_view_table";
@@ -244,9 +245,6 @@ const tablesSchema = __schema({
       { accessor: 'user_name', name: 'user_name_idx_btree', algorithm: 'btree', columns: [
         'name',
       ] },
-      { accessor: 'user_passkey_credential_id', name: 'user_passkey_credential_id_idx_btree', algorithm: 'btree', columns: [
-        'passkeyCredentialId',
-      ] },
       { accessor: 'userId', name: 'user_user_id_idx_btree', algorithm: 'btree', columns: [
         'userId',
       ] },
@@ -255,6 +253,20 @@ const tablesSchema = __schema({
       { name: 'user_user_id_key', constraint: 'unique', columns: ['userId'] },
     ],
   }, UserRow),
+  UserAuth: __table({
+    name: 'user_auth',
+    indexes: [
+      { accessor: 'user_auth_credential_id', name: 'user_auth_passkey_credential_id_idx_btree', algorithm: 'btree', columns: [
+        'passkeyCredentialId',
+      ] },
+      { accessor: 'userId', name: 'user_auth_user_id_idx_btree', algorithm: 'btree', columns: [
+        'userId',
+      ] },
+    ],
+    constraints: [
+      { name: 'user_auth_user_id_key', constraint: 'unique', columns: ['userId'] },
+    ],
+  }, UserAuthRow),
   UserIdentity: __table({
     name: 'user_identity',
     indexes: [

@@ -24,6 +24,7 @@
     "name_placeholder": "Seu Nome Completo",
     "complete_signup": "Criar Chave de Acesso",
     "saving": "Salvando...",
+    "new_passkey_name": "Nova Chave de Acesso",
     "loading": "Sincronizando...",
     "error_login": "Erro durante o login",
     "error_update_name": "Erro ao atualizar nome"
@@ -377,6 +378,8 @@
   },
   "api_errors": {
     "not_logged_in": "Sessão não iniciada",
+    "identity_already_registered": "Este dispositivo já está vinculado a outra conta.",
+    "passkey_already_registered": "Esta chave de acesso já está registrada em outra conta.",
     "session_expired": "Sessão expirada. Por favor, entre novamente.",
     "invalid_pin": "Este PIN é inválido ou expirou",
     "change_name_forbidden": "Você só tem permissão para alterar seu próprio nome.",
@@ -432,7 +435,10 @@
     "cannot_demote_last_owner": "Você não pode se rebaixar — você é o único proprietário restante deste local/canal.",
     "cannot_demote_same_role": "Permissões insuficientes para rebaixar outro usuário com função igual ou superior à sua.",
     "cannot_block_owner": "Você não pode bloquear um proprietário.",
-    "cannot_unblock_self": "Você não pode desbloquear a si mesmo."
+    "cannot_unblock_self": "Você não pode desbloquear a si mesmo.",
+    "invalid_attestation": "Dados da Passkey estão inválidos",
+    "invalid_challenge": "O desafio de segurança expirou ou é inválido. Por favor, tente novamente.",
+    "invalid_signature": "Falha na verificação da Passkey."
   },
   "settings": {
     "title": "Configurações",
