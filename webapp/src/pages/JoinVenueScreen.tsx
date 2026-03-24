@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { useTable, useReducer } from 'spacetimedb/react';
 import { tables, reducers } from '../module_bindings/index.ts';
@@ -12,22 +12,13 @@ export const JoinVenueScreen = () => {
   const { venueLink, token } = useParams<{ venueLink: string, token: string }>();
   const navigate = useNavigate();
   const { user, isLoggedIn } = useAuth();
-
-  // useReadyTable latches ready=true permanently once the first snapshot arrives,
-  // preventing flicker when other webapps trigger subscription re-evaluations
+  // Subscription ready state
   const [venues, venuesReady] = useReadyTable(tables.VenueView);
   const [venueMembers] = useTable(tables.VenueMemberView);
   const joinVenue = useReducer(reducers.joinVenue);
 
   const [loading, setLoading] = useState(false);
   const [errorText, setErrorText] = useState('');
-
-  // Redirect unauthenticated users — must be in useEffect to avoid "update during render"
-  useEffect(() => {
-    if (!isLoggedIn) {
-      navigate(`/login?redirect=/join/${venueLink}/${token}`, { replace: true });
-    }
-  }, [isLoggedIn, navigate, venueLink, token]);
 
   if (!isLoggedIn || !user) {
     return null;
