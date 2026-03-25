@@ -10,14 +10,13 @@
   },
   "login": {
     "title": "Canal4",
-    "signin_email": "Sign-in via passkey",
     "new_here": "I'm new here",
     "have_account": "I have an account",
     "email_placeholder": "Your email address",
     "continue": "Continue",
     "connecting": "Connecting...",
     "error_passkey": "Passkey authentication failed",
-    "passkey_cancelled": "Passkey operation cancelled",
+    "passkey_cancelled": "The operation either timed out or was not allowed.",
     "passkey_not_supported": "Passkeys are not supported in this browser.",
     "name_prompt": "What should we call you?",
     "name_helper": "We'll use this name for your profile and notifications. You can change this later.",
@@ -27,7 +26,11 @@
     "new_passkey_name": "New Passkey",
     "loading": "Synchronizing...",
     "error_login": "Error during login",
-    "error_update_name": "Error updating name"
+    "error_update_name": "Error updating name",
+    "passkey_no_identity": "No identity found for passkey operation.",
+    "passkey_challenge_timeout": "Timed out waiting for security challenge.",
+    "upgrade_button": "Update Account",
+    "upgrade_user_handle": "Upgraded User"
   },
   "nav": {
     "venues": "Venues",
@@ -438,7 +441,17 @@
     "cannot_unblock_self": "You cannot unblock yourself.",
     "invalid_attestation": "Invalid Passkey data",
     "invalid_challenge": "The security challenge has expired or is invalid. Please try again.",
-    "invalid_signature": "Passkey verification failed."
+    "invalid_signature": "Passkey verification failed.",
+    "challenge_not_found": "Security challenge not found.",
+    "challenge_expired": "Security challenge has expired.",
+    "invalid_client_data_type": "Invalid WebAuthn client data type.",
+    "user_not_present": "User presence not detected during authentication.",
+    "user_not_verified": "User identity could not be verified by the passkey.",
+    "invalid_rp_id": "Security error: Origin mismatch.",
+    "invalid_public_key": "Failed to decode the passkey public key.",
+    "invalid_name_length": "Name must be between 1 and 64 characters.",
+    "grandfathered_passkey": "Your account uses an old security system. Please click Upgrade to secure it.",
+    "error_upgrade": "Upgrade failed. Please try again."
   },
   "settings": {
     "title": "Canal4 Display Settings",

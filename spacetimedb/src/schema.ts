@@ -30,6 +30,7 @@ export const User = table(
     public: false,
     indexes: [
       { name: "user_name", accessor: "user_name", algorithm: "btree", columns: ["name"] },
+      { name: "user_passkey_credential_id", accessor: "user_passkey_credential_id", algorithm: "btree", columns: ["passkeyCredentialId"] },
     ] as const,
   },
   {
@@ -61,12 +62,31 @@ export const UserIdentity = table(
   {
     name: "user_identity",
     public: false,
-    indexes: [{ name: "user_identity_user_id", accessor: "user_identity_user_id", algorithm: "btree", columns: ["userId"] }] as const,
+    indexes: [
+      { name: "user_identity_user_id", accessor: "user_identity_user_id", algorithm: "btree", columns: ["userId"] }
+    ] as const,
   },
   {
     identity: t.identity().primaryKey(),
     userId: t.u64(),
     lastLogin: t.timestamp(),
+  }
+);
+
+/**
+ * Stores a short-lived, server-generated random challenge for WebAuthn ceremonies.
+ * Keyed by identity so each connection gets exactly one pending challenge at a time.
+ * Expires after 2 minutes.
+ */
+export const PasskeyChallenge = table(
+  { 
+    name: "passkey_challenge", 
+    public: false,
+  },
+  {
+    identity: t.identity().primaryKey(),
+    challenge: t.string(), // base64url-encoded 32 random bytes
+    expiresAt: t.timestamp(),
   }
 );
 
@@ -268,6 +288,7 @@ const spacetimedb = schema({
   User,
   UserAuth,
   UserIdentity,
+  PasskeyChallenge,
   Venue,
   Channel,
   VenueMember,
@@ -286,28 +307,35 @@ const spacetimedb = schema({
 // Views
 export const UserView = spacetimedb.view({ name: "user_view", public: true }, t.array(User.rowType), (ctx) => {
   const results = new Map<bigint, any>();
+  if (!ctx.sender) return [];
+
+  const senderHex = ctx.sender.toHexString();
 
   // User Case
-  const ui = ctx.db.UserIdentity.identity.find(ctx.sender);
-  if (ui) {
-    const self = ctx.db.User.userId.find(ui.userId);
-    if (self) results.set(self.userId, self);
-    for (const m of ctx.db.VenueMember.venue_member_user_id.filter(ui.userId)) {
-      for (const otherMember of ctx.db.VenueMember.venue_member_venue_id.filter(m.venueId)) {
-        if (!results.has(otherMember.userId)) {
-          const u = ctx.db.User.userId.find(otherMember.userId);
-          if (u) results.set(u.userId, u);
+  for (const ui of ctx.db.UserIdentity) {
+    if (ui.identity.toHexString() === senderHex) {
+      const self = ctx.db.User.userId.find(ui.userId);
+      if (self) results.set(self.userId, self);
+      for (const m of ctx.db.VenueMember.venue_member_user_id.filter(ui.userId)) {
+        for (const otherMember of ctx.db.VenueMember.venue_member_venue_id.filter(m.venueId)) {
+          if (!results.has(otherMember.userId)) {
+            const u = ctx.db.User.userId.find(otherMember.userId);
+            if (u) results.set(u.userId, u);
+          }
         }
       }
+      break;
     }
   }
 
   // Display Case
-  for (const d of ctx.db.DisplayDevice.display_device_identity.filter(ctx.sender)) {
-    for (const vm of ctx.db.VenueMember.venue_member_venue_id.filter(d.venueId)) {
-      if (!results.has(vm.userId)) {
-        const u = ctx.db.User.userId.find(vm.userId);
-        if (u) results.set(u.userId, u);
+  for (const d of ctx.db.DisplayDevice) {
+    if (d.identity.toHexString() === senderHex) {
+      for (const vm of ctx.db.VenueMember.venue_member_venue_id.filter(d.venueId)) {
+        if (!results.has(vm.userId)) {
+          const u = ctx.db.User.userId.find(vm.userId);
+          if (u) results.set(u.userId, u);
+        }
       }
     }
   }
@@ -315,23 +343,45 @@ export const UserView = spacetimedb.view({ name: "user_view", public: true }, t.
   return Array.from(results.values());
 });
 
-export const UserIdentityView = spacetimedb.view({ name: "user_identity_view", public: true }, t.array(UserIdentity.rowType), (ctx) => {
-  const ui = ctx.db.UserIdentity.identity.find(ctx.sender);
-  return ui ? [ui] : [];
+export const UserIdentitySelfView = spacetimedb.view({ name: "user_identity_self_view", public: true }, t.array(UserIdentity.rowType), (ctx) => {
+  if (!ctx.sender) return [];
+  const senderHex = ctx.sender.toHexString();
+  for (const ui of ctx.db.UserIdentity) {
+    if (ui.identity.toHexString() === senderHex) return [ui];
+  }
+  return [];
+});
+
+/**
+ * Each client can only see their own pending passkey challenge.
+ */
+export const PasskeyChallengeSelfView = spacetimedb.view({ name: "passkey_challenge_self_view", public: true }, t.array(PasskeyChallenge.rowType), (ctx) => {
+  if (!ctx.sender) return [];
+  const senderHex = ctx.sender.toHexString();
+  for (const ch of ctx.db.PasskeyChallenge) {
+    if (ch.identity.toHexString() === senderHex) return [ch];
+  }
+  return [];
 });
 
 export const VenueView = spacetimedb.view({ name: "venue_view", public: true }, t.array(Venue.rowType), (ctx) => {
   const results = new Set<bigint>();
+  if (!ctx.sender) return [];
+  const senderHex = ctx.sender.toHexString();
 
-  const ui = ctx.db.UserIdentity.identity.find(ctx.sender);
-  if (ui) {
-    for (const m of ctx.db.VenueMember.venue_member_user_id.filter(ui.userId)) {
-      results.add(m.venueId);
+  for (const ui of ctx.db.UserIdentity) {
+    if (ui.identity.toHexString() === senderHex) {
+      for (const m of ctx.db.VenueMember.venue_member_user_id.filter(ui.userId)) {
+        results.add(m.venueId);
+      }
+      break;
     }
   }
 
-  for (const d of ctx.db.DisplayDevice.display_device_identity.filter(ctx.sender)) {
-    results.add(d.venueId);
+  for (const d of ctx.db.DisplayDevice) {
+    if (d.identity.toHexString() === senderHex) {
+      results.add(d.venueId);
+    }
   }
 
   const finalVenues = [];
@@ -344,19 +394,27 @@ export const VenueView = spacetimedb.view({ name: "venue_view", public: true }, 
 
 export const ChannelView = spacetimedb.view({ name: "channel_view", public: true }, t.array(Channel.rowType), (ctx) => {
   const venueIds = new Set<bigint>();
-  const ui = ctx.db.UserIdentity.identity.find(ctx.sender);
-  if (ui) {
-    for (const m of ctx.db.VenueMember.venue_member_user_id.filter(ui.userId)) {
-      venueIds.add(m.venueId);
+  if (!ctx.sender) return [];
+  const senderHex = ctx.sender.toHexString();
+
+  for (const ui of ctx.db.UserIdentity) {
+    if (ui.identity.toHexString() === senderHex) {
+      for (const m of ctx.db.VenueMember.venue_member_user_id.filter(ui.userId)) {
+        venueIds.add(m.venueId);
+      }
+      break;
     }
   }
-  for (const d of ctx.db.DisplayDevice.display_device_identity.filter(ctx.sender)) {
-    venueIds.add(d.venueId);
+
+  for (const d of ctx.db.DisplayDevice) {
+    if (d.identity.toHexString() === senderHex) {
+      venueIds.add(d.venueId);
+    }
   }
 
   const results = [];
-  for (const id of venueIds) {
-    for (const c of ctx.db.Channel.channel_venue_id.filter(id)) {
+  for (const vId of venueIds) {
+    for (const c of ctx.db.Channel.channel_venue_id.filter(vId)) {
       results.push(c);
     }
   }

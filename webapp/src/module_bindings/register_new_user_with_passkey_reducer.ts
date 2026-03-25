@@ -13,5 +13,6 @@ import {
 export default {
   credentialId: __t.string(),
   attestationObject: __t.string(),
+  clientDataJson: __t.string(),
   name: __t.string(),
 };

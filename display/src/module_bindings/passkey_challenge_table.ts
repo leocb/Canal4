@@ -10,9 +10,8 @@ import {
   type Infer as __Infer,
 } from "spacetimedb";
 
-export default {
-  credentialId: __t.string(),
-  attestationObject: __t.string(),
-  clientDataJson: __t.string(),
-  name: __t.string(),
-};
+export default __t.row({
+  identity: __t.identity().primaryKey(),
+  challenge: __t.string(),
+  expiresAt: __t.timestamp().name("expires_at"),
+});

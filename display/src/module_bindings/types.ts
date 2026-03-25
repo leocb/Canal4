@@ -143,6 +143,16 @@ export type NotificationFilterType = __Infer<typeof NotificationFilterType>;
 export const NotificationFilterView = __t.object("NotificationFilterView", {});
 export type NotificationFilterView = __Infer<typeof NotificationFilterView>;
 
+export const PasskeyChallenge = __t.object("PasskeyChallenge", {
+  identity: __t.identity(),
+  challenge: __t.string(),
+  expiresAt: __t.timestamp(),
+});
+export type PasskeyChallenge = __Infer<typeof PasskeyChallenge>;
+
+export const PasskeyChallengeSelfView = __t.object("PasskeyChallengeSelfView", {});
+export type PasskeyChallengeSelfView = __Infer<typeof PasskeyChallengeSelfView>;
+
 export const User = __t.object("User", {
   userId: __t.u64(),
   email: __t.option(__t.string()),
@@ -167,8 +177,8 @@ export const UserIdentity = __t.object("UserIdentity", {
 });
 export type UserIdentity = __Infer<typeof UserIdentity>;
 
-export const UserIdentityView = __t.object("UserIdentityView", {});
-export type UserIdentityView = __Infer<typeof UserIdentityView>;
+export const UserIdentitySelfView = __t.object("UserIdentitySelfView", {});
+export type UserIdentitySelfView = __Infer<typeof UserIdentitySelfView>;
 
 export const UserView = __t.object("UserView", {});
 export type UserView = __Infer<typeof UserView>;

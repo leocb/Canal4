@@ -19,8 +19,9 @@ export const LoginScreen = () => {
   const [view, setView] = useState<'selection' | 'name'>('selection');
 
   const updateUserName = useReducer(reducers.updateUserName);
-  const { createPasskey, authenticatePasskey } = usePasskeys();
-  
+  const { createPasskey, authenticatePasskey, upgradePasskey, lastCredentialId } = usePasskeys();
+  const [isGrandfathered, setIsGrandfathered] = useState(false);
+  const [grandfatheredName, setGrandfatheredName] = useState<string>('');
   const [showMenu, setShowMenu] = useState(false);
   const menuRef = useRef<HTMLDivElement>(null);
 
@@ -44,6 +45,13 @@ export const LoginScreen = () => {
     }
   }, [isLoggedIn, user?.name, navigate, redirect]);
 
+  // Check for WebAuthn support
+  useEffect(() => {
+    if (!window.PublicKeyCredential) {
+      setErrorText(t('login.passkey_not_supported'));
+    }
+  }, [t]);
+
   const handleNewUser = async () => {
     setErrorText('');
     setView('name');
@@ -53,11 +61,32 @@ export const LoginScreen = () => {
     setErrorText('');
     setLoading(true);
     try {
-      await authenticatePasskey(identity);
-      // once it returns, if successful, useEffect will handle navigation
+      await authenticatePasskey(identity ?? undefined);
+    } catch (err: any) {
+      if (err.message.startsWith('api_errors.grandfathered_passkey')) {
+        const parts = err.message.split(':');
+        const name = parts.length > 1 ? parts[1] : '';
+        setGrandfatheredName(name);
+        setIsGrandfathered(true);
+        setErrorText(t('api_errors.grandfathered_passkey'));
+      } else if (err.message !== 'login.passkey_cancelled') {
+        setErrorText(t(err.message) || t('login.error_passkey'));
+      }
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleUpgrade = async () => {
+    if (!lastCredentialId) return;
+    setErrorText('');
+    setLoading(true);
+    try {
+      await upgradePasskey(lastCredentialId, grandfatheredName);
+      // navigation handled by useEffect when user model arrives
     } catch (err: any) {
       if (err.message !== 'login.passkey_cancelled') {
-        setErrorText(t(err.message) || t('login.error_passkey'));
+        setErrorText(t(err.message) || t('login.error_upgrade'));
       }
     } finally {
       setLoading(false);
@@ -79,11 +108,9 @@ export const LoginScreen = () => {
         });
       } else {
         // New user: create passkey with this name
-        console.log(`[Login] Creating passkey for new user: ${fullName.trim()}`);
-        await createPasskey(fullName.trim(), identity);
+        await createPasskey(fullName.trim(), identity ?? undefined);
       }
     } catch (err: any) {
-      console.error("[Login] Error during name submission/passkey creation:", err);
       setLoading(false);
       if (err.message !== 'login.passkey_cancelled') {
         setErrorText(t(err.message) || t('login.error_passkey') || t('login.error_update_name'));
@@ -139,28 +166,51 @@ export const LoginScreen = () => {
                 {t('login.new_here')}
              </button>
 
-             <button 
-                className="secondary-button"
-                onClick={handleHaveAccount}
-                disabled={loading || !connected}
-                style={{ 
-                    display: 'flex', 
-                    alignItems: 'center', 
-                    justifyContent: 'center', 
-                    gap: '12px', 
-                    padding: '18px',
-                    fontSize: '1.1rem',
-                    background: 'rgba(255,255,255,0.05)',
-                    border: '1px solid rgba(255,255,255,0.1)',
-                    backdropFilter: 'blur(10px)',
-                    transition: 'background 0.2s'
-                }}
-                onMouseEnter={(e) => { e.currentTarget.style.background = 'rgba(255,255,255,0.1)'; }}
-                onMouseLeave={(e) => { e.currentTarget.style.background = 'rgba(255,255,255,0.05)'; }}
-             >
-                {loading ? <Loader2 className="animate-spin" size={24} /> : <LogIn size={24} />}
-                {t('login.have_account')}
-             </button>
+             {isGrandfathered ? (
+               <button 
+                 className="primary-button"
+                 onClick={handleUpgrade}
+                 disabled={loading || !connected || !lastCredentialId}
+                 style={{ 
+                     display: 'flex', 
+                     alignItems: 'center', 
+                     justifyContent: 'center', 
+                     gap: '12px', 
+                     padding: '18px',
+                     fontSize: '1.1rem',
+                     background: 'var(--success-color)', // Green for success/upgrade
+                     border: 'none',
+                     boxShadow: '0 4px 15px rgba(20, 200, 20, 0.2)',
+                     transition: 'transform 0.2s, box-shadow 0.2s'
+                 }}
+               >
+                 {loading ? <Loader2 className="animate-spin" size={24} /> : <LogIn size={24} />}
+                 {t('login.upgrade_button')}
+               </button>
+             ) : (
+               <button 
+                 className="secondary-button"
+                 onClick={handleHaveAccount}
+                 disabled={loading || !connected}
+                 style={{ 
+                     display: 'flex', 
+                     alignItems: 'center', 
+                     justifyContent: 'center', 
+                     gap: '12px', 
+                     padding: '18px',
+                     fontSize: '1.1rem',
+                     background: 'rgba(255,255,255,0.05)',
+                     border: '1px solid rgba(255,255,255,0.1)',
+                     backdropFilter: 'blur(10px)',
+                     transition: 'background 0.2s'
+                 }}
+                 onMouseEnter={(e) => { e.currentTarget.style.background = 'rgba(255,255,255,0.1)'; }}
+                 onMouseLeave={(e) => { e.currentTarget.style.background = 'rgba(255,255,255,0.05)'; }}
+               >
+                 {loading ? <Loader2 className="animate-spin" size={24} /> : <LogIn size={24} />}
+                 {t('login.have_account')}
+               </button>
+             )}
 
              {!connected && (
                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px', color: 'var(--text-secondary)', fontSize: '0.9rem', marginTop: '8px' }}>
@@ -184,6 +234,7 @@ export const LoginScreen = () => {
               value={fullName}
               onChange={(e) => setFullName(e.target.value)}
               required
+              maxLength={64}
               disabled={loading}
               autoFocus
             />

@@ -5,7 +5,7 @@ import { useReadyTable } from './useReadyTable';
 export function useAuth() {
   const { isActive, identity } = useSpacetimeDB();
   const [users, usersReady] = useReadyTable(tables.UserView);
-  const [identities, identitiesReady] = useReadyTable(tables.UserIdentityView);
+  const [identities, identitiesReady] = useReadyTable(tables.UserIdentitySelfView);
 
   const isReady = isActive && usersReady && identitiesReady;
 

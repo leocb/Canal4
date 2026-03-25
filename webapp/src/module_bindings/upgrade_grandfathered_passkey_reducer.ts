@@ -11,8 +11,8 @@ import {
 } from "spacetimedb";
 
 export default {
-  credentialId: __t.string(),
+  oldCredentialId: __t.string(),
+  newCredentialId: __t.string(),
   attestationObject: __t.string(),
   clientDataJson: __t.string(),
-  name: __t.string(),
 };

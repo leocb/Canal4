@@ -11,6 +11,7 @@ import CreateChannelReducer from "../create_channel_reducer";
 import CreateDisplayPinReducer from "../create_display_pin_reducer";
 import CreateInviteTokenReducer from "../create_invite_token_reducer";
 import CreateMessageTemplateReducer from "../create_message_template_reducer";
+import CreatePasskeyChallengeReducer from "../create_passkey_challenge_reducer";
 import CreateVenueReducer from "../create_venue_reducer";
 import DeleteChannelReducer from "../delete_channel_reducer";
 import DeleteDisplayDeviceReducer from "../delete_display_device_reducer";
@@ -41,12 +42,14 @@ import UpdateMessageTemplateReducer from "../update_message_template_reducer";
 import UpdatePushTokenReducer from "../update_push_token_reducer";
 import UpdateUserNameReducer from "../update_user_name_reducer";
 import UpdateVenueReducer from "../update_venue_reducer";
+import UpgradeGrandfatheredPasskeyReducer from "../upgrade_grandfathered_passkey_reducer";
 
 export type BlockUserParams = __Infer<typeof BlockUserReducer>;
 export type CreateChannelParams = __Infer<typeof CreateChannelReducer>;
 export type CreateDisplayPinParams = __Infer<typeof CreateDisplayPinReducer>;
 export type CreateInviteTokenParams = __Infer<typeof CreateInviteTokenReducer>;
 export type CreateMessageTemplateParams = __Infer<typeof CreateMessageTemplateReducer>;
+export type CreatePasskeyChallengeParams = __Infer<typeof CreatePasskeyChallengeReducer>;
 export type CreateVenueParams = __Infer<typeof CreateVenueReducer>;
 export type DeleteChannelParams = __Infer<typeof DeleteChannelReducer>;
 export type DeleteDisplayDeviceParams = __Infer<typeof DeleteDisplayDeviceReducer>;
@@ -77,4 +80,5 @@ export type UpdateMessageTemplateParams = __Infer<typeof UpdateMessageTemplateRe
 export type UpdatePushTokenParams = __Infer<typeof UpdatePushTokenReducer>;
 export type UpdateUserNameParams = __Infer<typeof UpdateUserNameReducer>;
 export type UpdateVenueParams = __Infer<typeof UpdateVenueReducer>;
+export type UpgradeGrandfatheredPasskeyParams = __Infer<typeof UpgradeGrandfatheredPasskeyReducer>;
 

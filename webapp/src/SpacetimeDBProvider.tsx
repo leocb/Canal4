@@ -113,7 +113,8 @@ export const SpacetimeDBProvider = ({ children }: { children: ReactNode }) => {
           const sub = connection.subscriptionBuilder();
           sub.subscribe([
             tables.UserView,
-            tables.UserIdentityView,
+            tables.UserIdentitySelfView,
+            tables.PasskeyChallengeSelfView,
             tables.VenueView,
             tables.ChannelView,
             tables.VenueMemberView,

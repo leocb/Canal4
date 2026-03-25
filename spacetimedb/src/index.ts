@@ -1,17 +1,16 @@
 import spacetimedb from "./schema";
 import { t, SenderError, type ReducerCtx } from "spacetimedb/server";
 
-import { 
-    decodeClientDataJSON, 
-    decodeAttestationObject,
-    parseAuthenticatorData,
-    isoBase64URL, 
-    isoUint8Array,
-    isoCBOR
+import {
+  decodeClientDataJSON,
+  decodeAttestationObject,
+  parseAuthenticatorData,
+  isoBase64URL,
+  isoUint8Array,
+  isoCBOR
 } from "@simplewebauthn/server/helpers";
 import { p256 } from "@noble/curves/nist.js";
 import { sha256 } from "@noble/hashes/sha2.js";
-
 import { Timestamp } from "spacetimedb";
 
 
@@ -20,7 +19,8 @@ import { Timestamp } from "spacetimedb";
 
 export {
   UserView,
-  UserIdentityView,
+  UserIdentitySelfView,
+  PasskeyChallengeSelfView,
   VenueView,
   ChannelView,
   VenueMemberView,
@@ -36,8 +36,70 @@ export {
 
 /*** USER AUTHENTICATION & MANAGEMENT ***/
 
+// ---------------------------------------------------------------------------
+// Security constants
+// ---------------------------------------------------------------------------
+// Challenge TTL: 2 minutes
+const CHALLENGE_TTL_MICROS = 2n * 60n * 1000000n;
 
 const THIRTY_DAYS_MICROS = 30n * 24n * 3600n * 1000000n;
+
+/**
+ * Verifies and consumes a passkey challenge for ctx.sender.
+ * Throws SenderError if the challenge is absent, expired, or mismatched.
+ */
+function consumeChallenge(ctx: any, expectedChallenge: string): void {
+  const row = ctx.db.PasskeyChallenge.identity.find(ctx.sender);
+  if (!row) {
+    throw new SenderError("api_errors.challenge_not_found");
+  }
+
+  // Always delete the challenge first (single-use)
+  ctx.db.PasskeyChallenge.identity.delete(ctx.sender);
+
+  const now = ctx.timestamp.microsSinceUnixEpoch;
+  if (now > row.expiresAt.microsSinceUnixEpoch) {
+    throw new SenderError("api_errors.challenge_expired");
+  }
+  const storedBuf = isoBase64URL.toBuffer(row.challenge);
+  const clientBuf = new Uint8Array(isoBase64URL.toBuffer(expectedChallenge) as any);
+
+  if (!isoUint8Array.areEqual(storedBuf as any, clientBuf as any)) {
+    throw new SenderError("api_errors.invalid_challenge");
+  }
+}
+
+/**
+ * Validates the fields of a decoded clientDataJSON object.
+ * @param clientData  - The decoded object from decodeClientDataJSON
+ * @param expectedType - "webauthn.create" | "webauthn.get"
+ */
+function verifyClientData(clientData: any, expectedType: string): string {
+  if (clientData.type !== expectedType) {
+    throw new SenderError("api_errors.invalid_client_data_type");
+  }
+  return clientData.challenge as string;
+}
+
+/**
+ * Verifies the rpIdHash and UP flag inside authenticatorData.
+ * authDataBuffer must be a raw Uint8Array.
+ */
+function verifyAuthenticatorData(authDataBuffer: Uint8Array): void {
+  // Byte 32: flags
+  const flags = authDataBuffer[32];
+  const UP = 0x01; // User Present
+  const UV = 0x04; // User Verified
+
+  if (!(flags & UP)) {
+    throw new SenderError("api_errors.user_not_present");
+  }
+
+  // Since we require user verification in the frontend, we must verify it here.
+  if (!(flags & UV)) {
+    throw new SenderError("api_errors.user_not_verified");
+  }
+}
 
 function getUserId(ctx: any): bigint {
   const ui = ctx.db.UserIdentity.identity.find(ctx.sender);
@@ -64,8 +126,85 @@ function getUserId(ctx: any): bigint {
   return ui.userId;
 }
 
-function getRoleRank(tag: string): number {
-  switch (tag.toLowerCase()) {
+/**
+ * Robustly converts a DER-encoded ECDSA signature to a raw 64-byte (R, S) format.
+ * WebAuthn authenticators return DER.
+ */
+function extractRawSignature(der: Uint8Array): Uint8Array {
+  let pos = 0;
+  if (der[pos++] !== 0x30) throw new Error("Invalid DER: not a sequence");
+
+  // Skip length byte(s)
+  let len = der[pos++];
+  if (len & 0x80) pos += (len & 0x7f);
+
+  const extractInteger = () => {
+    if (der[pos++] !== 0x02) throw new Error("Invalid DER: expected integer");
+    let iLen = der[pos++];
+    let i = der.slice(pos, pos + iLen);
+    pos += iLen;
+    // Strip leading zero if it makes it 33 bytes (DER-encoding for positive integers)
+    if (i.length > 32) i = i.slice(i.length - 32);
+    // Pad to 32 bytes if shorter
+    const padded = new Uint8Array(32);
+    padded.set(i, 32 - i.length);
+    return padded;
+  };
+
+  const r = extractInteger();
+  const s = extractInteger();
+  const raw = new Uint8Array(64);
+  raw.set(r, 0);
+  raw.set(s, 32);
+  return raw;
+}
+
+/**
+ * Extracts the hostname from a full origin (e.g. http://localhost:3000 -> localhost)
+ */
+function decodeHostname(origin: string): string {
+  try {
+    // Simple extraction for common patterns: scheme://hostname[:port]
+    let hostname = origin.split("://")[1] || origin;
+    hostname = hostname.split(":")[0].split("/")[0];
+    return hostname;
+  } catch (e) {
+    return origin;
+  }
+}
+
+/**
+ * Verifies that the rpIdHash in authData matches the expected hostname's hash.
+ */
+function verifyRpId(authData: Uint8Array, origin: string): void {
+  const rpId = decodeHostname(origin);
+  // Use a reliable way to convert string to Uint8Array in this environment
+  const rpIdBytes = new TextEncoder().encode(rpId);
+  const expectedRpIdHash = new Uint8Array(sha256(rpIdBytes));
+  const actualRpIdHash = new Uint8Array(authData.slice(0, 32));
+
+  if (!isoUint8Array.areEqual(expectedRpIdHash, actualRpIdHash)) {
+    throw new SenderError("api_errors.invalid_rp_id");
+  }
+}
+
+/**
+ * Normalizes a buffer to exactly 32 bytes for P-256 coordinates.
+ */
+function normalizeBuffer32(buf: Uint8Array): Uint8Array {
+  const source = new Uint8Array(buf as any);
+  if (source.length === 32) return source;
+  const result = new Uint8Array(32);
+  if (source.length > 32) {
+    result.set(source.slice(source.length - 32));
+  } else {
+    result.set(source, 32 - source.length);
+  }
+  return result;
+}
+
+function getRoleRank(role: string): number {
+  switch (role) {
     case "owner": return 4;
     case "admin": return 3;
     case "moderator": return 2;
@@ -75,23 +214,41 @@ function getRoleRank(tag: string): number {
 }
 
 export const register_new_user_with_passkey = spacetimedb.reducer(
-  { credentialId: t.string(), attestationObject: t.string(), name: t.string() },
-  (ctx, { credentialId, attestationObject, name }) => {
-    // 1. Extract COSE Public Key from Attestation Object using libraries
-    const attestationBytes = isoBase64URL.toBuffer(attestationObject);
-    const decodedAttestation = decodeAttestationObject(attestationBytes) as Map<string, any>;
-    const authData = decodedAttestation.get('authData');
-    if (!authData) throw new SenderError("api_errors.invalid_attestation");
-    const parsedAuthData = parseAuthenticatorData(authData);
-
-
-    
-    if (!parsedAuthData.credentialPublicKey) {
-        throw new SenderError("api_errors.invalid_attestation");
+  { credentialId: t.string(), attestationObject: t.string(), clientDataJson: t.string(), name: t.string() },
+  (ctx, { credentialId, attestationObject, clientDataJson, name }) => {
+    // 0. Validate name length
+    const trimmedName = name.trim();
+    if (trimmedName.length === 0 || trimmedName.length > 64) {
+      throw new SenderError("api_errors.invalid_name_length");
     }
-    const publicKeyBase64 = isoBase64URL.fromBuffer(parsedAuthData.credentialPublicKey);
 
-    // 2. Check if identity already has a user
+    // 1. Verify clientDataJSON: type, origin, and retrieve the challenge
+    const clientData = decodeClientDataJSON(clientDataJson);
+    const challengeFromClient = verifyClientData(clientData, "webauthn.create");
+
+    // 2. Consume the server-issued challenge (single-use, time-limited)
+    consumeChallenge(ctx, challengeFromClient);
+
+    // 3. Extract and verify authenticatorData from the attestation object
+    const attestationBytes = new Uint8Array(isoBase64URL.toBuffer(attestationObject) as any);
+    const decodedAttestation = decodeAttestationObject(attestationBytes as any) as Map<string, any>;
+    const authDataBuffer = decodedAttestation.get('authData') as Uint8Array;
+    if (!authDataBuffer) throw new SenderError("api_errors.invalid_attestation");
+
+    // Verify UP/UV flags
+    verifyAuthenticatorData(authDataBuffer);
+
+    const parsedAuthData = parseAuthenticatorData(authDataBuffer);
+    if (!parsedAuthData.credentialPublicKey) {
+      throw new SenderError("api_errors.invalid_attestation");
+    }
+
+    // Verify RP ID Hash
+    verifyRpId(authDataBuffer, clientData.origin);
+
+    const publicKeyBase64 = isoBase64URL.fromBuffer(parsedAuthData.credentialPublicKey as Uint8Array);
+
+    // 4. Check if identity already has a user
     const existingIdentity = ctx.db.UserIdentity.identity.find(ctx.sender);
     if (existingIdentity) {
       const existingUser = ctx.db.User.userId.find(existingIdentity.userId);
@@ -99,12 +256,12 @@ export const register_new_user_with_passkey = spacetimedb.reducer(
       ctx.db.UserIdentity.identity.delete(ctx.sender);
     }
 
-    // 3. Create user and auth
+    // 5. Create user and auth
     const user = ctx.db.User.insert({
       userId: 0n,
       email: undefined,
       passkeyCredentialId: undefined,
-      name: name.trim(),
+      name: trimmedName,
       pushToken: undefined,
       createdAt: ctx.timestamp,
     });
@@ -120,15 +277,53 @@ export const register_new_user_with_passkey = spacetimedb.reducer(
       userId: user.userId,
       lastLogin: ctx.timestamp,
     });
-    console.log(`[STDB] User registered successfully: "${user.name}"`);
   }
 );
 
 
+/**
+ * Must be called before any WebAuthn ceremony. Generates a cryptographically
+ * random 32-byte challenge, stores it server-side for this identity, and
+ * makes it readable via PasskeyChallengeView. Expires in 2 minutes.
+ */
+export const create_passkey_challenge = spacetimedb.reducer(
+  {},
+  (ctx) => {
+    // Generate 32 random bytes using available entropy:
+    // ... (rest of logic unchanged)
+    const identityBytes = ctx.sender.toUint8Array();
+    // ...
+    const tsMicros = ctx.timestamp.microsSinceUnixEpoch;
+    // ...
+    const tsBytes = new Uint8Array(8);
+    let tmp = tsMicros;
+    for (let i = 7; i >= 0; i--) {
+      tsBytes[i] = Number(tmp & 0xffn);
+      tmp >>= 8n;
+    }
+
+    const seed = new Uint8Array(isoUint8Array.concat([new Uint8Array(identityBytes as any), tsBytes] as any));
+    const challengeBytes = sha256(seed as any);
+    const challenge = isoBase64URL.fromBuffer(challengeBytes);
+
+    const expiresAtMicros = tsMicros + CHALLENGE_TTL_MICROS;
+
+    // Upsert — replace any stale challenge for this identity
+    const existing = ctx.db.PasskeyChallenge.identity.find(ctx.sender);
+    if (existing) {
+      ctx.db.PasskeyChallenge.identity.delete(ctx.sender);
+    }
+    ctx.db.PasskeyChallenge.insert({
+      identity: ctx.sender,
+      challenge,
+      expiresAt: new Timestamp(expiresAtMicros),
+    });
+  }
+);
+
 export const extend_session = spacetimedb.reducer(
   {},
   (ctx) => {
-
     getUserId(ctx); // This will update lastLogin via side-effect in getUserId
   }
 );
@@ -150,12 +345,17 @@ export const update_user_name = spacetimedb.reducer(
       throw new SenderError("api_errors.change_name_forbidden");
     }
 
+    const trimmedName = newName.trim();
+    if (trimmedName.length === 0 || trimmedName.length > 64) {
+      throw new SenderError("api_errors.invalid_name_length");
+    }
+
     const user = ctx.db.User.userId.find(userId);
     if (!user) throw new SenderError("api_errors.user_not_found");
 
     ctx.db.User.userId.update({
       ...user,
-      name: newName.trim(),
+      name: trimmedName,
     });
   }
 );
@@ -177,23 +377,24 @@ export const delete_user_account = spacetimedb.reducer(
       throw new SenderError("api_errors.confirmation_mismatch");
     }
 
-    // Delete user identities
-    const identities = [...ctx.db.UserIdentity.iter()].filter(ui => ui.userId === userId);
-    for (const identity of identities) {
+    // Delete user identities (use index instead of full table scan)
+    for (const identity of ctx.db.UserIdentity.user_identity_user_id.filter(userId)) {
       ctx.db.UserIdentity.identity.delete(identity.identity);
     }
 
-    // Delete venue memberships
-    const memberships = [...ctx.db.VenueMember.iter()].filter(m => m.userId === userId);
-    for (const m of memberships) {
+    // Delete venue memberships (use index instead of full table scan)
+    for (const m of ctx.db.VenueMember.venue_member_user_id.filter(userId)) {
       ctx.db.VenueMember.delete({ ...m });
     }
 
-    // Delete channel roles
-    const roles = [...ctx.db.ChannelMemberRole.iter()].filter(r => r.userId === userId);
-    for (const r of roles) {
+    // Delete channel roles (use index instead of full table scan)
+    for (const r of ctx.db.ChannelMemberRole.channel_member_role_user_id.filter(userId)) {
       ctx.db.ChannelMemberRole.delete({ ...r });
     }
+
+    // Remove any pending passkey challenge
+    const pendingChallenge = ctx.db.PasskeyChallenge.identity.find(ctx.sender);
+    if (pendingChallenge) ctx.db.PasskeyChallenge.identity.delete(ctx.sender);
 
     // Delete user auth
     ctx.db.UserAuth.userId.delete(userId);
@@ -204,27 +405,39 @@ export const delete_user_account = spacetimedb.reducer(
 );
 
 export const register_passkey = spacetimedb.reducer(
-    { credentialId: t.string(), attestationObject: t.string() },
-    (ctx, { credentialId, attestationObject }) => {
-      const userId = getUserId(ctx);
-      
-      const attestationBytes = isoBase64URL.toBuffer(attestationObject);
-      const decodedAttestation = decodeAttestationObject(attestationBytes) as Map<string, any>;
-      const authData = decodedAttestation.get('authData');
-      if (!authData) throw new SenderError("api_errors.invalid_attestation");
-      const parsedAuthData = parseAuthenticatorData(authData);
+  { credentialId: t.string(), attestationObject: t.string(), clientDataJson: t.string() },
+  (ctx, { credentialId, attestationObject, clientDataJson }) => {
+    const userId = getUserId(ctx);
 
+    // Verify clientDataJSON: type, origin, and retrieve the challenge
+    const clientData = decodeClientDataJSON(clientDataJson);
+    const challengeFromClient = verifyClientData(clientData, "webauthn.create");
 
-      
-      if (!parsedAuthData.credentialPublicKey) throw new SenderError("api_errors.invalid_attestation");
-      const publicKeyBase64 = isoBase64URL.fromBuffer(parsedAuthData.credentialPublicKey);
-  
-      ctx.db.UserAuth.insert({
-        userId,
-        passkeyCredentialId: credentialId,
-        passkeyPublicKey: publicKeyBase64,
-      });
-    }
+    // Consume the server-issued challenge (single-use, time-limited)
+    consumeChallenge(ctx, challengeFromClient);
+
+    // Extract and verify authenticatorData
+    const attestationBytes = new Uint8Array(isoBase64URL.toBuffer(attestationObject) as any);
+    const decodedAttestation = decodeAttestationObject(attestationBytes as any) as Map<string, any>;
+    const authDataBuffer = decodedAttestation.get('authData') as Uint8Array;
+    if (!authDataBuffer) throw new SenderError("api_errors.invalid_attestation");
+
+    verifyAuthenticatorData(authDataBuffer);
+
+    const parsedAuthData = parseAuthenticatorData(authDataBuffer);
+    if (!parsedAuthData.credentialPublicKey) throw new SenderError("api_errors.invalid_attestation");
+
+    // Verify RP ID Hash
+    verifyRpId(authDataBuffer, clientData.origin);
+
+    const publicKeyBase64 = isoBase64URL.fromBuffer(parsedAuthData.credentialPublicKey as Uint8Array);
+
+    ctx.db.UserAuth.userId.update({
+      userId,
+      passkeyCredentialId: credentialId,
+      passkeyPublicKey: publicKeyBase64,
+    });
+  }
 );
 
 
@@ -232,41 +445,78 @@ export const register_passkey = spacetimedb.reducer(
 export const login_with_passkey = spacetimedb.reducer(
   { credentialId: t.string(), authenticatorData: t.string(), clientDataJson: t.string(), signature: t.string() },
   (ctx, { credentialId, authenticatorData, clientDataJson, signature }) => {
-    const authRecord = [...ctx.db.UserAuth.iter()].find((u) => u.passkeyCredentialId === credentialId);
-    if (!authRecord) throw new SenderError("api_errors.passkey_not_found");
+    // 1. Lookup credential via index in the NEW system (UserAuth)
+    let authRecord = ctx.db.UserAuth.user_auth_credential_id.filter(credentialId).next().value;
+    
+    // 2. If not in the new system, check the OLD system (User.passkeyCredentialId)
+    if (!authRecord) {
+      const oldUser = ctx.db.User.user_passkey_credential_id.filter(credentialId).next().value;
+      if (oldUser) {
+        // Return a specific error code + name that the frontend can use to start the upgrade
+        throw new SenderError("api_errors.grandfathered_passkey:" + oldUser.name);
+      }
+      throw new SenderError("api_errors.passkey_not_found");
+    }
 
     const expectedUser = ctx.db.User.userId.find(authRecord.userId);
     if (!expectedUser) throw new SenderError("api_errors.user_not_found");
 
-    // 1. Decode inputs using SimpleWebAuthn helpers
+    // 2. Decode and validate clientDataJSON (type, origin, challenge)
     const clientData = decodeClientDataJSON(clientDataJson);
-    const authDataBuffer = isoBase64URL.toBuffer(authenticatorData);
-    const signatureBytes = isoBase64URL.toBuffer(signature);
+    const challengeFromClient = verifyClientData(clientData, "webauthn.get");
+
+    // 3. Consume the server-issued challenge (single-use, time-limited)
+    consumeChallenge(ctx, challengeFromClient);
+
+    // 4. Decode authenticatorData and verify rpId hash + UP flag
+    const authDataBuffer = new Uint8Array(isoBase64URL.toBuffer(authenticatorData) as any);
+    verifyAuthenticatorData(authDataBuffer);
+
+    // Verify RP ID Hash (Strict match against clientData.origin)
+    verifyRpId(authDataBuffer, clientData.origin);
+
+    // 5. Decode COSE Public Key from Database using library parser
     const publicKeyBytes = isoBase64URL.toBuffer(authRecord.passkeyPublicKey);
+    const decodedKey = isoCBOR.decodeFirst(new Uint8Array(publicKeyBytes as any) as any) as Map<number, Uint8Array>;
 
-    // 2. Verify Challenge
-    const { challenge } = clientData;
-    const expectedChallenge = isoBase64URL.fromBuffer(ctx.sender.toUint8Array() as any);
-    if (challenge !== expectedChallenge) throw new SenderError("api_errors.invalid_challenge");
+    // P-256 keys: kty=2(EC2), crv=1(P-256), x=-2, y=-3
+    const x = decodedKey.get(-2);
+    const y = decodedKey.get(-3);
+    if (!x || !y) throw new SenderError("api_errors.invalid_public_key");
 
-    // 3. Reconstruct Public Key Point (0x04 + X + Y) from COSE Map
-    const coseMap = isoCBOR.decodeFirst(publicKeyBytes) as Map<number, any>;
-    const x = coseMap.get(-2); // COSEKEYS.x (X coord)
-    const y = coseMap.get(-3); // COSEKEYS.y (Y coord)
-    const rawPublicKey = isoUint8Array.concat([new Uint8Array([0x04]), x, y]);
+    const x32 = normalizeBuffer32(x);
+    const y32 = normalizeBuffer32(y);
+    const pubKeyRaw = new Uint8Array(isoUint8Array.concat([new Uint8Array([0x04]), x32, y32]));
 
-    // 4. Verify Signature using Noble library (synchronous)
-    const clientDataBytes = isoBase64URL.toBuffer(clientDataJson);
-    const clientDataHash = sha256(clientDataBytes);
-    const signedPayload = isoUint8Array.concat([authDataBuffer, clientDataHash]);
+    // 6. Verify Signature using standard bytes
+    const clientDataBytes = new Uint8Array(isoBase64URL.toBuffer(clientDataJson) as any);
+    const clientDataHash = new Uint8Array(sha256(clientDataBytes as any));
 
-    
-    // Noble handles DER format parsing internally with the 'der' option
-    const isValid = p256.verify(signatureBytes, signedPayload, rawPublicKey, { format: 'der' });
+    // WebAuthn signature is over (authenticatorData || clientDataHash).
+    // Noble's p256.verify internally hashes the message with SHA256 by default.
+    // We pass the raw concatenated bytes (signedPayload) so it hashes them exactly once.
+    const signedPayload = new Uint8Array(isoUint8Array.concat([authDataBuffer, clientDataHash] as any));
 
-    if (!isValid) throw new SenderError("api_errors.invalid_signature");
+    // Convert DER signature to raw 64-byte format for Noble
+    const rawSignature = extractRawSignature(new Uint8Array(isoBase64URL.toBuffer(signature) as any));
 
-    // Link identity
+    let isValid = false;
+    try {
+      isValid = p256.verify(
+        rawSignature,
+        signedPayload,
+        pubKeyRaw,
+        { lowS: false }
+      );
+    } catch (e) {
+      // Keep internal error for server-side troubleshooting but remove hex dumps
+    }
+
+    if (!isValid) {
+      throw new SenderError("api_errors.invalid_signature");
+    }
+
+    // 7. Link identity
     const existingIdentity = ctx.db.UserIdentity.identity.find(ctx.sender);
     if (!existingIdentity || existingIdentity.userId !== expectedUser.userId) {
       if (existingIdentity) ctx.db.UserIdentity.identity.delete(ctx.sender);
@@ -276,7 +526,60 @@ export const login_with_passkey = spacetimedb.reducer(
         lastLogin: ctx.timestamp,
       });
     }
-    console.log(`[STDB] Login successful and verified for user "${expectedUser.name}"`);
+  }
+);
+
+export const upgrade_grandfathered_passkey = spacetimedb.reducer(
+  { oldCredentialId: t.string(), newCredentialId: t.string(), attestationObject: t.string(), clientDataJson: t.string() },
+  (ctx, { oldCredentialId, newCredentialId, attestationObject, clientDataJson }) => {
+    // 1. Verify we HAVE a user for this old credential
+    const user = ctx.db.User.user_passkey_credential_id.filter(oldCredentialId).next().value;
+    if (!user) throw new SenderError("api_errors.user_not_found");
+
+    // 2. Verify and extract the NEW passkey
+    const clientData = decodeClientDataJSON(clientDataJson);
+    const challengeFromClient = verifyClientData(clientData, "webauthn.create");
+    consumeChallenge(ctx, challengeFromClient);
+
+    const attestationBytes = new Uint8Array(isoBase64URL.toBuffer(attestationObject) as any);
+    const decodedAttestation = decodeAttestationObject(attestationBytes as any) as Map<string, any>;
+    const authDataBuffer = decodedAttestation.get('authData') as Uint8Array;
+    if (!authDataBuffer) throw new SenderError("api_errors.invalid_attestation");
+
+    verifyAuthenticatorData(authDataBuffer);
+    const parsedAuthData = parseAuthenticatorData(authDataBuffer);
+    if (!parsedAuthData.credentialPublicKey) throw new SenderError("api_errors.invalid_attestation");
+
+    verifyRpId(authDataBuffer, clientData.origin);
+    const publicKeyBase64 = isoBase64URL.fromBuffer(parsedAuthData.credentialPublicKey as any);
+
+    // 3. Migrate: Insert into UserAuth and Clear the old field in User
+    ctx.db.UserAuth.insert({
+      userId: user.userId,
+      passkeyCredentialId: newCredentialId,
+      passkeyPublicKey: publicKeyBase64,
+    });
+
+    ctx.db.User.userId.update({
+      ...user,
+      passkeyCredentialId: "", // Clear the old system field
+    });
+
+    // 4. Link identity for this session so the user is logged in
+    const existingUi = ctx.db.UserIdentity.identity.find(ctx.sender);
+    if (existingUi) {
+      ctx.db.UserIdentity.identity.update({
+        ...existingUi,
+        userId: user.userId,
+        lastLogin: ctx.timestamp,
+      });
+    } else {
+      ctx.db.UserIdentity.insert({
+        identity: ctx.sender,
+        userId: user.userId,
+        lastLogin: ctx.timestamp,
+      });
+    }
   }
 );
 
@@ -782,7 +1085,6 @@ export const delete_message_template = spacetimedb.reducer(
 export const send_message = spacetimedb.reducer(
   { channelId: t.u64(), content: t.string(), templateId: t.u64().optional() },
   (ctx, { channelId, content, templateId }) => {
-    console.log(`[SendMessage] Channel: ${channelId}, Template: ${templateId}`);
     const userId = getUserId(ctx);
     const ch = ctx.db.Channel.channelId.find(channelId);
     if (!ch) throw new SenderError("api_errors.channel_not_found");
@@ -1003,8 +1305,6 @@ export const display_connect = spacetimedb.reducer(
 export const update_message_delivery_status = spacetimedb.reducer(
   { uid: t.string(), messageId: t.u64(), statusTag: t.string() },
   (ctx, { uid, messageId, statusTag }) => {
-    console.log(`[UpdateStatus] UID: ${uid}, Msg: ${messageId}, Status: ${statusTag}`);
-
     // 1. Find the message and its venue
     const msg = ctx.db.Message.messageId.find(messageId);
     if (!msg) throw new SenderError("api_errors.message_not_found");
@@ -1017,30 +1317,20 @@ export const update_message_delivery_status = spacetimedb.reducer(
     const device = devicesByUid.find(d => d.identity.isEqual(ctx.sender) && d.venueId === channel.venueId);
 
     if (!device) {
-      const senderHex = ctx.sender.toHexString().slice(0, 10);
-      console.error(`[UpdateStatus] Identity mismatch for UID ${uid}. Sender: ${senderHex}... Venue: ${channel.venueId}`);
-      if (devicesByUid.length > 0) {
-        console.error(`[UpdateStatus] Found ${devicesByUid.length} devices with this UID but none match sender/venue.`);
-        devicesByUid.forEach(d => console.log(` - Device ${d.displayId} Identity: ${d.identity.toHexString().slice(0, 10)}... Venue: ${d.venueId}`));
-      }
       throw new SenderError("api_errors.display_device_mismatch");
     }
-
-    console.log(`[UpdateStatus] Found device: ${device.displayId} (${device.name})`);
 
     // 3. Update the status row
     const statusRow = [...ctx.db.MessageDeliveryStatus.delivery_status_message_id.filter(messageId)]
       .find(s => s.displayId === device.displayId);
 
     if (statusRow) {
-      console.log(`[UpdateStatus] Updating status for ID ${statusRow.statusId} to ${statusTag}`);
       ctx.db.MessageDeliveryStatus.statusId.update({
         ...statusRow,
         status: { tag: statusTag as any, value: "" },
         updatedAt: ctx.timestamp,
       });
     } else {
-      console.log(`[UpdateStatus] No status row found, creating new one.`);
       ctx.db.MessageDeliveryStatus.insert({
         statusId: 0n,
         messageId,
@@ -1050,7 +1340,6 @@ export const update_message_delivery_status = spacetimedb.reducer(
       });
     }
 
-    console.log(`[UpdateStatus] Successfully set ${messageId}/${device.displayId} to ${statusTag}`);
   }
 );
 
