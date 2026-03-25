@@ -148,20 +148,6 @@ export const ChannelScreen = () => {
   const connectedDevices = (displayDevices as any[]).filter(d => d.venueId === venue.venueId);
   const hasDevices = connectedDevices.length > 0;
 
-  const getNodeStatus = (device: any): 'online' | 'unstable' | 'offline' => {
-    if (!device.lastConnectedAt) return 'offline';
-    try {
-      const lastActive = Number(BigInt(device.lastConnectedAt.microsSinceUnixEpoch) / 1000n);
-      const now = Date.now();
-      const diff = now - lastActive;
-      if (diff < 7000) return 'online';
-      if (diff < 17000) return 'unstable';
-      return 'offline';
-    } catch {
-      return 'offline';
-    }
-  };
-
   const getDeliveryStatus = (messageId: bigint, deviceId: bigint) => {
     const list = Array.from(deliveryStatuses || []);
     const mid = BigInt(messageId);
@@ -200,61 +186,6 @@ export const ChannelScreen = () => {
 
 
 
-  const NodeIndicator = ({ device }: { device: any }) => {
-    const status = getNodeStatus(device);
-    const lastTime = device.lastConnectedAt?.microsSinceUnixEpoch?.toString();
-
-    const color = status === 'online' ? '#10B981' : status === 'unstable' ? '#F59E0B' : '#64748b';
-    const shadowSize = status === 'unstable' ? '8px' : '8px';
-    const shadowOpacity = status === 'unstable' ? '0.5' : '0.4';
-    const shadowColor = status === 'online' ? `rgba(16,185,129,${shadowOpacity})` : status === 'unstable' ? `rgba(245,158,11,${shadowOpacity})` : 'transparent';
-
-    // We use the lastConnectedAt value as a key to trigger the pulse-ring animation whenever it updates
-    return (
-      <div style={{ position: 'relative', width: '8px', height: '8px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-        {status === 'online' && (
-          <div key={lastTime} className="pulse-ring" />
-        )}
-        <div style={{
-          width: '8px', height: '8px', borderRadius: '50%',
-          background: color,
-          boxShadow: status !== 'offline' ? `0 0 ${shadowSize} ${shadowColor}` : 'none',
-          zIndex: 1
-        }} />
-      </div>
-    );
-  };
-
-  const StatusIcon = ({ status, nodeStatus, deviceName }: { status: string | undefined, nodeStatus: 'online' | 'unstable' | 'offline', deviceName: string }) => {
-    if (nodeStatus === 'offline') {
-      return (
-        <span title={`${deviceName}: ${t('node_status.offline')}`}>
-          <WifiOff size={14} style={{ color: 'var(--text-secondary)', opacity: 0.5 }} />
-        </span>
-      );
-    }
-
-    if (!status) {
-      return <span title={t('node_status.unknown')}><Clock size={14} style={{ color: 'rgba(255,255,255,0.1)' }} /></span>;
-    }
-
-    switch (status) {
-      case 'Queued':
-        return <span title={`${deviceName}: ${t('node_status.waiting')}`}><Clock size={14} style={{ color: '#94A3B8' }} /></span>;
-      case 'InProgress':
-        return <span title={`${deviceName}: ${t('node_status.in_progress')}`}><Play size={14} style={{ color: '#3B82F6' }} /></span>;
-      case 'Shown':
-        return <span title={`${deviceName}: ${t('node_status.shown')}`}><CheckCircle2 size={14} style={{ color: '#10B981' }} /></span>;
-      case 'Unavailable':
-        return <span title={`${deviceName}: ${t('node_status.unavailable')}`}><AlertCircle size={14} style={{ color: '#F59E0B' }} /></span>;
-      case 'Skipped':
-        return <span title={`${deviceName}: ${t('node_status.skipped')}`}><AlertCircle size={14} style={{ color: '#F59E0B' }} /></span>;
-      case 'Cancelled':
-        return <span title={`${deviceName}: ${t('node_status.deleted')}`}><XCircle size={14} style={{ color: '#EF4444' }} /></span>;
-      default:
-        return <span title={`${deviceName}: ${status}`}><Clock size={14} style={{ color: 'rgba(255,255,255,0.2)' }} /></span>;
-    }
-  };
 
 
 
@@ -443,6 +374,7 @@ export const ChannelScreen = () => {
                             status={getDeliveryStatus(msg.messageId, d.displayId)}
                             nodeStatus={getNodeStatus(d)}
                             deviceName={d.name}
+                            t={t}
                           />
                         ))}
                       </span>
@@ -503,4 +435,76 @@ export const ChannelScreen = () => {
       )}
     </>
   );
+};
+
+const getNodeStatus = (device: any): 'online' | 'unstable' | 'offline' => {
+  if (!device.lastConnectedAt) return 'offline';
+  try {
+    const lastActive = Number(BigInt(device.lastConnectedAt.microsSinceUnixEpoch) / 1000n);
+    const now = Date.now();
+    const diff = now - lastActive;
+    if (diff < 7000) return 'online';
+    if (diff < 17000) return 'unstable';
+    return 'offline';
+  } catch {
+    return 'offline';
+  }
+};
+
+const NodeIndicator = ({ device }: { device: any }) => {
+  const status = getNodeStatus(device);
+  const lastTime = device.lastConnectedAt?.microsSinceUnixEpoch?.toString();
+
+  const color = status === 'online' ? '#10B981' : status === 'unstable' ? '#F59E0B' : '#64748b';
+  const shadowSize = status === 'unstable' ? '8px' : '8px';
+  const shadowOpacity = status === 'unstable' ? '0.5' : '0.4';
+  const shadowColor = status === 'online' ? `rgba(16,185,129,${shadowOpacity})` : status === 'unstable' ? `rgba(245,158,11,${shadowOpacity})` : 'transparent';
+
+  // We use the lastConnectedAt value as a key to trigger the pulse-ring animation whenever it updates.
+  // By defining NodeIndicator as a stable top-level component, we ensure that the animation ONLY
+  // restarts when the 'lastTime' key changes (i.e., a real heartbeat received), instead of every time the parent re-renders.
+  return (
+    <div style={{ position: 'relative', width: '8px', height: '8px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+      {status === 'online' && (
+        <div key={lastTime} className="pulse-ring" />
+      )}
+      <div style={{
+        width: '8px', height: '8px', borderRadius: '50%',
+        background: color,
+        boxShadow: status !== 'offline' ? `0 0 ${shadowSize} ${shadowColor}` : 'none',
+        zIndex: 1
+      }} />
+    </div>
+  );
+};
+
+const StatusIcon = ({ status, nodeStatus, deviceName, t }: { status: string | undefined, nodeStatus: 'online' | 'unstable' | 'offline', deviceName: string, t: any }) => {
+  if (nodeStatus === 'offline') {
+    return (
+      <span title={`${deviceName}: ${t('node_status.offline')}`}>
+        <WifiOff size={14} style={{ color: 'var(--text-secondary)', opacity: 0.5 }} />
+      </span>
+    );
+  }
+
+  if (!status) {
+    return <span title={t('node_status.unknown')}><Clock size={14} style={{ color: 'rgba(255,255,255,0.1)' }} /></span>;
+  }
+
+  switch (status) {
+    case 'Queued':
+      return <span title={`${deviceName}: ${t('node_status.waiting')}`}><Clock size={14} style={{ color: '#94A3B8' }} /></span>;
+    case 'InProgress':
+      return <span title={`${deviceName}: ${t('node_status.in_progress')}`}><Play size={14} style={{ color: '#3B82F6' }} /></span>;
+    case 'Shown':
+      return <span title={`${deviceName}: ${t('node_status.shown')}`}><CheckCircle2 size={14} style={{ color: '#10B981' }} /></span>;
+    case 'Unavailable':
+      return <span title={`${deviceName}: ${t('node_status.unavailable')}`}><AlertCircle size={14} style={{ color: '#F59E0B' }} /></span>;
+    case 'Skipped':
+      return <span title={`${deviceName}: ${t('node_status.skipped')}`}><AlertCircle size={14} style={{ color: '#F59E0B' }} /></span>;
+    case 'Cancelled':
+      return <span title={`${deviceName}: ${t('node_status.deleted')}`}><XCircle size={14} style={{ color: '#EF4444' }} /></span>;
+    default:
+      return <span title={`${deviceName}: ${status}`}><Clock size={14} style={{ color: 'rgba(255,255,255,0.2)' }} /></span>;
+  }
 };

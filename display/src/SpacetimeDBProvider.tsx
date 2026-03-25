@@ -220,7 +220,7 @@ export const SpacetimeDBProvider = ({ children }: { children: ReactNode }) => {
           tables.DisplayDeviceView,
           tables.DisplayPairingPinView,
           tables.MessageDeliveryStatusView,
-          tables.UserIdentityView
+          tables.UserIdentitySelfView
         ]);
       })
       .onConnectError((_ctx, err: any) => {

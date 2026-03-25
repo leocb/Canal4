@@ -56,19 +56,6 @@ export const DesktopDisplaySyncScreen = () => {
     );
   }
 
-  const getNodeStatus = (device: any): 'online' | 'unstable' | 'offline' => {
-    if (!device.lastConnectedAt) return 'offline';
-    try {
-      const lastActive = Number(BigInt(device.lastConnectedAt.microsSinceUnixEpoch) / 1000n);
-      const now = Date.now();
-      const diff = now - lastActive;
-      if (diff < 7000) return 'online';
-      if (diff < 17000) return 'unstable';
-      return 'offline';
-    } catch {
-      return 'offline';
-    }
-  };
 
   const handleDelete = async (device: any) => {
     if (!window.confirm(t('display_nodes.confirm_delete', { name: device.name }))) return;
@@ -90,27 +77,6 @@ export const DesktopDisplaySyncScreen = () => {
     }
   };
 
-  const NodeIndicator = ({ device }: { device: any }) => {
-    const status = getNodeStatus(device);
-    const lastTime = device.lastConnectedAt?.microsSinceUnixEpoch?.toString();
-    
-    const color = status === 'online' ? '#10B981' : status === 'unstable' ? '#F59E0B' : '#64748b';
-    const shadow = status === 'online' ? '0 0 10px rgba(16,185,129,0.5)' : status === 'unstable' ? '0 0 10px rgba(245,158,11,0.5)' : 'none';
-
-    return (
-      <div style={{ position: 'relative', width: '10px', height: '10px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-        {status === 'online' && (
-          <div key={lastTime} className="pulse-ring" />
-        )}
-        <div style={{ 
-          width: '10px', height: '10px', borderRadius: '50%', 
-          background: color,
-          boxShadow: shadow,
-          zIndex: 1
-        }} />
-      </div>
-    );
-  };
 
   return (
     <div className="app-container">
@@ -215,6 +181,45 @@ export const DesktopDisplaySyncScreen = () => {
         </div>
       </div>
 
+    </div>
+  );
+};
+
+const getNodeStatus = (device: any): 'online' | 'unstable' | 'offline' => {
+  if (!device.lastConnectedAt) return 'offline';
+  try {
+    const lastActive = Number(BigInt(device.lastConnectedAt.microsSinceUnixEpoch) / 1000n);
+    const now = Date.now();
+    const diff = now - lastActive;
+    if (diff < 7000) return 'online';
+    if (diff < 17000) return 'unstable';
+    return 'offline';
+  } catch {
+    return 'offline';
+  }
+};
+
+const NodeIndicator = ({ device }: { device: any }) => {
+  const status = getNodeStatus(device);
+  const lastTime = device.lastConnectedAt?.microsSinceUnixEpoch?.toString();
+  
+  const color = status === 'online' ? '#10B981' : status === 'unstable' ? '#F59E0B' : '#64748b';
+  const shadow = status === 'online' ? '0 0 10px rgba(16,185,129,0.5)' : status === 'unstable' ? '0 0 10px rgba(245,158,11,0.5)' : 'none';
+
+  // We use the lastConnectedAt value as a key to trigger the pulse-ring animation whenever it updates.
+  // Defining this outside the main component prevents it from remounting and restarting the animation 
+  // on every parent re-render (e.g. from the 5s timer).
+  return (
+    <div style={{ position: 'relative', width: '10px', height: '10px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+      {status === 'online' && (
+        <div key={lastTime} className="pulse-ring" />
+      )}
+      <div style={{ 
+        width: '10px', height: '10px', borderRadius: '50%', 
+        background: color,
+        boxShadow: shadow,
+        zIndex: 1
+      }} />
     </div>
   );
 };
