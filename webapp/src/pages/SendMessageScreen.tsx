@@ -53,7 +53,7 @@ export const SendMessageScreen = () => {
   const isAdmin = isOwner || roleTag === 'admin';
   const isModerator = isAdmin || roleTag === 'moderator';
 
-  const channelTemplates = templates.filter(t => t.channelId === channelIdBigInt);
+  const channelTemplates = templates.filter(t => t.channelId === channelIdBigInt).sort((a, b) => a.name.localeCompare(b.name));
   const isNodeConnected = (device: any) => {
     if (!device.lastConnectedAt) return false;
     try {

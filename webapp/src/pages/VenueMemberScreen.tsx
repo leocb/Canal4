@@ -35,7 +35,7 @@ export const VenueMemberScreen = () => {
   const isVenueAdmin = myMember?.role.tag.toLowerCase() === 'admin';
  
   // Auth check
-  const venueChannels = channels.filter(c => c.venueId === venue?.venueId);
+  const venueChannels = channels.filter(c => c.venueId === venue?.venueId).sort((a, b) => a.name.localeCompare(b.name));
   const userChannelRoles = channelRoles.filter(
     (r) => r.userId === user?.userId && venueChannels.some((c) => c.channelId === r.channelId)
   );

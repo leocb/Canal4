@@ -83,7 +83,7 @@ export const VenueChannelsScreen = () => {
     const userRoleLevel = userChannelRole ? getRoleLevel(userChannelRole) : 1;
     
     return userRoleLevel >= minRoleLevel;
-  });
+  }).sort((a, b) => a.name.localeCompare(b.name));
   const userRolesInVenue = channelRoles.filter(r =>
     r.userId === user?.userId &&
     venueChannels.some(c => c.channelId === r.channelId)

@@ -214,8 +214,14 @@ export const SettingsScreen = () => {
     return pin;
   }, [pins, machineUid]);
 
+  const getVenueName = (id: bigint) => venues.find(v => v.venueId === id)?.name ?? t('common.venue_default_name', { id: id.toString() });
+
   // This device's registration entries
-  const myDevices = devices.filter(d => d.uid === machineUid);
+  const myDevices = useMemo(() => {
+    return devices
+      .filter(d => d.uid === machineUid)
+      .sort((a, b) => getVenueName(a.venueId).localeCompare(getVenueName(b.venueId)));
+  }, [devices, machineUid, venues, t]);
 
 
   // Build full log list (last 50 messages, newest first)
@@ -230,7 +236,6 @@ export const SettingsScreen = () => {
     .sort((a, b) => Number(b.sentAt.microsSinceUnixEpoch - a.sentAt.microsSinceUnixEpoch))
     .slice(0, 50), [messages, pairedChannelIds]);
 
-  const getVenueName = (id: bigint) => venues.find(v => v.venueId === id)?.name ?? t('common.venue_default_name', { id: id.toString() });
   const getTemplateName = (id?: bigint | null) =>
     id ? (templates.find(t => t.templateId === id)?.name ?? t('common.template_default_name', { id: id.toString() })) : t('settings.logs.manual');
   const getUserName = (id: bigint) => users.find(u => u.userId === id)?.name ?? t('common.user_default_name', { id: id.toString() });

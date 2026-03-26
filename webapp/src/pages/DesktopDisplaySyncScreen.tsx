@@ -29,7 +29,7 @@ export const DesktopDisplaySyncScreen = () => {
   const venue = venues.find(v => v.link === venueLink);
   const venueIdBigInt = venue ? venue.venueId : 0n;
   
-  const venueDevices = displayDevices.filter(d => d.venueId === venueIdBigInt);
+  const venueDevices = displayDevices.filter(d => d.venueId === venueIdBigInt).sort((a, b) => a.name.localeCompare(b.name));
 
   if (!venue) {
     return (

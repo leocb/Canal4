@@ -28,7 +28,7 @@ export const VenuesListScreen = () => {
       .map(m => m.venueId)
   );
 
-  const myVenues = venues.filter(v => myVenueIds.has(v.venueId));
+  const myVenues = venues.filter(v => myVenueIds.has(v.venueId)).sort((a, b) => a.name.localeCompare(b.name));
 
   return (
     <div className="app-container">

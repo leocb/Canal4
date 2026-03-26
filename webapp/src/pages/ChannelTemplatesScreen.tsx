@@ -36,7 +36,7 @@ export const ChannelTemplatesScreen = () => {
 
   const canManageTemplates = isVenueOwner || isChannelOwner || isChannelAdmin;
 
-  const channelTemplates = templates.filter(t => t.channelId === channelIdBigInt);
+  const channelTemplates = templates.filter(t => t.channelId === channelIdBigInt).sort((a, b) => a.name.localeCompare(b.name));
 
   useEffect(() => {
     if (!isLoggedIn) {
