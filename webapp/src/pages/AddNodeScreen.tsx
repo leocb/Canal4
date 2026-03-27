@@ -107,6 +107,8 @@ export const AddNodeScreen = () => {
           />
           <input
             type="text"
+            inputMode="numeric"
+            pattern="[0-9]*"
             placeholder="000000"
             value={pin}
             onChange={e => setPin(e.target.value.replace(/\D/g, ''))}
