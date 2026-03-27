@@ -26,6 +26,12 @@ export function usePasskeys() {
   const registerPasskey = useReducer(reducers.registerPasskey);
   const createPasskeyChallenge = useReducer(reducers.createPasskeyChallenge);
   const upgradeGrandfatheredPasskey = useReducer(reducers.upgradeGrandfatheredPasskey);
+  const handleCeremonyError = (error: any) => {
+    if (error?.name === 'NotAllowedError') throw new Error('login.passkey_cancelled');
+    if (error?.name === 'AbortError') throw new Error('login.passkey_aborted');
+    if (error?.name === 'SecurityError') throw new Error('login.passkey_security_error');
+    throw error;
+  };
 
   // Subscribe to our own pending challenge (filtered server-side to our identity)
   const [challengeRows] = useReadyTable(tables.PasskeyChallengeSelfView);
@@ -118,23 +124,21 @@ export function usePasskeys() {
     };
 
     // 3. Perform the WebAuthn registration ceremony
-    let credential;
     try {
-      credential = await startRegistration({ optionsJSON: options });
+      const credential = await startRegistration({ optionsJSON: options });
+
+      // 4. Send credential + clientDataJSON to backend for verification
+      await registerNewUserWithPasskey({
+        credentialId: credential.id,
+        attestationObject: credential.response.attestationObject,
+        clientDataJson: credential.response.clientDataJSON,
+        name,
+      });
+
+      return credential;
     } catch (error: any) {
-      if (error?.name === 'NotAllowedError') throw new Error('login.passkey_cancelled');
-      throw error;
+      handleCeremonyError(error);
     }
-
-    // 4. Send credential + clientDataJSON to backend for verification
-    await registerNewUserWithPasskey({
-      credentialId: credential.id,
-      attestationObject: credential.response.attestationObject,
-      clientDataJson: credential.response.clientDataJSON,
-      name,
-    });
-
-    return credential;
   };
 
   /**
@@ -157,24 +161,22 @@ export function usePasskeys() {
     };
 
     // 3. Perform the WebAuthn authentication ceremony
-    let assertion;
     try {
-      assertion = await startAuthentication({ optionsJSON: options });
+      const assertion = await startAuthentication({ optionsJSON: options });
+
+      // 4. Send the assertion to our SpacetimeDB backend for cryptographic verification
+      lastCredentialIdRef.current = assertion.id;
+      await loginWithPasskey({
+        credentialId: assertion.id,
+        authenticatorData: assertion.response.authenticatorData,
+        clientDataJson: assertion.response.clientDataJSON,
+        signature: assertion.response.signature,
+      });
+
+      return assertion;
     } catch (error: any) {
-      if (error?.name === 'NotAllowedError') throw new Error('login.passkey_cancelled');
-      throw error;
+      handleCeremonyError(error);
     }
-
-    // 4. Send the assertion to our SpacetimeDB backend for cryptographic verification
-    lastCredentialIdRef.current = assertion.id;
-    await loginWithPasskey({
-      credentialId: assertion.id,
-      authenticatorData: assertion.response.authenticatorData,
-      clientDataJson: assertion.response.clientDataJSON,
-      signature: assertion.response.signature,
-    });
-
-    return assertion;
   };
 
   /**
@@ -212,20 +214,18 @@ export function usePasskeys() {
     };
 
     // 3. Perform ceremony
-    let credential;
     try {
-      credential = await startRegistration({ optionsJSON: options });
-    } catch (error: any) {
-      if (error?.name === 'NotAllowedError') throw new Error('login.passkey_cancelled');
-      throw error;
-    }
+      const credential = await startRegistration({ optionsJSON: options });
 
-    // 4. Register (updates existing UserAuth row)
-    await registerPasskey({
-      credentialId: credential.id,
-      attestationObject: credential.response.attestationObject,
-      clientDataJson: credential.response.clientDataJSON,
-    });
+      // 4. Register (updates existing UserAuth row)
+      await registerPasskey({
+        credentialId: credential.id,
+        attestationObject: credential.response.attestationObject,
+        clientDataJson: credential.response.clientDataJSON,
+      });
+    } catch (error: any) {
+      handleCeremonyError(error);
+    }
   };
 
   /**
@@ -264,23 +264,21 @@ export function usePasskeys() {
     };
 
     // 3. Perform registration ceremony
-    let credential;
     try {
-      credential = await startRegistration({ optionsJSON: options });
+      const credential = await startRegistration({ optionsJSON: options });
+
+      // 4. Upgrade in backend
+      await upgradeGrandfatheredPasskey({
+        oldCredentialId,
+        newCredentialId: credential.id,
+        attestationObject: credential.response.attestationObject,
+        clientDataJson: credential.response.clientDataJSON,
+      });
+
+      return credential;
     } catch (error: any) {
-      if (error?.name === 'NotAllowedError') throw new Error('login.passkey_cancelled');
-      throw error;
+      handleCeremonyError(error);
     }
-
-    // 4. Upgrade in backend
-    await upgradeGrandfatheredPasskey({
-      oldCredentialId,
-      newCredentialId: credential.id,
-      attestationObject: credential.response.attestationObject,
-      clientDataJson: credential.response.clientDataJSON,
-    });
-
-    return credential;
   };
 
 

@@ -68,7 +68,7 @@ export const LoginScreen = () => {
         const name = parts.length > 1 ? parts[1] : '';
         setGrandfatheredName(name);
         setIsGrandfathered(true);
-        setErrorText(t('api_errors.grandfathered_passkey'));
+        setErrorText(t('api_errors.grandfathered_passkey', { name }));
       } else if (err.message !== 'login.passkey_cancelled') {
         setErrorText(t(err.message) || t('login.error_passkey'));
       }
@@ -327,7 +327,7 @@ export const LoginScreen = () => {
 
       <div style={{ marginTop: '32px', fontSize: '0.8rem', color: 'var(--text-secondary)' }}>
         <a href="https://github.com/leocb" target="_blank" rel="noreferrer" style={{ color: 'inherit' }}>
-          Copyright github.com/leocb
+          {t('login.copyright')}
         </a>
       </div>
     </div>

@@ -17,6 +17,8 @@
     "connecting": "Connecting...",
     "error_passkey": "Passkey authentication failed",
     "passkey_cancelled": "The operation either timed out or was not allowed.",
+    "passkey_aborted": "The operation was aborted.",
+    "passkey_security_error": "Security error during passkey operation.",
     "passkey_not_supported": "Passkeys are not supported in this browser.",
     "name_prompt": "What should we call you?",
     "name_helper": "We'll use this name for your profile and notifications. You can change this later.",
@@ -30,7 +32,9 @@
     "passkey_no_identity": "No identity found for passkey operation.",
     "passkey_challenge_timeout": "Timed out waiting for security challenge.",
     "upgrade_button": "Update Account",
-    "upgrade_user_handle": "Upgraded User"
+    "upgrade_user_handle": "Upgraded User",
+    "error_upgrade": "Upgrade failed. Please try again.",
+    "copyright": "Made by github.com/leocb"
   },
   "nav": {
     "venues": "Venues",
@@ -450,7 +454,7 @@
     "invalid_rp_id": "Security error: Origin mismatch.",
     "invalid_public_key": "Failed to decode the passkey public key.",
     "invalid_name_length": "Name must be between 1 and 64 characters.",
-    "grandfathered_passkey": "Your account uses an old security system. Please click Upgrade to secure it.",
+    "grandfathered_passkey": "Your account ({{name}}) uses an old security system. Please click Upgrade to secure it.",
     "error_upgrade": "Upgrade failed. Please try again."
   },
   "settings": {

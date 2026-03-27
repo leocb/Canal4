@@ -17,6 +17,8 @@
     "connecting": "Conectando...",
     "error_passkey": "Falha na autenticação via Chave de Acesso",
     "passkey_cancelled": "A operação expirou ou não foi permitida.",
+    "passkey_aborted": "A operação foi cancelada.",
+    "passkey_security_error": "Erro de segurança durante a operação da chave de acesso.",
     "passkey_not_supported": "Chaves de Acesso não são suportadas neste navegador.",
     "name_prompt": "Como devemos chamar você?",
     "name_helper": "Usaremos este nome para seu perfil e notificações. Você pode alterar isso depois.",
@@ -30,7 +32,9 @@
     "passkey_no_identity": "Identidade não encontrada para operação de chave de acesso.",
     "passkey_challenge_timeout": "Tempo esgotado aguardando o desafio de segurança.",
     "upgrade_button": "Atualizar Conta",
-    "upgrade_user_handle": "Usuário Atualizado"
+    "upgrade_user_handle": "Usuário Atualizado",
+    "error_upgrade": "A atualização falhou. Tente novamente.",
+    "copyright": "Criado por github.com/leocb"
   },
   "nav": {
     "venues": "Locais",
@@ -450,7 +454,7 @@
     "invalid_rp_id": "Erro de segurança: Origem não correspondente.",
     "invalid_public_key": "Falha ao decodificar a chave pública da chave de acesso.",
     "invalid_name_length": "O nome deve ter entre 1 e 64 caracteres.",
-    "grandfathered_passkey": "Sua conta usa um sistema de segurança antigo. Clique em Atualizar para protegê-la.",
+    "grandfathered_passkey": "Sua conta ({{name}}) usa um sistema de segurança antigo. Clique em Atualizar para protegê-la.",
     "error_upgrade": "Falha na atualização. Tente novamente."
   },
   "settings": {
@@ -464,6 +468,7 @@
     "common": {
       "quit": "Fechar",
       "back": "Voltar",
+      "connecting": "Conectando...",
       "language": "Idioma",
       "venue_default_name": "Local #{{id}}",
       "template_default_name": "Modelo #{{id}}",
