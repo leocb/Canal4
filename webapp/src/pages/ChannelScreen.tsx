@@ -4,7 +4,7 @@ import { useTable, useReducer } from 'spacetimedb/react';
 import { tables, reducers } from '../module_bindings/index.ts';
 import { useReadyTable } from '../hooks/useReadyTable';
 import { useAuth } from '../hooks/useAuth';
-import { Plus, MoreVertical, Settings, Send, History, LayoutTemplate, Repeat, Trash2, UserX, Clock, Play, CheckCircle2, AlertCircle, WifiOff, Monitor, XCircle, ArrowLeft } from 'lucide-react';
+import { MoreVertical, Settings, Send, History, LayoutTemplate, Repeat, Trash2, UserX, Clock, Play, CheckCircle2, AlertCircle, WifiOff, Monitor, XCircle, ArrowLeft } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 
 export const ChannelScreen = () => {
