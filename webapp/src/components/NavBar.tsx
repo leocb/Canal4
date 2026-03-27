@@ -32,6 +32,8 @@ const NavBar = () => {
             className="hover-bg"
             onClick={() => navigate('/profile')}
             title={t('nav.profile')}
+            role="button"
+            aria-label={t('nav.profile')}
           >
             <span style={{ fontSize: '0.9rem', color: 'var(--text-secondary)', fontWeight: 500 }}>
               {user.name}

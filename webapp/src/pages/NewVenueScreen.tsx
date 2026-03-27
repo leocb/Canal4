@@ -81,6 +81,7 @@ export const NewVenueScreen = () => {
             <button 
               className="icon-button" 
               onClick={() => navigate('/venues')}
+              aria-label={t('aria.back')}
             >
               <ArrowLeft size={20} />
             </button>

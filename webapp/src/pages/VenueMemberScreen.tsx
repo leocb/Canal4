@@ -243,6 +243,7 @@ export const VenueMemberScreen = () => {
             <button 
               className="icon-button" 
               onClick={() => navigate(`/venues/${venue.link}/permissions`)}
+              aria-label={t('aria.back')}
             >
               <ArrowLeft size={20} />
             </button>

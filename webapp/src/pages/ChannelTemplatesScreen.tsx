@@ -66,6 +66,7 @@ export const ChannelTemplatesScreen = () => {
             <button 
               className="icon-button" 
               onClick={() => navigate(`/venues/${venue.link}/channels/${channel.channelId}`)}
+              aria-label={t('aria.back')}
             >
               <ArrowLeft size={20} />
             </button>
@@ -75,6 +76,7 @@ export const ChannelTemplatesScreen = () => {
             className="icon-button"
             onClick={() => navigate(`/venues/${venue.link}/channels/${channel.channelId}/templates/new`)}
             title={t('channel_templates.new_template_tooltip')}
+            aria-label={t('aria.add')}
           >
             <Plus size={20} />
           </button>

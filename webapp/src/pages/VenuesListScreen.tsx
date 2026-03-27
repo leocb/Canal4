@@ -40,6 +40,7 @@ export const VenuesListScreen = () => {
             className="icon-button"
             onClick={() => navigate('/venues/new')}
             title={t('venues_list.new_venue')}
+            aria-label={t('aria.add')}
           >
             <Plus size={20} />
           </button>

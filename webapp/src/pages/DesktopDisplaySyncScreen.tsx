@@ -86,6 +86,7 @@ export const DesktopDisplaySyncScreen = () => {
             <button 
               className="icon-button" 
               onClick={() => navigate(`/venues/${venue.link}`)}
+              aria-label={t('aria.back')}
             >
               <ArrowLeft size={20} />
             </button>
@@ -95,6 +96,7 @@ export const DesktopDisplaySyncScreen = () => {
             className="icon-button"
             onClick={() => navigate(`/venues/${venue.link}/desktop-displays/new`)}
             title={t('display_nodes.add_button')}
+            aria-label={t('aria.add')}
           >
             <Plus size={20} />
           </button>
@@ -132,6 +134,7 @@ export const DesktopDisplaySyncScreen = () => {
                         className="icon-button" 
                         onClick={() => handleEditName(device)}
                         title={t('display_nodes.rename_tooltip')}
+                        aria-label={t('aria.edit')}
                         style={{ 
                           padding: '8px', 
                           background: 'rgba(255,255,255,0.05)', 
@@ -150,6 +153,7 @@ export const DesktopDisplaySyncScreen = () => {
                         className="icon-button danger" 
                         onClick={() => handleDelete(device)}
                         title={t('display_nodes.delete_tooltip')}
+                        aria-label={t('aria.delete')}
                         style={{ 
                           padding: '8px',
                           background: 'rgba(239, 68, 68, 0.1)', 

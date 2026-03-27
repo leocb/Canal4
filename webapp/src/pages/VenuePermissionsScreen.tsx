@@ -135,6 +135,7 @@ export const VenuePermissionsScreen = () => {
             <button 
               className="icon-button" 
               onClick={() => navigate(`/venues/${venue.link}`)}
+              aria-label={t('aria.back')}
             >
               <ArrowLeft size={20} />
             </button>
@@ -149,6 +150,7 @@ export const VenuePermissionsScreen = () => {
             value={searchTerm} 
             onChange={(e) => setSearchTerm(e.target.value)}
             style={{ flex: '1 1 200px', padding: '10px 14px', borderRadius: '8px', border: '1px solid var(--surface-border)', background: 'var(--surface-color)' }}
+            aria-label={t('aria.search')}
           />
           <select 
             value={roleFilter} 

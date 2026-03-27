@@ -187,6 +187,7 @@ export const VenueChannelsScreen = () => {
               <button
                 className="icon-button"
                 onClick={() => navigate('/venues')}
+                aria-label={t('aria.back')}
               >
                 <ArrowLeft size={20} />
               </button>
@@ -197,6 +198,7 @@ export const VenueChannelsScreen = () => {
                 <button
                   className="icon-button"
                   onClick={() => setShowMenu(!showMenu)}
+                  aria-label={t('aria.toggle_menu')}
                 >
                   <MoreVertical size={20} />
                 </button>

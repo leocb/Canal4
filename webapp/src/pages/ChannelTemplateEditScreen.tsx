@@ -415,6 +415,7 @@ export const ChannelTemplateEditScreen = () => {
             <button
               className="icon-button"
               onClick={() => navigate(`/venues/${venue.link}/channels/${channel.channelId}/templates`)}
+              aria-label={t('aria.back')}
             >
               <ArrowLeft size={20} />
             </button>
@@ -425,6 +426,7 @@ export const ChannelTemplateEditScreen = () => {
               className="icon-button danger"
               onClick={() => setShowDeleteConfirm(!showDeleteConfirm)}
               title={t('template_edit.danger_zone.delete_button')}
+              aria-label={t('aria.delete')}
             >
               <Trash2 size={20} />
             </button>
@@ -516,6 +518,7 @@ export const ChannelTemplateEditScreen = () => {
                             onClick={() => handleMoveUp(idx)}
                             disabled={idx === 0}
                             title={t('common.move_up')}
+                            aria-label={t('aria.move_up')}
                           >
                             <ArrowUp size={16} />
                           </button>
@@ -525,6 +528,7 @@ export const ChannelTemplateEditScreen = () => {
                             onClick={() => handleMoveDown(idx)}
                             disabled={idx === fields.length - 1}
                             title={t('common.move_down')}
+                            aria-label={t('aria.move_down')}
                           >
                             <ArrowDown size={16} />
                           </button>
@@ -533,6 +537,7 @@ export const ChannelTemplateEditScreen = () => {
                             className="icon-button danger"
                             onClick={() => handleRemoveField(idx)}
                             title={t('template_edit.remove_field')}
+                            aria-label={t('aria.remove')}
                           >
                             <Trash2 size={16} />
                           </button>
@@ -752,7 +757,12 @@ export const ChannelTemplateEditScreen = () => {
               <button type="button" className="secondary" style={{ flex: 1 }} onClick={() => navigate(-1)} disabled={loading}>
                 {t('common.cancel')}
               </button>
-              <button type="submit" disabled={loading || !name.trim()} style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px' }} >
+              <button 
+                type="submit" 
+                disabled={loading || !name.trim()} 
+                style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px' }}
+                aria-label={t('aria.save')}
+              >
                 <Check size={18} /> {loading ? t('template_edit.saving') : t('template_edit.save_template')}
               </button>
             </div>

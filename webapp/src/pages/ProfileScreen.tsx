@@ -93,6 +93,7 @@ export const ProfileScreen = () => {
             <button 
               className="icon-button" 
               onClick={() => navigate(-1)}
+              aria-label={t('aria.back')}
             >
               <ArrowLeft size={20} />
             </button>
@@ -142,22 +143,24 @@ export const ProfileScreen = () => {
             </div>
             
             <div style={{ position: 'relative' }} ref={menuRef}>
-              <button
-                type="button"
-                className="secondary"
-                style={{
-                  width: '100%',
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'space-between',
-                  padding: '12px 16px',
-                  textAlign: 'left'
-                }}
-                onClick={() => setShowLangMenu(!showLangMenu)}
-              >
-                <span>{i18n.resolvedLanguage === 'en' ? t('languages.en') : t('languages.pt-BR')}</span>
-                <ChevronDown size={18} style={{ transform: showLangMenu ? 'rotate(180deg)' : 'none', transition: 'transform 0.2s' }} />
-              </button>
+                <button
+                  type="button"
+                  className="secondary"
+                  style={{
+                    width: '100%',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'space-between',
+                    padding: '12px 16px',
+                    textAlign: 'left'
+                  }}
+                  onClick={() => setShowLangMenu(!showLangMenu)}
+                  aria-label={t('common.language')}
+                  aria-expanded={showLangMenu}
+                >
+                  <span>{i18n.resolvedLanguage === 'en' ? t('languages.en') : t('languages.pt-BR')}</span>
+                  <ChevronDown size={18} style={{ transform: showLangMenu ? 'rotate(180deg)' : 'none', transition: 'transform 0.2s' }} />
+                </button>
 
               {showLangMenu && (
                 <div className="dropdown-menu glass-panel" style={{ 

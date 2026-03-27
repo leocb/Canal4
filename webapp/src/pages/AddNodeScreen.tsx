@@ -73,6 +73,7 @@ export const AddNodeScreen = () => {
             <button 
               className="icon-button" 
               onClick={() => navigate(-1)}
+              aria-label={t('aria.back')}
             >
               <ArrowLeft size={20} />
             </button>

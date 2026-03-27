@@ -88,6 +88,7 @@ export const VenueSettingsScreen = () => {
             <button 
               className="icon-button" 
               onClick={() => navigate(`/venues/${venue.link}`)}
+              aria-label={t('aria.back')}
             >
               <ArrowLeft size={20} />
             </button>
@@ -120,7 +121,7 @@ export const VenueSettingsScreen = () => {
               <button type="button" className="secondary" onClick={() => navigate(-1)} disabled={loading} style={{ flex: 1 }}>
                 {t('common.cancel')}
               </button>
-              <button type="submit" disabled={loading || !name.trim()} style={{ flex: 1 }}>
+              <button type="submit" disabled={loading || !name.trim()} style={{ flex: 1 }} aria-label={t('aria.save')}>
                 {loading ? t('login.saving') : t('venue_settings.confirm_button')}
               </button>
             </div>

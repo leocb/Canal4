@@ -229,6 +229,7 @@ export const ChannelScreen = () => {
               <button
                 className="icon-button"
                 onClick={() => navigate(`/venues/${venue.link}`)}
+                aria-label={t('aria.back')}
               >
                 <ArrowLeft size={20} />
               </button>
@@ -240,7 +241,7 @@ export const ChannelScreen = () => {
               {/* 3-dot menu — only shown if user can manage the channel */}
               {canUpdate && (
                 <div style={{ position: 'relative' }} ref={menuRef}>
-                  <button className="icon-button" onClick={() => setShowMenu(s => !s)}>
+                  <button className="icon-button" onClick={() => setShowMenu(s => !s)} aria-label={t('aria.toggle_menu')}>
                     <MoreVertical size={20} />
                   </button>
                   {showMenu && (

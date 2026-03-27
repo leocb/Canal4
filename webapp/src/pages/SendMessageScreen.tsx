@@ -297,6 +297,7 @@ export const SendMessageScreen = () => {
                   navigate(-1);
                 }
               }}
+              aria-label={t('aria.back')}
             >
               <ArrowLeft size={20} style={{ transform: 'translateY(1px)' }} />
             </button>
@@ -378,7 +379,12 @@ export const SendMessageScreen = () => {
             </div>
 
             <div className="glass-panel" style={{ display: 'flex', gap: '12px', marginTop: '16px', position: 'sticky', bottom: '-16px', padding: '16px', zIndex: 10, margin: '0 -16px -16px -16px', borderLeft: 'none', borderRight: 'none', borderBottom: 'none', borderRadius: '0' }}>
-              <button type="submit" disabled={loading} style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px' }} >
+              <button 
+                type="submit" 
+                disabled={loading} 
+                style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px' }}
+                aria-label={t('aria.send')}
+              >
                 <Send size={18} /> {loading ? t('send_message.sending') : t('send_message.title')}
               </button>
             </div>

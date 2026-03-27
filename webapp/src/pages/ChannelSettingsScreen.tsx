@@ -134,7 +134,7 @@ export const ChannelSettingsScreen = () => {
             <button
               className="icon-button"
               onClick={() => navigate(`/venues/${venue.link}/channels/${channel.channelId}`)}
-              aria-label="Back to channel"
+              aria-label={t('aria.back')}
             >
               <ArrowLeft size={20} />
             </button>
@@ -223,7 +223,7 @@ export const ChannelSettingsScreen = () => {
             <button type="button" className="secondary" style={{ flex: 1 }} onClick={() => navigate(-1)} disabled={loading}>
               {t('common.cancel')}
             </button>
-            <button type="submit" disabled={loading || !name.trim()} style={{ flex: 1 }} >
+            <button type="submit" disabled={loading || !name.trim()} style={{ flex: 1 }} aria-label={t('aria.save')}>
               {loading ? t('common.loading') : t('channel_settings.confirm_button')}
             </button>
           </div>

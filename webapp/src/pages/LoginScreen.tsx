@@ -148,6 +148,7 @@ export const LoginScreen = () => {
                   className="primary-button"
                   onClick={handleNewUser}
                   disabled={loading || !connected}
+                  aria-label={t('login.new_here')}
                   style={{ 
                       display: 'flex', 
                       alignItems: 'center', 
@@ -172,6 +173,7 @@ export const LoginScreen = () => {
                    className="primary-button"
                    onClick={handleUpgrade}
                    disabled={loading || !connected || !lastCredentialId}
+                   aria-label={t('login.upgrade_button')}
                    style={{ 
                        display: 'flex', 
                        alignItems: 'center', 
@@ -193,6 +195,7 @@ export const LoginScreen = () => {
                    className="secondary-button"
                    onClick={handleHaveAccount}
                    disabled={loading || !connected}
+                   aria-label={t('login.have_account')}
                    style={{ 
                        display: 'flex', 
                        alignItems: 'center', 
@@ -278,6 +281,8 @@ export const LoginScreen = () => {
                 }}
                 onClick={() => setShowMenu(!showMenu)}
                 type="button"
+                aria-label={t('common.language')}
+                aria-expanded={showMenu}
               >
                 <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
                   <Languages size={18} />
