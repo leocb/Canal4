@@ -317,57 +317,52 @@ export const VenueChannelsScreen = () => {
             </p>
             <div style={{
               display: 'flex',
-              gap: '8px',
-              background: 'rgba(0,0,0,0.3)',
-              border: '1px solid var(--surface-border)',
-              borderRadius: 'var(--radius-md)',
-              padding: '10px 14px',
-              alignItems: 'center',
+              gap: '12px',
+              marginTop: '12px',
             }}>
-              <span style={{
-                flex: 1,
-                fontSize: '0.82rem',
-                color: 'var(--text-secondary)',
-                overflow: 'hidden',
-                textOverflow: 'ellipsis',
-                whiteSpace: 'nowrap',
-                fontFamily: 'monospace',
-              }}>
-                {joinUrl}
-              </span>
               <button
                 onClick={handleCopy}
                 style={{
-                  padding: '6px 14px',
-                  fontSize: '0.85rem',
+                  flex: 1,
+                  padding: '12px 16px',
+                  borderRadius: 'var(--radius-md)',
+                  fontSize: '0.95rem',
+                  fontWeight: 600,
                   display: 'flex',
                   alignItems: 'center',
-                  gap: '6px',
-                  flexShrink: 0,
+                  justifyContent: 'center',
+                  gap: '8px',
                   background: copied ? 'rgba(16,185,129,0.15)' : 'var(--accent-color)',
                   border: copied ? '1px solid var(--success-color)' : 'none',
                   color: copied ? 'var(--success-color)' : '#fff',
                   transition: 'all 0.2s ease',
+                  cursor: 'pointer'
                 }}
+                aria-label={t('aria.copy')}
               >
-                {copied ? <><Check size={14} /> {t('venue_channels.copied')}</> : <><Copy size={14} /> {t('venue_channels.copy')}</>}
+                {copied ? <><Check size={18} /> {t('venue_channels.copied')}</> : <><Copy size={18} /> {t('venue_channels.copy')}</>}
               </button>
               <button
                 onClick={handleShare}
                 style={{
-                  padding: '6px 14px',
-                  fontSize: '0.85rem',
+                  flex: 1,
+                  padding: '12px 16px',
+                  borderRadius: 'var(--radius-md)',
+                  fontSize: '0.95rem',
+                  fontWeight: 600,
                   display: 'flex',
                   alignItems: 'center',
-                  gap: '6px',
-                  flexShrink: 0,
+                  justifyContent: 'center',
+                  gap: '8px',
                   background: 'var(--surface-color)',
                   border: '1px solid var(--surface-border)',
                   color: 'var(--text-primary)',
                   transition: 'all 0.2s ease',
+                  cursor: 'pointer'
                 }}
+                aria-label={t('aria.share')}
               >
-                <Share size={14} /> {t('venue_channels.share')}
+                <Share size={18} /> {t('venue_channels.share')}
               </button>
             </div>
           </div>
