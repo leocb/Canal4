@@ -1,6 +1,7 @@
 import { app, BrowserWindow, Tray, Menu, screen, ipcMain, nativeImage, powerSaveBlocker } from 'electron'
 import { join } from 'path'
 import { electronApp, optimizer, is } from '@electron-toolkit/utils'
+import { autoUpdater } from 'electron-updater'
 import icon from '../../resources/icon.png?asset'
 
 app.commandLine.appendSwitch('disable-renderer-backgrounding');
@@ -8,6 +9,111 @@ app.commandLine.appendSwitch('disable-renderer-backgrounding');
 let tray: Tray | null = null;
 let tickerWindow: BrowserWindow | null = null;
 let settingsWindow: BrowserWindow | null = null;
+let updateCheckTimer: ReturnType<typeof setInterval> | null = null;
+
+// ─── Auto-Updater ─────────────────────────────────────────────────────────────
+
+autoUpdater.autoDownload = false;          // We control when to download
+autoUpdater.autoInstallOnAppQuit = false;  // We control when to install
+autoUpdater.logger = null;                 // Suppress built-in file logging
+
+/**
+ * Trigger an update check. If an update is available it downloads and then
+ * calls quitAndInstall(true, true) so the OS relaunches into the new version.
+ * Always resolves (never rejects) — callers can safely await it.
+ */
+function triggerUpdateCheckAndInstall(): Promise<void> {
+  return new Promise((resolve) => {
+    if (is.dev) {
+      console.log('[Updater] Skipping update check in dev mode.');
+      resolve();
+      return;
+    }
+
+    let settled = false;
+    const settle = () => { if (!settled) { settled = true; resolve(); } };
+
+    const onNotAvailable = () => {
+      console.log('[Updater] App is up-to-date.');
+      cleanup();
+      settle();
+    };
+
+    const onDownloaded = (info: { version: string }) => {
+      console.log(`[Updater] Update v${info.version} downloaded — relaunching now.`);
+      cleanup();
+      // silent=true, forceRunAfter=true → quit + relaunch automatically
+      autoUpdater.quitAndInstall(true, true);
+      // settle() intentionally NOT called — the process is about to quit & relaunch
+    };
+
+    const onAvailable = (info: { version: string }) => {
+      console.log(`[Updater] Update available: v${info.version} — downloading…`);
+      autoUpdater.downloadUpdate().catch((e) => {
+        console.error('[Updater] Download failed:', e.message);
+        cleanup();
+        settle();
+      });
+    };
+
+    const onError = (err: Error) => {
+      console.error('[Updater] Update check error:', err.message);
+      cleanup();
+      settle();
+    };
+
+    const cleanup = () => {
+      autoUpdater.removeListener('update-not-available', onNotAvailable);
+      autoUpdater.removeListener('update-available', onAvailable);
+      autoUpdater.removeListener('update-downloaded', onDownloaded);
+      autoUpdater.removeListener('error', onError);
+    };
+
+    autoUpdater.once('update-not-available', onNotAvailable);
+    autoUpdater.once('update-available', onAvailable);
+    autoUpdater.once('update-downloaded', onDownloaded);
+    autoUpdater.once('error', onError);
+
+    autoUpdater.checkForUpdates().catch((e) => {
+      console.error('[Updater] checkForUpdates failed:', e.message);
+      cleanup();
+      settle();
+    });
+  });
+}
+
+/**
+ * Startup check — awaited before any UI is created.
+ * A 20-second timeout ensures a slow/offline network never blocks the app.
+ */
+async function checkForUpdateBeforeLaunch(): Promise<void> {
+  if (is.dev) return;
+
+  console.log('[Updater] Checking for update before launch…');
+  const timeout = new Promise<void>((resolve) =>
+    setTimeout(() => {
+      console.log('[Updater] Update check timed out — proceeding with launch.');
+      resolve();
+    }, 20_000)
+  );
+
+  await Promise.race([triggerUpdateCheckAndInstall(), timeout]);
+}
+
+/**
+ * Schedule a periodic check every 12 hours.
+ * If an update is found it downloads and the app relaunches automatically.
+ */
+function schedulePeriodicUpdateCheck(): void {
+  if (is.dev) return;
+
+  updateCheckTimer = setInterval(() => {
+    console.log('[Updater] Scheduled 12-hour update check…');
+    triggerUpdateCheckAndInstall();
+  }, 12 * 60 * 60 * 1_000);
+}
+
+// ─── Windows ──────────────────────────────────────────────────────────────────
 
 function createTickerWindow(): void {
   const primaryDisplay = screen.getPrimaryDisplay()
@@ -118,7 +224,7 @@ ipcMain.on('update-tray', (_event, { settingsLabel, quitLabel, tooltip }) => {
   tray.setContextMenu(contextMenu)
 });
 
-app.whenReady().then(() => {
+app.whenReady().then(async () => {
   electronApp.setAppUserModelId('org.canal4.displaynode')
 
   // Hide from macOS Dock — this is a background tray-only app
@@ -130,8 +236,12 @@ app.whenReady().then(() => {
     optimizer.watchWindowShortcuts(window)
   })
 
+  // Check for update before showing any UI — relaunch automatically if one is found
+  await checkForUpdateBeforeLaunch();
+
   createTray()
   createTickerWindow()
+  schedulePeriodicUpdateCheck()
 
   powerSaveBlocker.start('prevent-app-suspension');
 
@@ -232,4 +342,11 @@ app.whenReady().then(() => {
 // Keep app running in background when settings is closed
 app.on('window-all-closed', () => {
   // Do nothing. The Tray keeps it alive.
+})
+
+app.on('before-quit', () => {
+  if (updateCheckTimer) {
+    clearInterval(updateCheckTimer);
+    updateCheckTimer = null;
+  }
 })

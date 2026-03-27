@@ -81,5 +81,7 @@ appImage:
 npmRebuild: false
 
 publish:
-  provider: generic
-  url: https://example.com/auto-updates
+  provider: github
+  owner: leocb
+  repo: Canal4
+  releaseType: release

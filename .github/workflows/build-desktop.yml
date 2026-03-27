@@ -32,6 +32,8 @@ jobs:
 
       - name: Build Application
         working-directory: display
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
           if [ "${{ matrix.os }}" = "macos-latest" ]; then
             npm run build:mac
@@ -48,6 +50,7 @@ jobs:
             display/dist/*.dmg
             display/dist/*.exe
             display/dist/*.zip
+            display/dist/*.yml
           if-no-files-found: error
 
   publish-latest:
@@ -78,6 +81,7 @@ jobs:
             release-artifacts/*.dmg
             release-artifacts/*.exe
             release-artifacts/*.zip
+            release-artifacts/*.yml
           prerelease: true
           make_latest: false
         env:
@@ -104,6 +108,7 @@ jobs:
             release-artifacts/*.dmg
             release-artifacts/*.exe
             release-artifacts/*.zip
+            release-artifacts/*.yml
           draft: false
           prerelease: false
         env:
