@@ -238,7 +238,7 @@ export const VenueChannelsScreen = () => {
           </div>
         </div>
 
-        <div className="flex-col" style={{ marginTop: '16px' }}>
+        <div className="flex-col">
           {visibleChannels.length === 0 ? (
             <div className="empty-state glass-panel">
               <h3 style={{ color: 'var(--text-primary)' }}>{t('venue_channels.no_channels')}</h3>

@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { useTable } from 'spacetimedb/react';
 import { tables } from '../module_bindings/index.ts';
-import { ArrowLeft, User as UserIcon } from 'lucide-react';
+import { ArrowLeft } from 'lucide-react';
 import { useAuth } from '../hooks/useAuth';
 import { useReadyTable } from '../hooks/useReadyTable';
 import { useTranslation } from 'react-i18next';
@@ -141,18 +141,18 @@ export const VenuePermissionsScreen = () => {
         </div>
       </div>
 
-      <div className="flex-row" style={{ marginTop: '16px', gap: '12px' }}>
+      <div className="flex-row" style={{ gap: '12px', flexWrap: 'wrap' }}>
         <input 
           type="text" 
           placeholder={t('venue_permissions.search_placeholder')}
           value={searchTerm} 
           onChange={(e) => setSearchTerm(e.target.value)}
-          style={{ flex: 1, padding: '10px 14px', borderRadius: '8px', border: '1px solid var(--surface-border)', background: 'var(--surface-color)' }}
+          style={{ flex: '1 1 200px', padding: '10px 14px', borderRadius: '8px', border: '1px solid var(--surface-border)', background: 'var(--surface-color)' }}
         />
         <select 
           value={roleFilter} 
           onChange={(e) => setRoleFilter(e.target.value)}
-          style={{ padding: '10px 14px', borderRadius: '8px', border: '1px solid var(--surface-border)', background: 'var(--surface-color)' }}
+          style={{ flex: '1 1 150px', padding: '10px 14px', borderRadius: '8px', border: '1px solid var(--surface-border)', background: 'var(--surface-color)' }}
         >
           <option value="">{t('venue_permissions.filters.all_roles')}</option>
           <option value="Owner">{t('roles.owner')}</option>
@@ -175,16 +175,14 @@ export const VenuePermissionsScreen = () => {
                 alignItems: 'center', 
                 justifyContent: 'space-between', 
                 opacity: member.isBlocked ? 0.6 : 1,
+                gap: '12px',
               }}
               onClick={() => navigate(`/venues/${venue.link}/permissions/${member.userId}`)}
             >
-              <div className="flex-row" style={{ alignItems: 'center', gap: '12px' }}>
-                <div style={{ width: '40px', height: '40px', borderRadius: '50%', background: 'var(--surface-color)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                  <UserIcon size={20} color="var(--text-secondary)" />
-                </div>
-                <div>
-                  <h3 style={{ margin: 0, fontSize: '1.1rem' }}>{member.name} {member.isBlocked && t('venue_permissions.blocked_suffix')}</h3>
-                </div>
+              <div style={{ flex: 1, minWidth: 0 }}>
+                <h3 style={{ margin: 0, fontSize: '1.1rem', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                  {member.name} {member.isBlocked && t('venue_permissions.blocked_suffix')}
+                </h3>
               </div>
               <span style={{
                 background: badge.bg,
@@ -193,6 +191,8 @@ export const VenuePermissionsScreen = () => {
                 borderRadius: '12px',
                 fontSize: '0.8rem',
                 fontWeight: 600,
+                whiteSpace: 'nowrap',
+                flexShrink: 0,
               }}>
                 {member.isBlocked ? t('roles.blocked') : t(`roles.${member.highestRole}`)}
               </span>

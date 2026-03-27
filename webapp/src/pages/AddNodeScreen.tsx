@@ -79,7 +79,7 @@ export const AddNodeScreen = () => {
         </div>
       </div>
 
-      <form onSubmit={handlePairing} className="glass-panel" style={{ padding: '40px', textAlign: 'center', width: '100%', maxWidth: '400px', marginTop: '16px' }}>
+      <form onSubmit={handlePairing} className="glass-panel" style={{ padding: '40px', textAlign: 'center', width: '100%', maxWidth: '400px' }}>
         <p style={{ marginBottom: '24px', color: 'var(--text-secondary)' }}>{t('add_node.helper_text')}</p>
 
         {errorText && (

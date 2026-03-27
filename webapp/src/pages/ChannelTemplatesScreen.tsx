@@ -79,7 +79,7 @@ export const ChannelTemplatesScreen = () => {
         </button>
       </div>
 
-      <div className="content-area" style={{ flex: 1, padding: '16px', overflowY: 'auto' }}>
+      <div className="content-area" style={{ flex: 1, padding: '0', overflowY: 'auto' }}>
         {channelTemplates.length === 0 ? (
           <div className="empty-state">
             <h3 style={{ marginBottom: '8px' }}>{t('channel_templates.no_templates')}</h3>

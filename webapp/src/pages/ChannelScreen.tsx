@@ -257,11 +257,51 @@ export const ChannelScreen = () => {
           </div>
         </div>
 
-        {/* Send message — moderators and above only */}
+        {/* Moderator Tools Section */}
         {isModerator && (
-          <div style={{ padding: '24px 24px 0' }}>
-            <div className="glass-panel" style={{ padding: '4px', background: 'var(--surface-bg)' }}>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '16px', padding: '0 12px' }}>
+            {/* Display Nodes Status Shelf */}
+            {hasDevices && (
+              <div>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '12px', color: 'var(--text-secondary)', fontSize: '0.8rem', fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.05em' }}>
+                  <Monitor size={14} /> {t('channel.display_nodes')}
+                </div>
+                <div style={{ display: 'flex', gap: '12px', overflowX: 'auto', paddingBottom: '8px' }}>
+                  {connectedDevices.map((d: any) => {
+                    const status = getNodeStatus(d);
+                    const isOffline = status === 'offline';
+                    return (
+                      <div
+                        key={d.displayId.toString()}
+                        className="glass-panel"
+                        style={{
+                          minWidth: '200px',
+                          padding: '12px 16px',
+                          display: 'flex',
+                          alignItems: 'center',
+                          justifyContent: 'space-between',
+                          background: 'rgba(255,255,255,0.02)',
+                          border: `1px solid ${status === 'online' ? 'rgba(16,185,129,0.2)' : status === 'unstable' ? 'rgba(245,158,11,0.2)' : 'rgba(255,255,255,0.05)'}`
+                        }}
+                      >
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+                          <NodeIndicator device={d} />
+                          <div>
+                            <div style={{ fontSize: '0.85rem', fontWeight: 600 }}>{d.name}</div>
+                            <div style={{ fontSize: '0.7rem', color: isOffline ? 'var(--text-secondary)' : status === 'online' ? '#10B981' : '#F59E0B' }}>
+                              {status === 'online' ? t('channel.connected') : status === 'unstable' ? t('node_status.unstable') : t('channel.offline')}
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+              </div>
+            )}
 
+            {/* Send Broadcast Button */}
+            <div className="glass-panel" style={{ padding: '4px', background: 'var(--surface-bg)' }}>
               <button
                 type="button"
                 onClick={() => navigate(`/venues/${venue.link}/channels/${channel.channelId}/send`)}
@@ -272,48 +312,8 @@ export const ChannelScreen = () => {
           </div>
         )}
 
-        {/* Display Nodes Status Shelf — moderators only */}
-        {isModerator && hasDevices && (
-          <div style={{ padding: '24px 24px 0' }}>
-            <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '12px', color: 'var(--text-secondary)', fontSize: '0.8rem', fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.05em' }}>
-              <Monitor size={14} /> {t('channel.display_nodes')}
-            </div>
-            <div style={{ display: 'flex', gap: '12px', overflowX: 'auto', paddingBottom: '8px' }}>
-              {connectedDevices.map((d: any) => {
-                const status = getNodeStatus(d);
-                const isOffline = status === 'offline';
-                return (
-                  <div
-                    key={d.displayId.toString()}
-                    className="glass-panel"
-                    style={{
-                      minWidth: '200px',
-                      padding: '12px 16px',
-                      display: 'flex',
-                      alignItems: 'center',
-                      justifyContent: 'space-between',
-                      background: 'rgba(255,255,255,0.02)',
-                      border: `1px solid ${status === 'online' ? 'rgba(16,185,129,0.2)' : status === 'unstable' ? 'rgba(245,158,11,0.2)' : 'rgba(255,255,255,0.05)'}`
-                    }}
-                  >
-                    <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-                      <NodeIndicator device={d} />
-                      <div>
-                        <div style={{ fontSize: '0.85rem', fontWeight: 600 }}>{d.name}</div>
-                        <div style={{ fontSize: '0.7rem', color: isOffline ? 'var(--text-secondary)' : status === 'online' ? '#10B981' : '#F59E0B' }}>
-                          {status === 'online' ? t('channel.connected') : status === 'unstable' ? t('node_status.unstable') : t('channel.offline')}
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-                );
-              })}
-            </div>
-          </div>
-        )}
-
         {/* Messages list — newest at top, notification panel style */}
-        <div className="flex-col" style={{ flex: 1, overflowY: 'auto', padding: '24px', gap: '12px' }}>
+        <div className="flex-col" style={{ flex: 1, overflowY: 'auto', padding: '0 12px 24px', gap: '12px', marginTop: '16px' }}>
           {channelMessages.length === 0 ? (
             <div className="empty-state glass-panel">
               <History size={48} style={{ opacity: 0.2, marginBottom: '16px' }} />

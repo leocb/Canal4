@@ -95,12 +95,12 @@ export const VenueSettingsScreen = () => {
       </div>
 
       {errorMsg && (
-        <div style={{ color: 'var(--error-color)', marginTop: '16px', padding: '12px', background: 'rgba(255,80,80,0.1)', borderRadius: '8px' }}>
+        <div style={{ color: 'var(--error-color)', padding: '12px', background: 'rgba(255,80,80,0.1)', borderRadius: '8px' }}>
           {errorMsg}
         </div>
       )}
 
-      <form onSubmit={handleUpdate} className="glass-panel" style={{ padding: '24px', width: '100%', marginTop: '24px' }}>
+      <form onSubmit={handleUpdate} className="glass-panel" style={{ padding: '24px', width: '100%' }}>
         <div className="flex-col" style={{ gap: '16px', textAlign: 'left' }}>
           <label style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
             <span style={{ fontWeight: 500 }}>{t('venue_settings.venue_name_label')}</span>

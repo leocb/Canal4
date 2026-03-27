@@ -1,8 +1,10 @@
 @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
 
 :root {
-  --bg-color: #0B0E14; /* Deep, rich space dark */
-  --surface-color: rgba(255, 255, 255, 0.03); /* Glassmorphism base */
+  --bg-color: #0B0E14;
+  /* Deep, rich space dark */
+  --surface-color: rgba(255, 255, 255, 0.03);
+  /* Glassmorphism base */
   --surface-border: rgba(255, 255, 255, 0.08);
   --surface-hover: rgba(255, 255, 255, 0.06);
   --text-primary: #F8FAFC;
@@ -12,7 +14,7 @@
   --error-color: #EF4444;
   --success-color: #10B981;
   --warn-color: #F59E0B;
-  
+
   --radius-md: 12px;
   --radius-lg: 16px;
   --transition-fast: 0.2s ease-in-out;
@@ -34,7 +36,7 @@ body {
   min-height: -webkit-fill-available;
   overflow: hidden;
   -webkit-font-smoothing: antialiased;
-  background-image: 
+  background-image:
     radial-gradient(circle at 15% 50%, rgba(59, 130, 246, 0.1), transparent 25%),
     radial-gradient(circle at 85% 30%, rgba(16, 185, 129, 0.05), transparent 25%);
   background-attachment: fixed;
@@ -48,7 +50,12 @@ body {
   flex-direction: column;
 }
 
-h1, h2, h3, h4, h5, h6 {
+h1,
+h2,
+h3,
+h4,
+h5,
+h6 {
   font-weight: 600;
   letter-spacing: -0.02em;
 }
@@ -180,19 +187,93 @@ button.danger:hover {
   max-width: 800px;
   width: 100%;
   margin: 0 auto;
-  padding: 24px 20px;
-  padding-bottom: calc(24px + env(safe-area-inset-bottom));
+  padding: 16px 10px;
+  padding-bottom: calc(16px + env(safe-area-inset-bottom));
   flex: 1;
   overflow-y: auto;
   display: flex;
   flex-direction: column;
 }
 
+/* Base Animations */
+.reveal-section {
+  max-height: 0;
+  opacity: 0;
+  overflow: hidden;
+  transform: translateY(-8px);
+  transition: max-height 0.4s cubic-bezier(0.4, 0, 0.2, 1),
+    opacity 0.4s cubic-bezier(0.4, 0, 0.2, 1),
+    transform 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+  pointer-events: none;
+}
+
+.reveal-section.show {
+  max-height: 1000px;
+  opacity: 1;
+  transform: translateY(0);
+  pointer-events: auto;
+  margin-top: 12px;
+}
+
+.field-zoom {
+  animation: field-fade-in 0.6s ease-out;
+}
+
+@keyframes field-fade-in {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* Global scroll behavior */
+html {
+  scroll-behavior: smooth;
+}
+
+.fields-list-container {
+  transition: opacity 0.3s ease, transform 0.6s cubic-bezier(0.34, 1.56, 1.0, 1);
+  position: relative;
+}
+
+.field-card-wrapper {
+  transition: transform 0.5s cubic-bezier(0.4, 0, 0.2, 1);
+  position: relative;
+  will-change: transform;
+}
+
+.field-card-wrapper.moving-up, .field-card-wrapper.moving-down {
+  z-index: 50;
+  pointer-events: none;
+}
+
+.field-card-wrapper.moving-up .glass-panel, .field-card-wrapper.moving-down .glass-panel {
+  box-shadow: 0 15px 50px rgba(0,0,0,0.6);
+  border: 1px solid rgba(var(--accent-color-rgb), 0.5);
+  backdrop-filter: blur(20px);
+  background: rgba(255,255,255,0.08);
+}
+
+.field-card-wrapper.blur-sibling {
+  filter: blur(4px);
+  opacity: 0.5;
+  transition: filter 0.5s ease, opacity 0.5s ease;
+}
+
+.fields-hidden {
+  opacity: 0;
+  pointer-events: none;
+}
+
 .screen-header {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  margin-bottom: 32px;
+  margin-bottom: 16px;
 }
 
 .flex-col {
@@ -210,7 +291,7 @@ button.danger:hover {
 
 .empty-state {
   text-align: center;
-  padding: 64px 24px;
+  padding: 64px 12px;
   color: var(--text-secondary);
 }
 
@@ -218,7 +299,7 @@ button.danger:hover {
 .nav-bar {
   display: flex;
   align-items: center;
-  padding: 16px 24px;
+  padding: 16px 12px;
   padding-top: calc(16px + env(safe-area-inset-top));
   border-bottom: 1px solid var(--surface-border);
   background: rgba(11, 14, 20, 0.8);
@@ -230,7 +311,7 @@ button.danger:hover {
 
 /* Breadcrumbs */
 .breadcrumbs-container {
-  padding: 8px 24px;
+  padding: 8px 12px;
   background: rgba(11, 14, 20, 0.4);
   border-bottom: 1px solid var(--surface-border);
   backdrop-filter: blur(8px);
@@ -325,6 +406,7 @@ button.icon-button:hover {
     opacity: 0;
     transform: scale(0.92) translateY(-6px);
   }
+
   to {
     opacity: 1;
     transform: scale(1) translateY(0);
@@ -371,6 +453,7 @@ button.icon-button:hover {
     transform: scale(0.8);
     opacity: 0.8;
   }
+
   100% {
     transform: scale(2.5);
     opacity: 0;
@@ -390,6 +473,7 @@ button.icon-button:hover {
   from {
     transform: rotate(0deg);
   }
+
   to {
     transform: rotate(360deg);
   }
@@ -397,4 +481,50 @@ button.icon-button:hover {
 
 .animate-spin {
   animation: spin 1s linear infinite;
+}
+
+/* Switch Component */
+.switch {
+  position: relative;
+  display: inline-block;
+  width: 36px;
+  height: 20px;
+}
+
+.switch input {
+  opacity: 0;
+  width: 0;
+  height: 0;
+}
+
+.slider {
+  position: absolute;
+  cursor: pointer;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: var(--surface-border);
+  transition: .4s;
+  border-radius: 20px;
+}
+
+.slider:before {
+  position: absolute;
+  content: "";
+  height: 14px;
+  width: 14px;
+  left: 3px;
+  bottom: 3px;
+  background-color: white;
+  transition: .4s;
+  border-radius: 50%;
+}
+
+input:checked+.slider {
+  background-color: var(--accent-color);
+}
+
+input:checked+.slider:before {
+  transform: translateX(16px);
 }
