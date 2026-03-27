@@ -134,9 +134,8 @@ export const ChannelSettingsScreen = () => {
             className="icon-button"
             onClick={() => navigate(`/venues/${venue.link}/channels/${channel.channelId}`)}
             aria-label="Back to channel"
-            style={{ display: 'flex', alignItems: 'center', justifyContent: 'center' }}
           >
-            <ArrowLeft size={20} style={{ transform: 'translateY(1px)' }} />
+            <ArrowLeft size={20} />
           </button>
           <h2>{t('channel_settings.title', { name: channel.name })}</h2>
         </div>

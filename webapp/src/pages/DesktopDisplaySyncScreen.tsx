@@ -3,7 +3,7 @@ import { useParams, useNavigate } from 'react-router-dom';
 import { useTable, useReducer } from 'spacetimedb/react';
 import { tables, reducers } from '../module_bindings/index.ts';
 import { useAuth } from '../hooks/useAuth';
-import { Trash2, Edit2, ArrowLeft } from 'lucide-react';
+import { Trash2, Edit2, ArrowLeft, Plus } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 
 export const DesktopDisplaySyncScreen = () => {
@@ -81,17 +81,21 @@ export const DesktopDisplaySyncScreen = () => {
   return (
     <div className="app-container">
       <div className="screen-header" style={{ flexShrink: 0 }}>
-        <div className="flex-col" style={{ gap: '4px' }}>
-          <span 
-            style={{ fontSize: '0.9rem', color: 'var(--accent-color)', cursor: 'pointer', fontWeight: 500, display: 'inline-flex', alignItems: 'center', gap: '4px' }}
+        <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+          <button 
+            className="icon-button" 
             onClick={() => navigate(`/venues/${venue.link}`)}
           >
-            <ArrowLeft size={16} /> {t('display_nodes.back_to_channels')}
-          </span>
+            <ArrowLeft size={20} />
+          </button>
           <h2>{t('display_nodes.title', { name: venue.name })}</h2>
         </div>
-        <button onClick={() => navigate(`/venues/${venue.link}/desktop-displays/new`)}>
-          {t('display_nodes.add_button')}
+        <button 
+          className="icon-button"
+          onClick={() => navigate(`/venues/${venue.link}/desktop-displays/new`)}
+          title={t('display_nodes.add_button')}
+        >
+          <Plus size={20} />
         </button>
       </div>
 

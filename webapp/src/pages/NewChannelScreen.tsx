@@ -61,13 +61,19 @@ export const NewChannelScreen = () => {
   return (
     <div className="app-container" style={{ alignItems: 'center', justifyContent: 'flex-start' }}>
       <div className="screen-header" style={{ width: '100%', maxWidth: '400px' }}>
-        <button className="secondary" onClick={() => navigate(-1)} style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-          <ArrowLeft size={16} style={{ transform: 'translateY(1px)' }} /> {t('common.back')}
-        </button>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+          <button 
+            className="icon-button" 
+            onClick={() => navigate(-1)}
+          >
+            <ArrowLeft size={20} />
+          </button>
+          <h2>{t('new_channel.title')}</h2>
+        </div>
       </div>
 
       <form onSubmit={handleCreateChannel} className="glass-panel" style={{ padding: '40px', textAlign: 'center', width: '100%', maxWidth: '400px' }}>
-        <h2 style={{ marginBottom: '24px', fontSize: '1.8rem' }}>{t('new_channel.title')}</h2>
+
 
         {errorText && (
           <div style={{

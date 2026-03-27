@@ -238,13 +238,13 @@ export const VenueMemberScreen = () => {
       {showErrorModal && <ErrorModal />}
       {showHelp && <HelpModal />}
       <div className="screen-header">
-        <div className="flex-col" style={{ gap: '4px' }}>
-          <span
-            style={{ fontSize: '0.9rem', color: 'var(--accent-color)', cursor: 'pointer', fontWeight: 500, display: 'flex', alignItems: 'center', gap: '4px' }}
+        <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+          <button 
+            className="icon-button" 
             onClick={() => navigate(`/venues/${venue.link}/permissions`)}
           >
-            <ArrowLeft size={16} /> {t('venue_permissions.filters.all_roles')}
-          </span>
+            <ArrowLeft size={20} />
+          </button>
           <h2>{targetUser.name}</h2>
         </div>
       </div>

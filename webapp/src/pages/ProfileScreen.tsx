@@ -88,13 +88,13 @@ export const ProfileScreen = () => {
   return (
     <div className="app-container">
       <div className="screen-header">
-        <div className="flex-col" style={{ gap: '4px' }}>
-          <span
-            style={{ fontSize: '0.9rem', color: 'var(--accent-color)', cursor: 'pointer', fontWeight: 500, display: 'flex', alignItems: 'center', gap: '4px' }}
+        <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+          <button 
+            className="icon-button" 
             onClick={() => navigate(-1)}
           >
-            <ArrowLeft size={16} /> {t('common.cancel')}
-          </span>
+            <ArrowLeft size={20} />
+          </button>
           <h2>{t('profile.title')}</h2>
         </div>
       </div>

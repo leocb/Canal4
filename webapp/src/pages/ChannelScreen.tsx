@@ -4,7 +4,7 @@ import { useTable, useReducer } from 'spacetimedb/react';
 import { tables, reducers } from '../module_bindings/index.ts';
 import { useReadyTable } from '../hooks/useReadyTable';
 import { useAuth } from '../hooks/useAuth';
-import { MoreVertical, Settings, Send, History, LayoutTemplate, Repeat, Trash2, UserX, Clock, Play, CheckCircle2, AlertCircle, WifiOff, Monitor, XCircle, ArrowLeft } from 'lucide-react';
+import { Plus, MoreVertical, Settings, Send, History, LayoutTemplate, Repeat, Trash2, UserX, Clock, Play, CheckCircle2, AlertCircle, WifiOff, Monitor, XCircle, ArrowLeft } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 
 export const ChannelScreen = () => {
@@ -224,34 +224,37 @@ export const ChannelScreen = () => {
       <div className="app-container">
         {/* Header */}
         <div className="screen-header">
-          <div className="flex-col" style={{ gap: '4px' }}>
-            <span
-              style={{ fontSize: '0.9rem', color: 'var(--accent-color)', cursor: 'pointer', fontWeight: 500, display: 'inline-flex', alignItems: 'center', gap: '4px' }}
+          <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+            <button
+              className="icon-button"
               onClick={() => navigate(`/venues/${venue.link}`)}
             >
-              <ArrowLeft size={16} style={{ transform: 'translateY(1px)' }} /> {venue.name}
-            </span>
+              <ArrowLeft size={20} />
+            </button>
             <h2>{channel.name}</h2>
           </div>
 
-          {/* 3-dot menu — only shown if user can manage the channel */}
-          {canUpdate && (
-            <div style={{ position: 'relative' }} ref={menuRef}>
-              <button className="icon-button" onClick={() => setShowMenu(s => !s)}>
-                <MoreVertical size={20} />
-              </button>
-              {showMenu && (
-                <div className="dropdown-menu glass-panel" style={{ position: 'absolute', right: 0, top: '48px', zIndex: 100, minWidth: '180px', display: 'flex', flexDirection: 'column' }}>
-                  <button className="dropdown-item" onClick={() => { setShowMenu(false); navigate(`/venues/${venue.link}/channels/${channel.channelId}/settings`); }}>
-                    <Settings size={16} /> {t('channel.settings_button')}
-                  </button>
-                  <button className="dropdown-item" onClick={() => { setShowMenu(false); navigate(`/venues/${venue.link}/channels/${channel.channelId}/templates`); }}>
-                    <LayoutTemplate size={16} /> {t('channel.templates_button')}
-                  </button>
-                </div>
-              )}
-            </div>
-          )}
+          <div style={{ display: 'flex', gap: '8px' }}>
+
+            {/* 3-dot menu — only shown if user can manage the channel */}
+            {canUpdate && (
+              <div style={{ position: 'relative' }} ref={menuRef}>
+                <button className="icon-button" onClick={() => setShowMenu(s => !s)}>
+                  <MoreVertical size={20} />
+                </button>
+                {showMenu && (
+                  <div className="dropdown-menu glass-panel" style={{ position: 'absolute', right: 0, top: '48px', zIndex: 100, minWidth: '180px', display: 'flex', flexDirection: 'column' }}>
+                    <button className="dropdown-item" onClick={() => { setShowMenu(false); navigate(`/venues/${venue.link}/channels/${channel.channelId}/settings`); }}>
+                      <Settings size={16} /> {t('channel.settings_button')}
+                    </button>
+                    <button className="dropdown-item" onClick={() => { setShowMenu(false); navigate(`/venues/${venue.link}/channels/${channel.channelId}/templates`); }}>
+                      <LayoutTemplate size={16} /> {t('channel.templates_button')}
+                    </button>
+                  </div>
+                )}
+              </div>
+            )}
+          </div>
         </div>
 
         {/* Send message — moderators and above only */}
@@ -259,7 +262,7 @@ export const ChannelScreen = () => {
           <div style={{ padding: '24px 24px 0' }}>
             <div className="glass-panel" style={{ padding: '4px', background: 'var(--surface-bg)' }}>
 
-                <button
+              <button
                 type="button"
                 onClick={() => navigate(`/venues/${venue.link}/channels/${channel.channelId}/send`)}
                 style={{ width: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px', padding: '12px 16px', borderRadius: '8px' }}>

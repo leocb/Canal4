@@ -68,13 +68,18 @@ export const AddNodeScreen = () => {
   return (
     <div className="app-container" style={{ alignItems: 'center', justifyContent: 'center' }}>
       <div className="screen-header" style={{ width: '100%', maxWidth: '400px' }}>
-        <button className="secondary" onClick={() => navigate(-1)} style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-          <ArrowLeft size={16} /> {t('common.back')}
-        </button>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+          <button 
+            className="icon-button" 
+            onClick={() => navigate(-1)}
+          >
+            <ArrowLeft size={20} />
+          </button>
+          <h2>{t('add_node.title')}</h2>
+        </div>
       </div>
 
       <form onSubmit={handlePairing} className="glass-panel" style={{ padding: '40px', textAlign: 'center', width: '100%', maxWidth: '400px', marginTop: '16px' }}>
-        <h2 style={{ marginBottom: '24px', fontSize: '1.8rem' }}>{t('add_node.title')}</h2>
         <p style={{ marginBottom: '24px', color: 'var(--text-secondary)' }}>{t('add_node.helper_text')}</p>
 
         {errorText && (

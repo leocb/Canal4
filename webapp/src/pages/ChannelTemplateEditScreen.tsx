@@ -279,7 +279,7 @@ export const ChannelTemplateEditScreen = () => {
             className="icon-button" 
             onClick={() => navigate(`/venues/${venue.link}/channels/${channel.channelId}/templates`)}
           >
-            <ArrowLeft size={20} style={{ transform: 'translateY(1px)' }} />
+            <ArrowLeft size={20} />
           </button>
           <h2>{isNew ? t('template_edit.title_new') : t('template_edit.title_edit')}</h2>
         </div>

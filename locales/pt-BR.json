@@ -355,7 +355,7 @@
     "remove_field": "Remover Campo",
     "no_fields_error": "Os modelos devem ter pelo menos um campo.",
     "mandatory_regex_error": "O campo obrigatório \"{{name}}\" deve possuir uma expressão regular de validação.",
-    "save_template": "Salvar Modelo",
+    "save_template": "Salvar",
     "saving": "Salvando...",
     "preview_title": "Prévia da mensagem",
     "preview_helper": "É assim que as mensagens enviadas com este modelo geralmente aparecerão:",

@@ -355,7 +355,7 @@
     "remove_field": "Remove Field",
     "no_fields_error": "Templates must have at least one field.",
     "mandatory_regex_error": "Mandatory field \"{{name}}\" requires a validation regex patern.",
-    "save_template": "Save Template",
+    "save_template": "Save",
     "saving": "Saving...",
     "preview_title": "Preview Message",
     "preview_helper": "This is how messages sent with this template will generally look like:",

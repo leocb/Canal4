@@ -3,6 +3,7 @@ import { useTable } from 'spacetimedb/react';
 import { tables } from '../module_bindings/index.ts';
 import { useAuth } from '../hooks/useAuth';
 import { useTranslation } from 'react-i18next';
+import { Plus } from 'lucide-react';
 
 export const VenuesListScreen = () => {
   const { t } = useTranslation();
@@ -34,22 +35,26 @@ export const VenuesListScreen = () => {
     <div className="app-container">
       <div className="screen-header">
         <h2>{t('venues_list.title')}</h2>
-        <button onClick={() => navigate('/venues/new')}>
-          {t('venues_list.new_venue')}
+        <button
+          className="icon-button"
+          onClick={() => navigate('/venues/new')}
+          title={t('venues_list.new_venue')}
+        >
+          <Plus size={20} />
         </button>
       </div>
 
       <div className="flex-col">
         {myVenues.length === 0 ? (
           <div className="empty-state glass-panel">
-            <h3 style={{ color: 'var(--text-primary)'}}>{t('venues_list.no_venues')}</h3>
+            <h3 style={{ color: 'var(--text-primary)' }}>{t('venues_list.no_venues')}</h3>
             <p style={{ marginTop: '8px' }}>{t('venues_list.empty_helper')}</p>
           </div>
         ) : (
           myVenues.map(venue => (
-            <div 
-              key={venue.venueId.toString()} 
-              className="glass-panel-interactive" 
+            <div
+              key={venue.venueId.toString()}
+              className="glass-panel-interactive"
               style={{ padding: '24px', marginBottom: '12px' }}
               onClick={() => navigate(`/venues/${venue.link}`)}
             >
