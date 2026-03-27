@@ -163,7 +163,9 @@ export const ChannelTemplateEditScreen = () => {
   };
 
   const handleRemoveField = (indexToRemove: number) => {
-    setFields(fields.filter((_, idx) => idx !== indexToRemove));
+    if (window.confirm(t('template_edit.field.confirm_delete', 'Are you sure you want to remove this field?'))) {
+      setFields(fields.filter((_, idx) => idx !== indexToRemove));
+    }
   };
 
   const handleChangeField = (index: number, key: keyof TemplateField, value: string | boolean) => {
@@ -197,10 +199,10 @@ export const ChannelTemplateEditScreen = () => {
     setIsMoving(true);
     setActiveMovingIndex(index);
     setNewFieldIds([]); // Cancel any pending mount animations
-    
+
     const card1 = fieldRefs.current[index];
     const card2 = fieldRefs.current[index - 1];
-    
+
     if (card1 && card2 && contentAreaRef.current) {
       // Manual scroll to move slowly and accurately
       const h1 = card1.offsetHeight;
@@ -208,14 +210,14 @@ export const ChannelTemplateEditScreen = () => {
       const rect = card1.getBoundingClientRect();
       const containerRect = contentAreaRef.current.getBoundingClientRect();
       const currentScroll = contentAreaRef.current.scrollTop;
-      const targetScroll = currentScroll + (rect.top - containerRect.top) - (containerRect.height / 2) + (rect.height / 2) - (h2 + 16);
-      
+      const targetScroll = currentScroll + (rect.top - containerRect.top) - h2 - 32;
+
       const gap = 16;
       setAnimatingIndices({
         [index]: -(h2 + gap),
         [index - 1]: (h1 + gap)
       });
-      
+
       // Start scroll with a tiny delay to sync with CSS animation better
       setTimeout(() => {
         if (contentAreaRef.current) {
@@ -230,18 +232,18 @@ export const ChannelTemplateEditScreen = () => {
         // Atomic update to prevent flicker
         const newFields = [...fields];
         [newFields[index - 1], newFields[index]] = [newFields[index], newFields[index - 1]];
-        
+
         // Clearing indices, setting fields, and disabling transitions in the same batch
         setFields(newFields);
         setAnimatingIndices(null);
         setIsMoving(false);
         setActiveMovingIndex(null);
-      }, 550); // Slightly more time to allow scroll to settle
+      }, 1500); // Slightly more time to allow scroll to settle
     } else {
       const newFields = [...fields];
       [newFields[index - 1], newFields[index]] = [newFields[index], newFields[index - 1]];
       setFields(newFields);
-      setTimeout(() => setIsMoving(false), 300);
+      setTimeout(() => setIsMoving(false), 800);
     }
   };
 
@@ -250,46 +252,46 @@ export const ChannelTemplateEditScreen = () => {
     setIsMoving(true);
     setActiveMovingIndex(index);
     setNewFieldIds([]); // Cancel any pending mount animations
-    
+
     const card1 = fieldRefs.current[index];
     const card2 = fieldRefs.current[index + 1];
-    
+
     if (card1 && card2 && contentAreaRef.current) {
       const h1 = card1.offsetHeight;
       const h2 = card2.offsetHeight;
       const rect = card1.getBoundingClientRect();
       const containerRect = contentAreaRef.current.getBoundingClientRect();
       const currentScroll = contentAreaRef.current.scrollTop;
-      const targetScroll = currentScroll + (rect.top - containerRect.top) - (containerRect.height / 2) + (rect.height / 2) + (h2 + 16);
-      
+      const targetScroll = currentScroll + (rect.top - containerRect.top) + h2;
+
       contentAreaRef.current.scrollTo({
         top: targetScroll,
         behavior: 'smooth'
       });
-      
+
       const gap = 16;
-      
+
       setAnimatingIndices({
         [index]: (h2 + gap),
         [index + 1]: -(h1 + gap)
       });
-      
+
       setTimeout(() => {
         // Atomic update to prevent flicker
         const newFields = [...fields];
         [newFields[index], newFields[index + 1]] = [newFields[index + 1], newFields[index]];
-        
+
         // Clearing indices, setting fields, and disabling transitions in the same batch
         setFields(newFields);
         setAnimatingIndices(null);
         setIsMoving(false);
         setActiveMovingIndex(null);
-      }, 500);
+      }, 1500);
     } else {
       const newFields = [...fields];
       [newFields[index], newFields[index + 1]] = [newFields[index + 1], newFields[index]];
       setFields(newFields);
-      setTimeout(() => setIsMoving(false), 300);
+      setTimeout(() => setIsMoving(false), 800);
     }
   };
 
@@ -405,30 +407,29 @@ export const ChannelTemplateEditScreen = () => {
   );
 
   return (
-    <div className="app-container">
+    <div className="app-container" style={{ padding: '0 10px 16px 10px' }}>
       {showErrorModal && <ErrorModal />}
-      <div className="screen-header">
-        <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-          <button
-            className="icon-button"
-            onClick={() => navigate(`/venues/${venue.link}/channels/${channel.channelId}/templates`)}
-          >
-            <ArrowLeft size={20} />
-          </button>
-          <h2>{isNew ? t('template_edit.title_new') : t('template_edit.title_edit')}</h2>
+      <div className="content-area" ref={contentAreaRef} style={{ flex: 1, padding: '16px 10px 16px 10px', overflowY: 'auto' }}>
+        <div className="screen-header">
+          <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+            <button
+              className="icon-button"
+              onClick={() => navigate(`/venues/${venue.link}/channels/${channel.channelId}/templates`)}
+            >
+              <ArrowLeft size={20} />
+            </button>
+            <h2>{isNew ? t('template_edit.title_new') : t('template_edit.title_edit')}</h2>
+          </div>
+          {!isNew && (
+            <button
+              className="icon-button danger"
+              onClick={() => setShowDeleteConfirm(!showDeleteConfirm)}
+              title={t('template_edit.danger_zone.delete_button')}
+            >
+              <Trash2 size={20} />
+            </button>
+          )}
         </div>
-        {!isNew && (
-          <button
-            className="icon-button danger"
-            onClick={() => setShowDeleteConfirm(!showDeleteConfirm)}
-            title={t('template_edit.danger_zone.delete_button')}
-          >
-            <Trash2 size={20} />
-          </button>
-        )}
-      </div>
-
-      <div className="content-area" ref={contentAreaRef} style={{ flex: 1, padding: '16px 10px', overflowY: 'auto' }}>
         <form onSubmit={handleSave} className="flex-col" style={{ gap: '24px', maxWidth: '800px', margin: '0 auto', paddingBottom: '60px' }}>
 
 
@@ -490,8 +491,8 @@ export const ChannelTemplateEditScreen = () => {
                     key={field.id}
                     ref={el => { fieldRefs.current[idx] = el; }}
                     className={`field-card-wrapper ${offset < 0 ? 'moving-up' : offset > 0 ? 'moving-down' : ''} ${isMoving && offset === 0 ? 'blur-sibling' : ''}`}
-                    style={{ 
-                      transform: offset ? `translateY(${offset}px) scale(0.98)` : 'none',
+                    style={{
+                      transform: offset ? `translateY(${offset}px) scale(1)` : 'none',
                       zIndex: idx === activeMovingIndex ? 60 : (offset !== 0 || isMoving) ? 40 : 1,
                       transition: !isMoving ? 'none' : undefined,
                     }}
@@ -746,7 +747,7 @@ export const ChannelTemplateEditScreen = () => {
             </div>
           </div>
 
-          <div className="glass-panel" style={{ display: 'flex', gap: '12px', marginTop: '16px', position: 'sticky', bottom: '-16px', padding: '16px', zIndex: 10, margin: '0 -10px -16px -10px', borderLeft: 'none', borderRight: 'none', borderBottom: 'none', borderRadius: '0', flexDirection: 'column' }}>
+          <div className="glass-panel" style={{ display: 'flex', gap: '12px', marginTop: '16px', position: 'sticky', bottom: '-16px', padding: '16px', zIndex: 9999, margin: '0 -10px -16px -10px', borderLeft: 'none', borderRight: 'none', borderBottom: 'none', borderRadius: '0', flexDirection: 'column' }}>
             <div className="flex-row" style={{ gap: '12px', width: '100%' }}>
               <button type="button" className="secondary" style={{ flex: 1 }} onClick={() => navigate(-1)} disabled={loading}>
                 {t('common.cancel')}

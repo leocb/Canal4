@@ -224,10 +224,49 @@ button.danger:hover {
     opacity: 0;
     transform: translateY(10px);
   }
+
   to {
     opacity: 1;
     transform: translateY(0);
   }
+}
+
+@keyframes field-moveup {
+  0% {
+    transform: scale(1) translateX(0);
+  }
+
+  30% {
+    transform: scale(0.8) translateX(-80px);
+  }
+
+  50% {
+    transform: scale(0.8) translateX(-80px);
+  }
+
+  100% {
+    transform: scale(1) translateX(0);
+  }
+
+}
+
+@keyframes field-movedown {
+  0% {
+    transform: scale(1) translateX(0);
+  }
+
+  30% {
+    transform: scale(0.8) translateX(80px);
+  }
+
+  50% {
+    transform: scale(0.8) translateX(80px);
+  }
+
+  100% {
+    transform: scale(1) translateX(0);
+  }
+
 }
 
 /* Global scroll behavior */
@@ -236,26 +275,28 @@ html {
 }
 
 .fields-list-container {
-  transition: opacity 0.3s ease, transform 0.6s cubic-bezier(0.34, 1.56, 1.0, 1);
+  transition: opacity 0.3s ease, transform 1.5s ease-out;
   position: relative;
+  will-change: opacity, transform;
 }
 
 .field-card-wrapper {
-  transition: transform 0.5s cubic-bezier(0.4, 0, 0.2, 1);
+  transition: transform 1.5s ease-out;
   position: relative;
   will-change: transform;
 }
 
-.field-card-wrapper.moving-up, .field-card-wrapper.moving-down {
-  z-index: 50;
+
+.field-card-wrapper.moving-up .glass-panel {
   pointer-events: none;
+  animation: field-moveup 1.5s ease-in-out 1;
+  backdrop-filter: blur(20px);
 }
 
-.field-card-wrapper.moving-up .glass-panel, .field-card-wrapper.moving-down .glass-panel {
-  box-shadow: 0 15px 50px rgba(0,0,0,0.6);
-  border: 1px solid rgba(var(--accent-color-rgb), 0.5);
+.field-card-wrapper.moving-down .glass-panel {
+  pointer-events: none;
+  animation: field-movedown 1.5s ease-in-out 1;
   backdrop-filter: blur(20px);
-  background: rgba(255,255,255,0.08);
 }
 
 .field-card-wrapper.blur-sibling {
@@ -404,7 +445,7 @@ button.icon-button:hover {
 @keyframes dropdown-in {
   from {
     opacity: 0;
-    transform: scale(0.92) translateY(-6px);
+    transform: scale(0.90) translateY(-12px);
   }
 
   to {

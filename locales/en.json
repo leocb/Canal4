@@ -384,7 +384,8 @@
       "secondary_helper": "If value matches this regex, use different prefix/suffix.",
       "secondary_regex": "Trigger Regex",
       "secondary_prefix": "ALT Prefix",
-      "secondary_suffix": "ALT Suffix"
+      "secondary_suffix": "ALT Suffix",
+      "confirm_delete": "Are you sure you want to remove this field?"
     },
     "danger_zone": {
       "title": "Danger Zone",

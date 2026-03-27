@@ -384,7 +384,8 @@
       "secondary_helper": "Se o valor corresponder a este regex, use outros prefixo e sufixo.",
       "secondary_regex": "Regex da condição",
       "secondary_prefix": "OUTRO Prefixo",
-      "secondary_suffix": "OUTRO Sufixo"
+      "secondary_suffix": "OUTRO Sufixo",
+      "confirm_delete": "Tem certeza que deseja remover este campo?"
     },
     "danger_zone": {
       "title": "Zona de Perigo",

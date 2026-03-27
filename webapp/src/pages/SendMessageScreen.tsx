@@ -7,7 +7,7 @@ import { ArrowLeft, Send, CheckCircle, AlertTriangle } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 
 interface TemplateField {
-  id: string; // Internal id for reordering
+  id: string; 
   name: string;
   prefix: string;
   suffix: string;
@@ -16,8 +16,11 @@ interface TemplateField {
   secondaryPrefix: string;
   secondarySuffix: string;
   secondaryRegexTrigger?: string;
-  isNumericOnly: boolean;
-  isOptional: boolean;
+  type?: string;        // NEW: text, number, date, time
+  isRequired?: boolean; // NEW
+  // Legacy
+  isNumericOnly?: boolean;
+  isOptional?: boolean;
 }
 
 export const SendMessageScreen = () => {
@@ -110,9 +113,26 @@ export const SendMessageScreen = () => {
   }
 
   const selectedTemplate = channelTemplates.find(t => t.templateId === selectedTemplateId);
-  const parsedFields: TemplateField[] = selectedTemplate
-    ? (JSON.parse(selectedTemplate.fieldsJson || '[]') as TemplateField[])
-    : [];
+  
+  // Parse with backwards compatibility
+  let parsedFields: TemplateField[] = [];
+  let initialSuffix = '';
+  let finalPrefix = '';
+  
+  if (selectedTemplate) {
+    try {
+      const parsed = JSON.parse(selectedTemplate.fieldsJson || '[]');
+      if (Array.isArray(parsed)) {
+        parsedFields = parsed;
+      } else if (parsed && typeof parsed === 'object') {
+        parsedFields = parsed.fields || [];
+        initialSuffix = parsed.initialSuffix || '';
+        finalPrefix = parsed.finalPrefix || '';
+      }
+    } catch (e) {
+      console.error("Failed to parse template fields:", e);
+    }
+  }
 
   const handleFieldChange = (fieldId: string, value: string) => {
     setFieldValues(prev => ({ ...prev, [fieldId]: value }));
@@ -121,7 +141,8 @@ export const SendMessageScreen = () => {
     const field = parsedFields.find(f => f.id === fieldId);
     if (field) {
       let error = '';
-      if (value && field.isNumericOnly && !/^\d+$/.test(value)) {
+      const isNumeric = field.type === 'number' || field.isNumericOnly;
+      if (value && isNumeric && !/^\d+$/.test(value)) {
         error = t('send_message.field_numeric_only');
       } else if (value && field.regexPattern) {
         try {
@@ -141,12 +162,15 @@ export const SendMessageScreen = () => {
 
     parsedFields.forEach(field => {
       const val = fieldValues[field.id] || '';
-      if (!val && !field.isOptional) {
+      const isReq = field.isRequired !== undefined ? field.isRequired : !field.isOptional;
+      const isNumeric = field.type === 'number' || field.isNumericOnly;
+
+      if (!val && isReq) {
         newErrors[field.id] = t('send_message.field_required');
         isValid = false;
         return;
       }
-      if (val && field.isNumericOnly && !/^\d+$/.test(val)) {
+      if (val && isNumeric && !/^\d+$/.test(val)) {
         newErrors[field.id] = t('send_message.field_numeric_only');
         isValid = false;
         return;
@@ -173,8 +197,10 @@ export const SendMessageScreen = () => {
     let result = '';
 
     parsedFields.forEach((f, idx) => {
-      let val = fieldValues[f.id] || '';
-      if (!val && f.isOptional) return; // Skip completely if optional and empty
+      let val = (fieldValues[f.id] || '').trim();
+      const isReq = f.isRequired !== undefined ? f.isRequired : !f.isOptional;
+      
+      if (!val && !isReq) return; // Skip if optional and empty
 
       let pre = f.prefix;
       let suf = f.suffix;
@@ -190,10 +216,16 @@ export const SendMessageScreen = () => {
       }
 
       result += `${pre || ''}${val}${suf || ''}`;
-      if (idx !== parsedFields.length - 1) result += ' ';
+      // simple space separator between fields
+      if (idx !== parsedFields.length - 1 && parsedFields[idx+1]) {
+        // Only add space if next field might have content
+        result += ' ';
+      }
     });
 
-    return result.trim().replace(/\s+/g, ' '); // simple collapse spaces
+    // Wrap with root-level prefix/suffix
+    const finalContent = `${initialSuffix}${result.trim()}${finalPrefix}`;
+    return finalContent.replace(/\s+/g, ' '); // simple collapse spaces
   };
 
   const handleSend = async (e: React.FormEvent) => {
@@ -313,23 +345,28 @@ export const SendMessageScreen = () => {
               )}
 
               <div className="flex-col" style={{ gap: '16px' }}>
-                {parsedFields.map((field) => (
-                  <div key={field.id}>
-                    <label style={{ display: 'block', marginBottom: '8px', fontWeight: 500, fontSize: '0.9rem' }}>
-                      {field.name} {field.isOptional ? <span style={{ color: 'var(--text-secondary)' }}>{t('send_message.optional')}</span> : <span style={{ color: 'var(--error-color)' }}>*</span>}
-                    </label>
-                    <input
-                      type={field.isNumericOnly ? "number" : "text"}
-                      value={fieldValues[field.id] || ''}
-                      onChange={(e) => handleFieldChange(field.id, e.target.value)}
-                      style={{ width: '100%' }}
-                      autoFocus={parsedFields[0]?.id === field.id}
-                    />
-                    {fieldErrors[field.id] && (
-                      <p style={{ color: 'var(--error-color)', fontSize: '0.85rem', marginTop: '6px' }}>{fieldErrors[field.id]}</p>
-                    )}
-                  </div>
-                ))}
+                {parsedFields.map((field) => {
+                  const isReq = field.isRequired !== undefined ? field.isRequired : !field.isOptional;
+                  const isNumeric = field.type === 'number' || field.isNumericOnly;
+                  
+                  return (
+                    <div key={field.id}>
+                      <label style={{ display: 'block', marginBottom: '8px', fontWeight: 500, fontSize: '0.9rem' }}>
+                        {field.name} {isReq ? <span style={{ color: 'var(--error-color)' }}>*</span> : <span style={{ color: 'var(--text-secondary)' }}>{t('send_message.optional')}</span>}
+                      </label>
+                      <input
+                        type={isNumeric ? "number" : (field.type || "text")}
+                        value={fieldValues[field.id] || ''}
+                        onChange={(e) => handleFieldChange(field.id, e.target.value)}
+                        style={{ width: '100%' }}
+                        autoFocus={parsedFields[0]?.id === field.id}
+                      />
+                      {fieldErrors[field.id] && (
+                        <p style={{ color: 'var(--error-color)', fontSize: '0.85rem', marginTop: '6px' }}>{fieldErrors[field.id]}</p>
+                      )}
+                    </div>
+                  );
+                })}
               </div>
             </div>
 
