@@ -1,5 +1,5 @@
-import { useState } from 'react';
-import { useParams, useNavigate } from 'react-router-dom';
+import { useState, useMemo } from 'react';
+import { useParams, useNavigate, useLocation } from 'react-router-dom';
 import { useTable, useReducer } from 'spacetimedb/react';
 import { tables, reducers } from '../module_bindings/index.ts';
 import { useAuth } from '../hooks/useAuth';
@@ -11,11 +11,17 @@ export const JoinVenueScreen = () => {
   const { t } = useTranslation();
   const { venueLink, token } = useParams<{ venueLink: string, token: string }>();
   const navigate = useNavigate();
+  const location = useLocation();
   const { user, isLoggedIn } = useAuth();
+
+  const queryName = useMemo(() => new URLSearchParams(location.search).get('name'), [location.search]);
   // Subscription ready state
   const [venues, venuesReady] = useReadyTable(tables.VenueView);
   const [venueMembers] = useTable(tables.VenueMemberView);
   const joinVenue = useReducer(reducers.joinVenue);
+
+  const venue = venues.find(v => v.link === venueLink);
+  const venueName = venue?.name || queryName || venueLink || '';
 
   const [loading, setLoading] = useState(false);
   const [errorText, setErrorText] = useState('');
@@ -29,14 +35,12 @@ export const JoinVenueScreen = () => {
     return (
       <div className="app-container" style={{ alignItems: 'center', justifyContent: 'center' }}>
         <div className="glass-panel" style={{ padding: '48px', textAlign: 'center', maxWidth: '400px', width: '100%' }}>
-          <h2 style={{ marginBottom: '12px' }}>{t('join_venue.loading_invite')}</h2>
+          <h2 style={{ marginBottom: '12px' }}>{venueName}</h2>
           <p style={{ color: 'var(--text-secondary)' }}>{t('join_venue.connecting')}</p>
         </div>
       </div>
     );
   }
-
-  const venue = venues.find(v => v.link === venueLink);
 
   // Check if already a member
   const isMember = venue ? venueMembers.some(
@@ -52,8 +56,8 @@ export const JoinVenueScreen = () => {
           </div>
           <h2 style={{ marginBottom: '12px' }}>{t('join_venue.already_member_title')}</h2>
           <p style={{ color: 'var(--text-secondary)', marginBottom: '24px' }}>
-            <Trans i18nKey="join_venue.already_member_text" values={{ name: venue.name }}>
-              You are already a member of <strong>{venue.name}</strong>.
+            <Trans i18nKey="join_venue.already_member_text" values={{ name: venueName }}>
+              You are already a member of <strong>{venueName}</strong>.
             </Trans>
           </p>
           <button onClick={() => navigate(`/venues/${venue.link}`)} style={{ width: '100%' }}>
@@ -87,7 +91,7 @@ export const JoinVenueScreen = () => {
         <p style={{ color: 'var(--text-secondary)', marginBottom: '8px', fontSize: '0.9rem' }}>
           {t('join_venue.invited_to')}
         </p>
-        <h2 style={{ marginBottom: '8px', fontSize: '1.8rem' }}>{venue?.name || venueLink}</h2>
+        <h2 style={{ marginBottom: '8px', fontSize: '1.8rem' }}>{venueName}</h2>
         <p style={{ color: 'var(--text-secondary)', marginBottom: '32px', fontSize: '0.85rem' }}>
           <Trans i18nKey="join_venue.joining_as" values={{ name: user.name }}>
             Joining as <strong style={{ color: 'var(--text-primary)' }}>{user.name}</strong>

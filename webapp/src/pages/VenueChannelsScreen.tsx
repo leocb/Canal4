@@ -118,7 +118,7 @@ export const VenueChannelsScreen = () => {
     );
   }
 
-  const joinUrl = inviteToken ? `${window.location.origin}/join/${venue?.link}/${inviteToken}` : '';
+  const joinUrl = inviteToken ? `${window.location.origin}/join/${venue?.link}/${inviteToken}?name=${encodeURIComponent(venue?.name || '')}` : '';
   const handleCopy = () => {
     if (navigator.clipboard && window.isSecureContext) {
       navigator.clipboard.writeText(joinUrl);
