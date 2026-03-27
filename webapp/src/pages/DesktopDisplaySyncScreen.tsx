@@ -112,67 +112,78 @@ export const DesktopDisplaySyncScreen = () => {
                 <div 
                   key={device.displayId.toString()} 
                   className="glass-panel" 
-                  style={{ padding: '24px', marginBottom: '16px', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}
+                  style={{ padding: '24px', marginBottom: '16px', display: 'flex', flexDirection: 'column', gap: '16px' }}
                 >
-                  <div className="flex-row" style={{ gap: '20px', alignItems: 'center' }}>
-                    <NodeIndicator device={device} />
-                    
-                    <div className="flex-col" style={{ gap: '4px' }}>
-                      <h3 style={{ fontSize: '1.1rem', margin: 0, fontWeight: 600 }}>
+                  {/* 1st row: Name on the left, edit/delete buttons on the right */}
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                    <div className="flex-row" style={{ gap: '12px', alignItems: 'center' }}>
+                      <NodeIndicator device={device} />
+                      <h3 style={{ fontSize: '1.2rem', margin: 0, fontWeight: 600 }}>
                         {device.name}
                       </h3>
-                      <div className="flex-row" style={{ gap: '12px', marginTop: '6px', alignItems: 'center' }}>
-                        <span style={{ 
-                          fontSize: '0.75rem', 
-                          color: statusColor,
-                          fontWeight: 600,
-                          textTransform: 'uppercase',
-                          letterSpacing: '0.02em'
-                        }}>
-                          {statusLabel}
-                        </span>
-                        <span style={{ fontSize: '0.75rem', color: 'rgba(255,255,255,0.1)' }}>|</span>
-                        <span style={{ fontSize: '0.8rem', color: 'var(--text-secondary)' }}>
-                          {t('display_nodes.last_seen', { date: new Date(Number(device.lastConnectedAt.microsSinceUnixEpoch / 1000n)).toLocaleString() })}
-                        </span>
-                      </div>
+                    </div>
+
+                    <div className="flex-row" style={{ gap: '8px' }}>
+                      <button 
+                        className="icon-button" 
+                        onClick={() => handleEditName(device)}
+                        title={t('display_nodes.rename_tooltip')}
+                        style={{ 
+                          padding: '8px', 
+                          background: 'rgba(255,255,255,0.05)', 
+                          border: '1px solid rgba(255,255,255,0.1)',
+                          borderRadius: '8px',
+                          display: 'flex',
+                          alignItems: 'center',
+                          justifyContent: 'center',
+                          transition: 'all 0.2s'
+                        }}
+                      >
+                        <Edit2 size={18} color="var(--text-secondary)" />
+                      </button>
+
+                      <button 
+                        className="icon-button danger" 
+                        onClick={() => handleDelete(device)}
+                        title={t('display_nodes.delete_tooltip')}
+                        style={{ 
+                          padding: '8px',
+                          background: 'rgba(239, 68, 68, 0.1)', 
+                          border: '1px solid rgba(239, 68, 68, 0.2)',
+                          borderRadius: '8px',
+                          display: 'flex',
+                          alignItems: 'center',
+                          justifyContent: 'center',
+                          transition: 'all 0.2s'
+                        }}
+                      >
+                        <Trash2 size={18} color="#EF4444" />
+                      </button>
                     </div>
                   </div>
 
-                  <div className="flex-row" style={{ gap: '8px' }}>
-                    <button 
-                      className="icon-button" 
-                      onClick={() => handleEditName(device)}
-                      title={t('display_nodes.rename_tooltip')}
-                      style={{ 
-                        padding: '8px', 
-                        background: 'rgba(255,255,255,0.05)', 
-                        border: '1px solid rgba(255,255,255,0.1)',
-                        borderRadius: '4px',
-                        display: 'flex',
-                        alignItems: 'center',
-                        justifyContent: 'center'
-                      }}
-                    >
-                      <Edit2 size={18} color="var(--text-secondary)" />
-                    </button>
+                  {/* 2nd row: last seen */}
+                  <div style={{ fontSize: '0.85rem', color: 'var(--text-secondary)', opacity: 0.8 }}>
+                    {t('display_nodes.last_seen', { date: new Date(Number(device.lastConnectedAt.microsSinceUnixEpoch / 1000n)).toLocaleString() })}
+                  </div>
 
-                    <button 
-                      className="icon-button danger" 
-                      onClick={() => handleDelete(device)}
-                      title={t('display_nodes.delete_tooltip')}
-                      style={{ 
-                        padding: '8px',
-                        background: 'rgba(239, 68, 68, 0.1)', 
-                        border: '1px solid rgba(239, 68, 68, 0.2)',
-                        borderRadius: '4px',
-                        display: 'flex',
-                        alignItems: 'center',
-                        justifyContent: 'center'
-                      }}
-                    >
-                      <Trash2 size={18} color="#EF4444" />
-                    </button>
+                  {/* 3rd row: Connection badge */}
+                  <div>
+                    <span style={{ 
+                      fontSize: '0.72rem', 
+                      color: statusColor,
+                      background: status === 'online' ? 'rgba(16,185,129,0.1)' : status === 'unstable' ? 'rgba(245,158,11,0.1)' : 'rgba(255,255,255,0.05)',
+                      border: `1px solid ${status === 'online' ? 'rgba(16,185,129,0.2)' : status === 'unstable' ? 'rgba(245,158,11,0.2)' : 'rgba(255,255,255,0.1)'}`,
+                      borderRadius: '20px',
+                      padding: '4px 12px',
+                      fontWeight: 700,
+                      textTransform: 'uppercase',
+                      letterSpacing: '0.04em',
+                      display: 'inline-flex',
+                      alignItems: 'center'
+                    }}>
+                      {statusLabel}
+                    </span>
                   </div>
                 </div>
               );
