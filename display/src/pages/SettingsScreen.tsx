@@ -209,8 +209,11 @@ export const SettingsScreen = () => {
   }, []);
 
   const activePin = useMemo(() => {
-    const pin = pins.find(p => p.displayUid === machineUid);
-    console.log("Settings: Checking for active PIN", { machineUid, pins, found: !!pin });
+    const sorted = [...pins]
+      .filter(p => p.displayUid === machineUid)
+      .sort((a, b) => Number(b.expiresAt.microsSinceUnixEpoch - a.expiresAt.microsSinceUnixEpoch));
+    const pin = sorted[0];
+    console.log("Settings: Checking for active PIN", { machineUid, pinCount: pins.length, found: !!pin, allSameUid: sorted.length });
     return pin;
   }, [pins, machineUid]);
 
@@ -541,7 +544,7 @@ export const SettingsScreen = () => {
               </p>
 
 
-              {activePin ? (
+              {activePin && pinSecondsLeft > 0 ? (
                 <div style={{ textAlign: 'center', padding: '24px', background: 'rgba(59,130,246,0.08)', borderRadius: '12px', border: '1px solid rgba(59,130,246,0.2)' }}>
                   <div style={{ fontSize: '0.85rem', color: '#94A3B8', marginBottom: '8px' }}>{t('settings.pairing.enter_pin_helper')}</div>
                   <div style={{ fontSize: '3rem', letterSpacing: '12px', fontWeight: 700, fontFamily: 'monospace', color: '#3B82F6' }}>
@@ -554,9 +557,7 @@ export const SettingsScreen = () => {
                       <polyline points="12 6 12 12 16 14" />
                     </svg>
                     <span style={{ fontSize: '0.8rem', color: pinSecondsLeft < 60 ? '#F59E0B' : '#64748b', fontWeight: 600, fontFamily: 'monospace' }}>
-                      {pinSecondsLeft > 0
-                        ? t('settings.pairing.pin_remaining', { time: `${Math.floor(pinSecondsLeft / 60)}:${String(pinSecondsLeft % 60).padStart(2, '0')}` })
-                        : t('settings.pairing.pin_expired')}
+                      {t('settings.pairing.pin_remaining', { time: `${Math.floor(pinSecondsLeft / 60)}:${String(pinSecondsLeft % 60).padStart(2, '0')}` })}
                     </span>
                   </div>
                 </div>
@@ -578,6 +579,16 @@ export const SettingsScreen = () => {
                         <path d="M21 12a9 9 0 1 1-6.219-8.56" />
                       </svg>
                       <span style={{ fontSize: '0.8rem', color: '#94A3B8' }}>{t('settings.connection.waiting_device_id')}</span>
+                    </div>
+                  )}
+                  {activePin && pinSecondsLeft <= 0 && (
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '12px', padding: '10px 14px', background: 'rgba(245,158,11,0.08)', border: '1px solid rgba(245,158,11,0.2)', borderRadius: '10px' }}>
+                      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#F59E0B" strokeWidth="2.5">
+                        <circle cx="12" cy="12" r="10" />
+                        <line x1="12" y1="8" x2="12" y2="12" />
+                        <line x1="12" y1="16" x2="12.01" y2="16" />
+                      </svg>
+                      <span style={{ fontSize: '0.8rem', color: '#F59E0B' }}>{t('settings.pairing.pin_expired')}</span>
                     </div>
                   )}
                   <button

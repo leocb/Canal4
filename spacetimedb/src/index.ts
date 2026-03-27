@@ -1217,14 +1217,22 @@ export const create_display_pin = spacetimedb.reducer(
   { displayUid: t.string() },
   (ctx, { displayUid }) => {
     // We allow anonymous callers to generate a PIN.
-    // The PIN is linked to the caller's identity so only they can use it to pair later.
+    const sender = ctx.sender;
+    
+    // Clean up existing pins for this displayUid + identity
+    for (const p of ctx.db.DisplayPairingPin) {
+      if (p.displayUid === displayUid && p.identity.isEqual(sender)) {
+        ctx.db.DisplayPairingPin.pin.delete(p.pin);
+      }
+    }
+
     const pin = ctx.random.integerInRange(100000, 999999).toString();
     const expiresAt = ctx.timestamp.microsSinceUnixEpoch + (10n * 60n * 1000000n); // 10 mins
 
     ctx.db.DisplayPairingPin.insert({
       pin,
       displayUid,
-      identity: ctx.sender,
+      identity: sender,
       expiresAt: new Timestamp(expiresAt)
     });
   }
