@@ -181,104 +181,106 @@ export const VenueChannelsScreen = () => {
   return (
     <>
       <div className="app-container">
-        <div className="screen-header">
-          <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-            <button
-              className="icon-button"
-              onClick={() => navigate('/venues')}
-            >
-              <ArrowLeft size={20} />
-            </button>
-            <h2>{venue.name}</h2>
-          </div>
-          <div style={{ display: 'flex', gap: '8px' }}>
-            <div style={{ position: 'relative' }} ref={menuRef}>
+        <div className="content-area">
+          <div className="screen-header">
+            <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
               <button
                 className="icon-button"
-                onClick={() => setShowMenu(!showMenu)}
+                onClick={() => navigate('/venues')}
               >
-                <MoreVertical size={20} />
+                <ArrowLeft size={20} />
               </button>
-              {showMenu && (
-                <div className="dropdown-menu glass-panel" style={{ position: 'absolute', right: 0, top: '48px', zIndex: 100, minWidth: '200px', display: 'flex', flexDirection: 'column' }}>
-                  {isOwner && (
-                    <button className="dropdown-item" onClick={() => { setShowMenu(false); navigate(`/venues/${venue.link}/channels/new`); }}>
-                      <Plus size={16} /> {t('venue_channels.menu.new_channel')}
+              <h2>{venue.name}</h2>
+            </div>
+            <div style={{ display: 'flex', gap: '8px' }}>
+              <div style={{ position: 'relative' }} ref={menuRef}>
+                <button
+                  className="icon-button"
+                  onClick={() => setShowMenu(!showMenu)}
+                >
+                  <MoreVertical size={20} />
+                </button>
+                {showMenu && (
+                  <div className="dropdown-menu glass-panel" style={{ position: 'absolute', right: 0, top: '48px', zIndex: 100, minWidth: '200px', display: 'flex', flexDirection: 'column' }}>
+                    {isOwner && (
+                      <button className="dropdown-item" onClick={() => { setShowMenu(false); navigate(`/venues/${venue.link}/channels/new`); }}>
+                        <Plus size={16} /> {t('venue_channels.menu.new_channel')}
+                      </button>
+                    )}
+                    {canManageDisplays && (
+                      <button className="dropdown-item" onClick={() => { setShowMenu(false); navigate(`/venues/${venue.link}/desktop-displays`); }}>
+                        <Monitor size={16} /> {t('venue_channels.menu.display_nodes')}
+                      </button>
+                    )}
+                    {isOwner && (
+                      <button className="dropdown-item" onClick={() => { setShowMenu(false); navigate(`/venues/${venue.link}/settings`); }}>
+                        <Settings size={16} /> {t('venue_channels.menu.venue_settings')}
+                      </button>
+                    )}
+                    {canManageDisplays && (
+                      <button className="dropdown-item" onClick={() => { setShowMenu(false); navigate(`/venues/${venue.link}/permissions`); }}>
+                        <Shield size={16} /> {t('venue_channels.menu.permissions')}
+                      </button>
+                    )}
+                    <div className="dropdown-divider" />
+                    <button className="dropdown-item" onClick={handleOpenInvite}>
+                      <UserPlus size={16} /> {t('venue_channels.menu.invite')}
                     </button>
-                  )}
-                  {canManageDisplays && (
-                    <button className="dropdown-item" onClick={() => { setShowMenu(false); navigate(`/venues/${venue.link}/desktop-displays`); }}>
-                      <Monitor size={16} /> {t('venue_channels.menu.display_nodes')}
+                    <button className="dropdown-item" onClick={() => { setShowMenu(false); alert(t('venue_channels.menu.notifications_not_impl')); }}>
+                      <Bell size={16} /> {t('venue_channels.menu.notifications')}
                     </button>
-                  )}
-                  {isOwner && (
-                    <button className="dropdown-item" onClick={() => { setShowMenu(false); navigate(`/venues/${venue.link}/settings`); }}>
-                      <Settings size={16} /> {t('venue_channels.menu.venue_settings')}
+                    <div className="dropdown-divider" />
+                    <button className="dropdown-item danger" onClick={handleLeaveVenueClick}>
+                      <LogOut size={16} /> {t('venue_channels.menu.leave_venue')}
                     </button>
-                  )}
-                  {canManageDisplays && (
-                    <button className="dropdown-item" onClick={() => { setShowMenu(false); navigate(`/venues/${venue.link}/permissions`); }}>
-                      <Shield size={16} /> {t('venue_channels.menu.permissions')}
-                    </button>
-                  )}
-                  <div className="dropdown-divider" />
-                  <button className="dropdown-item" onClick={handleOpenInvite}>
-                    <UserPlus size={16} /> {t('venue_channels.menu.invite')}
-                  </button>
-                  <button className="dropdown-item" onClick={() => { setShowMenu(false); alert(t('venue_channels.menu.notifications_not_impl')); }}>
-                    <Bell size={16} /> {t('venue_channels.menu.notifications')}
-                  </button>
-                  <div className="dropdown-divider" />
-                  <button className="dropdown-item danger" onClick={handleLeaveVenueClick}>
-                    <LogOut size={16} /> {t('venue_channels.menu.leave_venue')}
-                  </button>
-                </div>
-              )}
+                  </div>
+                )}
+              </div>
             </div>
           </div>
-        </div>
 
-        <div className="flex-col">
-          {visibleChannels.length === 0 ? (
-            <div className="empty-state glass-panel">
-              <h3 style={{ color: 'var(--text-primary)' }}>{t('venue_channels.no_channels')}</h3>
-              <p style={{ marginTop: '8px' }}>{t('venue_channels.create_channel_helper')}</p>
-            </div>
-          ) : (
-            visibleChannels.map(channel => {
-              const minRole = channel.minimumRoleToView.tag.toLowerCase();
-              const badge = getRoleBadgeColor(minRole);
-              return (
-                <div
-                  key={channel.channelId.toString()}
-                  className="glass-panel-interactive flex-row"
-                  style={{ padding: '16px 24px', justifyContent: 'space-between', alignItems: 'center', marginBottom: '12px' }}
-                  onClick={() => navigate(`/venues/${venue.link}/channels/${channel.channelId}`)}
-                >
-                  <div>
-                    <h3 style={{ fontSize: '1.2rem', margin: 0, display: 'flex', alignItems: 'center', gap: '8px' }}>
-                      {channel.name}
-                      {minRole !== 'member' && (
-                        <span style={{
-                          background: badge.bg,
-                          color: badge.text,
-                          padding: '2px 8px',
-                          borderRadius: '12px',
-                          fontSize: '0.75rem',
-                          fontWeight: 600,
-                        }}>
-                          {t(`roles.${minRole}`)}
-                        </span>
-                      )}
-                    </h3>
-                    <p style={{ margin: '4px 0 0 0', color: 'var(--text-secondary)', fontSize: '0.9rem' }}>
-                      {channel.description || t('venue_channels.no_description')}
-                    </p>
+          <div className="flex-col">
+            {visibleChannels.length === 0 ? (
+              <div className="empty-state glass-panel">
+                <h3 style={{ color: 'var(--text-primary)' }}>{t('venue_channels.no_channels')}</h3>
+                <p style={{ marginTop: '8px' }}>{t('venue_channels.create_channel_helper')}</p>
+              </div>
+            ) : (
+              visibleChannels.map(channel => {
+                const minRole = channel.minimumRoleToView.tag.toLowerCase();
+                const badge = getRoleBadgeColor(minRole);
+                return (
+                  <div
+                    key={channel.channelId.toString()}
+                    className="glass-panel-interactive flex-row"
+                    style={{ padding: '16px 24px', justifyContent: 'space-between', alignItems: 'center', marginBottom: '12px' }}
+                    onClick={() => navigate(`/venues/${venue.link}/channels/${channel.channelId}`)}
+                  >
+                    <div>
+                      <h3 style={{ fontSize: '1.2rem', margin: 0, display: 'flex', alignItems: 'center', gap: '8px' }}>
+                        {channel.name}
+                        {minRole !== 'member' && (
+                          <span style={{
+                            background: badge.bg,
+                            color: badge.text,
+                            padding: '2px 8px',
+                            borderRadius: '12px',
+                            fontSize: '0.75rem',
+                            fontWeight: 600,
+                          }}>
+                            {t(`roles.${minRole}`)}
+                          </span>
+                        )}
+                      </h3>
+                      <p style={{ margin: '4px 0 0 0', color: 'var(--text-secondary)', fontSize: '0.9rem' }}>
+                        {channel.description || t('venue_channels.no_description')}
+                      </p>
+                    </div>
                   </div>
-                </div>
-              );
-            })
-          )}
+                );
+              })
+            )}
+          </div>
         </div>
       </div>
 

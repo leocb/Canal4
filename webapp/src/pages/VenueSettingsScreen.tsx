@@ -82,101 +82,103 @@ export const VenueSettingsScreen = () => {
 
   return (
     <div className="app-container">
-      <div className="screen-header">
-        <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-          <button 
-            className="icon-button" 
-            onClick={() => navigate(`/venues/${venue.link}`)}
-          >
-            <ArrowLeft size={20} />
-          </button>
-          <h2>{t('venue_settings.title', { name: venue.name })}</h2>
-        </div>
-      </div>
-
-      {errorMsg && (
-        <div style={{ color: 'var(--error-color)', padding: '12px', background: 'rgba(255,80,80,0.1)', borderRadius: '8px' }}>
-          {errorMsg}
-        </div>
-      )}
-
-      <form onSubmit={handleUpdate} className="glass-panel" style={{ padding: '24px', width: '100%' }}>
-        <div className="flex-col" style={{ gap: '16px', textAlign: 'left' }}>
-          <label style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
-            <span style={{ fontWeight: 500 }}>{t('venue_settings.venue_name_label')}</span>
-            <input
-              id="venueName"
-              type="text"
-              value={name}
-              onChange={(e) => setName(e.target.value)}
-              placeholder={t('venue_settings.venue_name_placeholder')}
-              disabled={loading}
-              style={{ width: '100%' }}
-            />
-          </label>
-
-          <div style={{ display: 'flex', gap: '12px', marginTop: '8px' }}>
-            <button type="button" className="secondary" onClick={() => navigate(-1)} disabled={loading} style={{ flex: 1 }}>
-              {t('common.cancel')}
+      <div className="content-area">
+        <div className="screen-header">
+          <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+            <button 
+              className="icon-button" 
+              onClick={() => navigate(`/venues/${venue.link}`)}
+            >
+              <ArrowLeft size={20} />
             </button>
-            <button type="submit" disabled={loading || !name.trim()} style={{ flex: 1 }}>
-              {loading ? t('login.saving') : t('venue_settings.confirm_button')}
-            </button>
+            <h2>{t('venue_settings.title', { name: venue.name })}</h2>
           </div>
         </div>
-      </form>
 
-      <div style={{ marginTop: '48px', paddingTop: '24px', borderTop: '1px solid var(--surface-border)', width: '100%' }}>
-        <h3 style={{ color: 'var(--error-color)' }}>{t('venue_settings.danger_zone.title')}</h3>
+        {errorMsg && (
+          <div style={{ color: 'var(--error-color)', padding: '12px', background: 'rgba(255,80,80,0.1)', borderRadius: '8px' }}>
+            {errorMsg}
+          </div>
+        )}
 
-        {!showDeleteConfirm ? (
-          <button
-            className="danger"
-            style={{ marginTop: '16px', display: 'flex', alignItems: 'center', gap: '8px' }}
-            onClick={() => setShowDeleteConfirm(true)}
-          >
-            <Trash2 size={16} /> {t('venue_settings.danger_zone.delete_button')}
-          </button>
-        ) : (
-          <div className="glass-panel" style={{ marginTop: '16px', padding: '16px', borderColor: 'var(--error-color)' }}>
-            <p style={{ marginBottom: '16px', color: 'var(--text-secondary)', fontSize: '0.9rem', lineHeight: 1.5 }}>
-              <Trans i18nKey="venue_settings.danger_zone.delete_confirm_text" values={{ name: venue.name }}>
-                This action cannot be undone. This will permanently delete the <strong>{venue.name}</strong> venue, disconnecting all members and deleting all channels and messages within it.
-              </Trans>
-            </p>
-            <p style={{ marginBottom: '8px', fontSize: '0.9rem' }}>
-              <Trans i18nKey="venue_settings.danger_zone.delete_type_confirm" values={{ name: venue.name }}>
-                Please type <strong>{venue.name}</strong> to confirm.
-              </Trans>
-            </p>
-            <input
-              type="text"
-              value={deleteConfirmationName}
-              onChange={(e) => setDeleteConfirmationName(e.target.value)}
-              placeholder={venue.name}
-              style={{ width: '100%', marginBottom: '12px' }}
-            />
-            <div className="flex-row" style={{ gap: '8px' }}>
-              <button
-                className="secondary"
-                onClick={() => { setShowDeleteConfirm(false); setDeleteConfirmationName(''); }}
+        <form onSubmit={handleUpdate} className="glass-panel" style={{ padding: '24px', width: '100%' }}>
+          <div className="flex-col" style={{ gap: '16px', textAlign: 'left' }}>
+            <label style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+              <span style={{ fontWeight: 500 }}>{t('venue_settings.venue_name_label')}</span>
+              <input
+                id="venueName"
+                type="text"
+                value={name}
+                onChange={(e) => setName(e.target.value)}
+                placeholder={t('venue_settings.venue_name_placeholder')}
                 disabled={loading}
-                style={{ flex: 1 }}
-              >
+                style={{ width: '100%' }}
+              />
+            </label>
+
+            <div style={{ display: 'flex', gap: '12px', marginTop: '8px' }}>
+              <button type="button" className="secondary" onClick={() => navigate(-1)} disabled={loading} style={{ flex: 1 }}>
                 {t('common.cancel')}
               </button>
-              <button
-                className="danger"
-                onClick={handleDelete}
-                disabled={loading || deleteConfirmationName !== venue.name || !isOwner}
-                style={{ flex: 1, opacity: isOwner ? 1 : 0.5 }}
-                title={!isOwner ? t('venue_settings.danger_zone.owner_only') : ''}
-              >
-                {t('venue_settings.danger_zone.confirm_delete_button')}
+              <button type="submit" disabled={loading || !name.trim()} style={{ flex: 1 }}>
+                {loading ? t('login.saving') : t('venue_settings.confirm_button')}
               </button>
             </div>
           </div>
-        )}
+        </form>
+
+        <div style={{ marginTop: '48px', paddingTop: '24px', borderTop: '1px solid var(--surface-border)', width: '100%' }}>
+          <h3 style={{ color: 'var(--error-color)' }}>{t('venue_settings.danger_zone.title')}</h3>
+
+          {!showDeleteConfirm ? (
+            <button
+              className="danger"
+              style={{ marginTop: '16px', display: 'flex', alignItems: 'center', gap: '8px' }}
+              onClick={() => setShowDeleteConfirm(true)}
+            >
+              <Trash2 size={16} /> {t('venue_settings.danger_zone.delete_button')}
+            </button>
+          ) : (
+            <div className="glass-panel" style={{ marginTop: '16px', padding: '16px', borderColor: 'var(--error-color)' }}>
+              <p style={{ marginBottom: '16px', color: 'var(--text-secondary)', fontSize: '0.9rem', lineHeight: 1.5 }}>
+                <Trans i18nKey="venue_settings.danger_zone.delete_confirm_text" values={{ name: venue.name }}>
+                  This action cannot be undone. This will permanently delete the <strong>{venue.name}</strong> venue, disconnecting all members and deleting all channels and messages within it.
+                </Trans>
+              </p>
+              <p style={{ marginBottom: '8px', fontSize: '0.9rem' }}>
+                <Trans i18nKey="venue_settings.danger_zone.delete_type_confirm" values={{ name: venue.name }}>
+                  Please type <strong>{venue.name}</strong> to confirm.
+                </Trans>
+              </p>
+              <input
+                type="text"
+                value={deleteConfirmationName}
+                onChange={(e) => setDeleteConfirmationName(e.target.value)}
+                placeholder={venue.name}
+                style={{ width: '100%', marginBottom: '12px' }}
+              />
+              <div className="flex-row" style={{ gap: '8px' }}>
+                <button
+                  className="secondary"
+                  onClick={() => { setShowDeleteConfirm(false); setDeleteConfirmationName(''); }}
+                  disabled={loading}
+                  style={{ flex: 1 }}
+                >
+                  {t('common.cancel')}
+                </button>
+                <button
+                  className="danger"
+                  onClick={handleDelete}
+                  disabled={loading || deleteConfirmationName !== venue.name || !isOwner}
+                  style={{ flex: 1, opacity: isOwner ? 1 : 0.5 }}
+                  title={!isOwner ? t('venue_settings.danger_zone.owner_only') : ''}
+                >
+                  {t('venue_settings.danger_zone.confirm_delete_button')}
+                </button>
+              </div>
+            </div>
+          )}
+        </div>
       </div>
     </div>
   );

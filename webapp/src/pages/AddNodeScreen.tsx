@@ -66,70 +66,72 @@ export const AddNodeScreen = () => {
   };
 
   return (
-    <div className="app-container" style={{ alignItems: 'center', justifyContent: 'flex-start' }}>
-      <div className="screen-header" style={{ width: '100%', maxWidth: '400px' }}>
-        <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-          <button 
-            className="icon-button" 
-            onClick={() => navigate(-1)}
-          >
-            <ArrowLeft size={20} />
-          </button>
-          <h2>{t('add_node.title')}</h2>
-        </div>
-      </div>
-
-      <form onSubmit={handlePairing} className="glass-panel" style={{ padding: '40px', textAlign: 'center', width: '100%', maxWidth: '400px' }}>
-        <p style={{ marginBottom: '24px', color: 'var(--text-secondary)' }}>{t('add_node.helper_text')}</p>
-
-        {errorText && (
-          <div style={{
-            color: 'var(--error-color)',
-            marginBottom: '16px',
-            fontSize: '0.9rem',
-            padding: '12px',
-            background: 'rgba(255,80,80,0.1)',
-            borderRadius: '8px',
-            border: '1px solid var(--error-color)',
-            display: 'flex',
-            alignItems: 'center',
-            gap: '8px',
-            textAlign: 'left'
-          }}>
-            <AlertTriangle size={18} style={{ flexShrink: 0 }} /> {errorText}
+    <div className="app-container">
+      <div className="content-area" style={{ alignItems: 'center' }}>
+        <div className="screen-header" style={{ width: '100%', maxWidth: '400px' }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+            <button 
+              className="icon-button" 
+              onClick={() => navigate(-1)}
+            >
+              <ArrowLeft size={20} />
+            </button>
+            <h2>{t('add_node.title')}</h2>
           </div>
-        )}
-
-        <div className="flex-col" style={{ gap: '16px' }}>
-          <input
-            type="text"
-            placeholder={t('add_node.name_placeholder')}
-            value={nodeName}
-            onChange={e => setNodeName(e.target.value)}
-            style={{ width: '100%' }}
-            autoFocus
-            disabled={loading}
-          />
-          <input
-            type="text"
-            inputMode="numeric"
-            pattern="[0-9]*"
-            placeholder="000000"
-            value={pin}
-            onChange={e => setPin(e.target.value.replace(/\D/g, ''))}
-            maxLength={6}
-            style={{ width: '100%', letterSpacing: '4px', textAlign: 'center', fontSize: '1.2rem' }}
-            disabled={loading}
-          />
-          <button
-            type="submit"
-            disabled={loading || !nodeName.trim() || pin.length !== 6}
-            style={{ width: '100%' }}
-          >
-            {loading ? t('add_node.pairing') : t('add_node.pair_button')}
-          </button>
         </div>
-      </form>
+
+        <form onSubmit={handlePairing} className="glass-panel" style={{ padding: '40px', textAlign: 'center', width: '100%', maxWidth: '400px' }}>
+          <p style={{ marginBottom: '24px', color: 'var(--text-secondary)' }}>{t('add_node.helper_text')}</p>
+
+          {errorText && (
+            <div style={{
+              color: 'var(--error-color)',
+              marginBottom: '16px',
+              fontSize: '0.9rem',
+              padding: '12px',
+              background: 'rgba(255,80,80,0.1)',
+              borderRadius: '8px',
+              border: '1px solid var(--error-color)',
+              display: 'flex',
+              alignItems: 'center',
+              gap: '8px',
+              textAlign: 'left'
+            }}>
+              <AlertTriangle size={18} style={{ flexShrink: 0 }} /> {errorText}
+            </div>
+          )}
+
+          <div className="flex-col" style={{ gap: '16px' }}>
+            <input
+              type="text"
+              placeholder={t('add_node.name_placeholder')}
+              value={nodeName}
+              onChange={e => setNodeName(e.target.value)}
+              style={{ width: '100%' }}
+              autoFocus
+              disabled={loading}
+            />
+            <input
+              type="text"
+              inputMode="numeric"
+              pattern="[0-9]*"
+              placeholder="000000"
+              value={pin}
+              onChange={e => setPin(e.target.value.replace(/\D/g, ''))}
+              maxLength={6}
+              style={{ width: '100%', letterSpacing: '4px', textAlign: 'center', fontSize: '1.2rem' }}
+              disabled={loading}
+            />
+            <button
+              type="submit"
+              disabled={loading || !nodeName.trim() || pin.length !== 6}
+              style={{ width: '100%' }}
+            >
+              {loading ? t('add_node.pairing') : t('add_node.pair_button')}
+            </button>
+          </div>
+        </form>
+      </div>
     </div>
   );
 };

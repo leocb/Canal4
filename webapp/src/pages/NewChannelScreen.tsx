@@ -59,64 +59,65 @@ export const NewChannelScreen = () => {
   };
 
   return (
-    <div className="app-container" style={{ alignItems: 'center', justifyContent: 'flex-start' }}>
-      <div className="screen-header" style={{ width: '100%', maxWidth: '400px' }}>
-        <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-          <button 
-            className="icon-button" 
-            onClick={() => navigate(-1)}
-          >
-            <ArrowLeft size={20} />
-          </button>
-          <h2>{t('new_channel.title')}</h2>
-        </div>
-      </div>
-
-      <form onSubmit={handleCreateChannel} className="glass-panel" style={{ padding: '40px', textAlign: 'center', width: '100%', maxWidth: '400px' }}>
-
-
-        {errorText && (
-          <div style={{
-            color: 'var(--error-color)',
-            marginBottom: '16px',
-            fontSize: '0.9rem',
-            padding: '12px',
-            background: 'rgba(255,80,80,0.1)',
-            borderRadius: '8px',
-            border: '1px solid var(--error-color)',
-            display: 'flex',
-            alignItems: 'center',
-            gap: '8px',
-            textAlign: 'left'
-          }}>
-            <AlertTriangle size={18} style={{ flexShrink: 0 }} /> {errorText}
+    <div className="app-container">
+      <div className="content-area" style={{ alignItems: 'center' }}>
+        <div className="screen-header" style={{ width: '100%', maxWidth: '400px' }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+            <button 
+              className="icon-button" 
+              onClick={() => navigate(-1)}
+            >
+              <ArrowLeft size={20} />
+            </button>
+            <h2>{t('new_channel.title')}</h2>
           </div>
-        )}
-
-        <div className="flex-col" style={{ gap: '16px' }}>
-          <input
-            type="text"
-            placeholder={t('new_channel.name_placeholder')}
-            value={name}
-            onChange={e => setName(e.target.value)}
-            style={{ width: '100%' }}
-            autoFocus
-            disabled={loading}
-          />
-          <input
-            type="text"
-            placeholder={t('new_channel.description_placeholder')}
-            value={description}
-            onChange={e => setDescription(e.target.value)}
-            style={{ width: '100%' }}
-            disabled={loading}
-          />
-          <button type="submit" disabled={loading || !name.trim()} style={{ width: '100%' }}>
-            {loading ? t('new_channel.creating') : t('new_channel.create')}
-          </button>
         </div>
-      </form>
-      <div style={{ flex: 1 }}></div>
+
+        <form onSubmit={handleCreateChannel} className="glass-panel" style={{ padding: '40px', textAlign: 'center', width: '100%', maxWidth: '400px' }}>
+
+
+          {errorText && (
+            <div style={{
+              color: 'var(--error-color)',
+              marginBottom: '16px',
+              fontSize: '0.9rem',
+              padding: '12px',
+              background: 'rgba(255,80,80,0.1)',
+              borderRadius: '8px',
+              border: '1px solid var(--error-color)',
+              display: 'flex',
+              alignItems: 'center',
+              gap: '8px',
+              textAlign: 'left'
+            }}>
+              <AlertTriangle size={18} style={{ flexShrink: 0 }} /> {errorText}
+            </div>
+          )}
+
+          <div className="flex-col" style={{ gap: '16px' }}>
+            <input
+              type="text"
+              placeholder={t('new_channel.name_placeholder')}
+              value={name}
+              onChange={e => setName(e.target.value)}
+              style={{ width: '100%' }}
+              autoFocus
+              disabled={loading}
+            />
+            <input
+              type="text"
+              placeholder={t('new_channel.description_placeholder')}
+              value={description}
+              onChange={e => setDescription(e.target.value)}
+              style={{ width: '100%' }}
+              disabled={loading}
+            />
+            <button type="submit" disabled={loading || !name.trim()} style={{ width: '100%' }}>
+              {loading ? t('new_channel.creating') : t('new_channel.create')}
+            </button>
+          </div>
+        </form>
+      </div>
     </div>
   );
 };

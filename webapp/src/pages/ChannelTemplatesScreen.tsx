@@ -60,26 +60,26 @@ export const ChannelTemplatesScreen = () => {
 
   return (
     <div className="app-container">
-      <div className="screen-header">
-        <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+      <div className="content-area">
+        <div className="screen-header">
+          <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+            <button 
+              className="icon-button" 
+              onClick={() => navigate(`/venues/${venue.link}/channels/${channel.channelId}`)}
+            >
+              <ArrowLeft size={20} />
+            </button>
+            <h2>{t('channel_templates.title', { name: channel.name })}</h2>
+          </div>
           <button 
-            className="icon-button" 
-            onClick={() => navigate(`/venues/${venue.link}/channels/${channel.channelId}`)}
+            className="icon-button"
+            onClick={() => navigate(`/venues/${venue.link}/channels/${channel.channelId}/templates/new`)}
+            title={t('channel_templates.new_template_tooltip')}
           >
-            <ArrowLeft size={20} />
+            <Plus size={20} />
           </button>
-          <h2>{t('channel_templates.title', { name: channel.name })}</h2>
         </div>
-        <button 
-          className="icon-button"
-          onClick={() => navigate(`/venues/${venue.link}/channels/${channel.channelId}/templates/new`)}
-          title={t('channel_templates.new_template_tooltip')}
-        >
-          <Plus size={20} />
-        </button>
-      </div>
 
-      <div className="content-area" style={{ flex: 1, padding: '0', overflowY: 'auto' }}>
         {channelTemplates.length === 0 ? (
           <div className="empty-state">
             <h3 style={{ marginBottom: '8px' }}>{t('channel_templates.no_templates')}</h3>

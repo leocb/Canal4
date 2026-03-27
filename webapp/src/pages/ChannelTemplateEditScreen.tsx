@@ -407,9 +407,9 @@ export const ChannelTemplateEditScreen = () => {
   );
 
   return (
-    <div className="app-container" style={{ padding: '0 10px 16px 10px' }}>
+    <div className="app-container">
       {showErrorModal && <ErrorModal />}
-      <div className="content-area" ref={contentAreaRef} style={{ flex: 1, padding: '16px 10px 16px 10px', overflowY: 'auto' }}>
+      <div className="content-area" ref={contentAreaRef}>
         <div className="screen-header">
           <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
             <button

@@ -83,46 +83,48 @@ export const JoinVenueScreen = () => {
   };
 
   return (
-    <div className="app-container" style={{ alignItems: 'center', justifyContent: 'center' }}>
-      <div className="glass-panel" style={{ padding: '48px', textAlign: 'center', maxWidth: '400px', width: '100%' }}>
-        <div style={{ color: 'var(--accent-color)', marginBottom: '16px' }}>
-          <Building2 size={48} />
-        </div>
-        <p style={{ color: 'var(--text-secondary)', marginBottom: '8px', fontSize: '0.9rem' }}>
-          {t('join_venue.invited_to')}
-        </p>
-        <h2 style={{ marginBottom: '8px', fontSize: '1.8rem' }}>{venueName}</h2>
-        <p style={{ color: 'var(--text-secondary)', marginBottom: '32px', fontSize: '0.85rem' }}>
-          <Trans i18nKey="join_venue.joining_as" values={{ name: user.name }}>
-            Joining as <strong style={{ color: 'var(--text-primary)' }}>{user.name}</strong>
-          </Trans>
-        </p>
-
-        {errorText && (
-          <div style={{
-            color: 'var(--error-color)',
-            marginBottom: '16px',
-            fontSize: '0.9rem',
-            padding: '12px',
-            background: 'rgba(255,80,80,0.1)',
-            borderRadius: '8px',
-            border: '1px solid var(--error-color)',
-            display: 'flex',
-            alignItems: 'center',
-            gap: '8px',
-            textAlign: 'left'
-          }}>
-            <AlertTriangle size={18} style={{ flexShrink: 0 }} /> {errorText}
+    <div className="app-container">
+      <div className="content-area" style={{ alignItems: 'center', justifyContent: 'center' }}>
+        <div className="glass-panel" style={{ padding: '48px', textAlign: 'center', maxWidth: '400px', width: '100%' }}>
+          <div style={{ color: 'var(--accent-color)', marginBottom: '16px' }}>
+            <Building2 size={48} />
           </div>
-        )}
+          <p style={{ color: 'var(--text-secondary)', marginBottom: '8px', fontSize: '0.9rem' }}>
+            {t('join_venue.invited_to')}
+          </p>
+          <h2 style={{ marginBottom: '8px', fontSize: '1.8rem' }}>{venueName}</h2>
+          <p style={{ color: 'var(--text-secondary)', marginBottom: '32px', fontSize: '0.85rem' }}>
+            <Trans i18nKey="join_venue.joining_as" values={{ name: user.name }}>
+              Joining as <strong style={{ color: 'var(--text-primary)' }}>{user.name}</strong>
+            </Trans>
+          </p>
 
-        <div className="flex-col" style={{ gap: '12px' }}>
-          <button onClick={handleJoin} disabled={loading} style={{ width: '100%' }}>
-            {loading ? t('join_venue.joining') : t('join_venue.join_button')}
-          </button>
-          <button className="secondary" onClick={() => navigate('/venues')} style={{ width: '100%' }}>
-            {t('common.cancel')}
-          </button>
+          {errorText && (
+            <div style={{
+              color: 'var(--error-color)',
+              marginBottom: '16px',
+              fontSize: '0.9rem',
+              padding: '12px',
+              background: 'rgba(255,80,80,0.1)',
+              borderRadius: '8px',
+              border: '1px solid var(--error-color)',
+              display: 'flex',
+              alignItems: 'center',
+              gap: '8px',
+              textAlign: 'left'
+            }}>
+              <AlertTriangle size={18} style={{ flexShrink: 0 }} /> {errorText}
+            </div>
+          )}
+
+          <div className="flex-col" style={{ gap: '12px' }}>
+            <button onClick={handleJoin} disabled={loading} style={{ width: '100%' }}>
+              {loading ? t('join_venue.joining') : t('join_venue.join_button')}
+            </button>
+            <button className="secondary" onClick={() => navigate('/venues')} style={{ width: '100%' }}>
+              {t('common.cancel')}
+            </button>
+          </div>
         </div>
       </div>
     </div>

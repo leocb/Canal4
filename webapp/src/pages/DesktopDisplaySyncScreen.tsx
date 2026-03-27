@@ -80,27 +80,27 @@ export const DesktopDisplaySyncScreen = () => {
 
   return (
     <div className="app-container">
-      <div className="screen-header" style={{ flexShrink: 0 }}>
-        <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+      <div className="content-area">
+        <div className="screen-header" style={{ flexShrink: 0 }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+            <button 
+              className="icon-button" 
+              onClick={() => navigate(`/venues/${venue.link}`)}
+            >
+              <ArrowLeft size={20} />
+            </button>
+            <h2>{t('display_nodes.title', { name: venue.name })}</h2>
+          </div>
           <button 
-            className="icon-button" 
-            onClick={() => navigate(`/venues/${venue.link}`)}
+            className="icon-button"
+            onClick={() => navigate(`/venues/${venue.link}/desktop-displays/new`)}
+            title={t('display_nodes.add_button')}
           >
-            <ArrowLeft size={20} />
+            <Plus size={20} />
           </button>
-          <h2>{t('display_nodes.title', { name: venue.name })}</h2>
         </div>
-        <button 
-          className="icon-button"
-          onClick={() => navigate(`/venues/${venue.link}/desktop-displays/new`)}
-          title={t('display_nodes.add_button')}
-        >
-          <Plus size={20} />
-        </button>
-      </div>
 
-      <div style={{ flex: 1, overflowY: 'auto', paddingBottom: '24px' }}>
-        <div className="flex-col">
+        <div className="flex-col" style={{ paddingBottom: '24px' }}>
           {venueDevices.length === 0 ? (
             <div className="empty-state glass-panel">
               <h3 style={{ color: 'var(--text-primary)'}}>{t('display_nodes.no_displays')}</h3>
@@ -195,7 +195,6 @@ export const DesktopDisplaySyncScreen = () => {
           )}
         </div>
       </div>
-
     </div>
   );
 };

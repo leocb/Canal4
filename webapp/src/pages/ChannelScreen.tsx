@@ -222,174 +222,176 @@ export const ChannelScreen = () => {
   return (
     <>
       <div className="app-container">
-        {/* Header */}
-        <div className="screen-header">
-          <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-            <button
-              className="icon-button"
-              onClick={() => navigate(`/venues/${venue.link}`)}
-            >
-              <ArrowLeft size={20} />
-            </button>
-            <h2>{channel.name}</h2>
-          </div>
+        <div className="content-area">
+          {/* Header */}
+          <div className="screen-header">
+            <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+              <button
+                className="icon-button"
+                onClick={() => navigate(`/venues/${venue.link}`)}
+              >
+                <ArrowLeft size={20} />
+              </button>
+              <h2>{channel.name}</h2>
+            </div>
 
-          <div style={{ display: 'flex', gap: '8px' }}>
+            <div style={{ display: 'flex', gap: '8px' }}>
 
-            {/* 3-dot menu — only shown if user can manage the channel */}
-            {canUpdate && (
-              <div style={{ position: 'relative' }} ref={menuRef}>
-                <button className="icon-button" onClick={() => setShowMenu(s => !s)}>
-                  <MoreVertical size={20} />
-                </button>
-                {showMenu && (
-                  <div className="dropdown-menu glass-panel" style={{ position: 'absolute', right: 0, top: '48px', zIndex: 100, minWidth: '180px', display: 'flex', flexDirection: 'column' }}>
-                    <button className="dropdown-item" onClick={() => { setShowMenu(false); navigate(`/venues/${venue.link}/channels/${channel.channelId}/settings`); }}>
-                      <Settings size={16} /> {t('channel.settings_button')}
-                    </button>
-                    <button className="dropdown-item" onClick={() => { setShowMenu(false); navigate(`/venues/${venue.link}/channels/${channel.channelId}/templates`); }}>
-                      <LayoutTemplate size={16} /> {t('channel.templates_button')}
-                    </button>
-                  </div>
-                )}
-              </div>
-            )}
-          </div>
-        </div>
-
-        {/* Moderator Tools Section */}
-        {isModerator && (
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '16px', padding: '0 12px' }}>
-            {/* Display Nodes Status Shelf */}
-            {hasDevices && (
-              <div>
-                <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '12px', color: 'var(--text-secondary)', fontSize: '0.8rem', fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.05em' }}>
-                  <Monitor size={14} /> {t('channel.display_nodes')}
+              {/* 3-dot menu — only shown if user can manage the channel */}
+              {canUpdate && (
+                <div style={{ position: 'relative' }} ref={menuRef}>
+                  <button className="icon-button" onClick={() => setShowMenu(s => !s)}>
+                    <MoreVertical size={20} />
+                  </button>
+                  {showMenu && (
+                    <div className="dropdown-menu glass-panel" style={{ position: 'absolute', right: 0, top: '48px', zIndex: 100, minWidth: '180px', display: 'flex', flexDirection: 'column' }}>
+                      <button className="dropdown-item" onClick={() => { setShowMenu(false); navigate(`/venues/${venue.link}/channels/${channel.channelId}/settings`); }}>
+                        <Settings size={16} /> {t('channel.settings_button')}
+                      </button>
+                      <button className="dropdown-item" onClick={() => { setShowMenu(false); navigate(`/venues/${venue.link}/channels/${channel.channelId}/templates`); }}>
+                        <LayoutTemplate size={16} /> {t('channel.templates_button')}
+                      </button>
+                    </div>
+                  )}
                 </div>
-                <div style={{ display: 'flex', gap: '12px', overflowX: 'auto', paddingBottom: '8px' }}>
-                  {connectedDevices.map((d: any) => {
-                    const status = getNodeStatus(d);
-                    const isOffline = status === 'offline';
-                    return (
-                      <div
-                        key={d.displayId.toString()}
-                        className="glass-panel"
-                        style={{
-                          minWidth: '200px',
-                          padding: '12px 16px',
-                          display: 'flex',
-                          alignItems: 'center',
-                          justifyContent: 'space-between',
-                          background: 'rgba(255,255,255,0.02)',
-                          border: `1px solid ${status === 'online' ? 'rgba(16,185,129,0.2)' : status === 'unstable' ? 'rgba(245,158,11,0.2)' : 'rgba(255,255,255,0.05)'}`
-                        }}
-                      >
-                        <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-                          <NodeIndicator device={d} />
-                          <div>
-                            <div style={{ fontSize: '0.85rem', fontWeight: 600 }}>{d.name}</div>
-                            <div style={{ fontSize: '0.7rem', color: isOffline ? 'var(--text-secondary)' : status === 'online' ? '#10B981' : '#F59E0B' }}>
-                              {status === 'online' ? t('channel.connected') : status === 'unstable' ? t('node_status.unstable') : t('channel.offline')}
+              )}
+            </div>
+          </div>
+
+          {/* Moderator Tools Section */}
+          {isModerator && (
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '16px', padding: '0 12px' }}>
+              {/* Display Nodes Status Shelf */}
+              {hasDevices && (
+                <div>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '12px', color: 'var(--text-secondary)', fontSize: '0.8rem', fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.05em' }}>
+                    <Monitor size={14} /> {t('channel.display_nodes')}
+                  </div>
+                  <div style={{ display: 'flex', gap: '12px', overflowX: 'auto', paddingBottom: '8px' }}>
+                    {connectedDevices.map((d: any) => {
+                      const status = getNodeStatus(d);
+                      const isOffline = status === 'offline';
+                      return (
+                        <div
+                          key={d.displayId.toString()}
+                          className="glass-panel"
+                          style={{
+                            minWidth: '200px',
+                            padding: '12px 16px',
+                            display: 'flex',
+                            alignItems: 'center',
+                            justifyContent: 'space-between',
+                            background: 'rgba(255,255,255,0.02)',
+                            border: `1px solid ${status === 'online' ? 'rgba(16,185,129,0.2)' : status === 'unstable' ? 'rgba(245,158,11,0.2)' : 'rgba(255,255,255,0.05)'}`
+                          }}
+                        >
+                          <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+                            <NodeIndicator device={d} />
+                            <div>
+                              <div style={{ fontSize: '0.85rem', fontWeight: 600 }}>{d.name}</div>
+                              <div style={{ fontSize: '0.7rem', color: isOffline ? 'var(--text-secondary)' : status === 'online' ? '#10B981' : '#F59E0B' }}>
+                                {status === 'online' ? t('channel.connected') : status === 'unstable' ? t('node_status.unstable') : t('channel.offline')}
+                              </div>
                             </div>
                           </div>
                         </div>
-                      </div>
-                    );
-                  })}
+                      );
+                    })}
+                  </div>
                 </div>
+              )}
+
+              {/* Send Broadcast Button */}
+              <div className="glass-panel" style={{ padding: '4px', background: 'var(--surface-bg)' }}>
+                <button
+                  type="button"
+                  onClick={() => navigate(`/venues/${venue.link}/channels/${channel.channelId}/send`)}
+                  style={{ width: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px', padding: '12px 16px', borderRadius: '8px' }}>
+                  <Send size={18} style={{ transform: 'translateY(1px)' }} /> {t('channel.send_broadcast')}
+                </button>
               </div>
-            )}
-
-            {/* Send Broadcast Button */}
-            <div className="glass-panel" style={{ padding: '4px', background: 'var(--surface-bg)' }}>
-              <button
-                type="button"
-                onClick={() => navigate(`/venues/${venue.link}/channels/${channel.channelId}/send`)}
-                style={{ width: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px', padding: '12px 16px', borderRadius: '8px' }}>
-                <Send size={18} style={{ transform: 'translateY(1px)' }} /> {t('channel.send_broadcast')}
-              </button>
             </div>
-          </div>
-        )}
+          )}
 
-        {/* Messages list — newest at top, notification panel style */}
-        <div className="flex-col" style={{ flex: 1, overflowY: 'auto', padding: '0 12px 24px', gap: '12px', marginTop: '16px' }}>
-          {channelMessages.length === 0 ? (
-            <div className="empty-state glass-panel">
-              <History size={48} style={{ opacity: 0.2, marginBottom: '16px' }} />
-              <h3 style={{ color: 'var(--text-primary)' }}>{t('channel.no_notifications_title')}</h3>
-              <p style={{ marginTop: '8px' }}>
-                {isModerator ? t('channel.no_notifications_moderator') : t('channel.no_notifications_member')}
-              </p>
-            </div>
-          ) : (
-            channelMessages.map(({ msg, count }: any) => {
-              const isMe = msg.senderId === user?.userId;
-              const dateObj = new Date(Number(msg.sentAt.microsSinceUnixEpoch / 1000n));
-              const isToday = new Date().toDateString() === dateObj.toDateString();
-              const timeString = isToday ? dateObj.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : dateObj.toLocaleString([], { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' });
+          {/* Messages list — newest at top, notification panel style */}
+          <div className="flex-col" style={{ flex: 1, padding: '0 12px 24px', gap: '12px', marginTop: '16px' }}>
+            {channelMessages.length === 0 ? (
+              <div className="empty-state glass-panel">
+                <History size={48} style={{ opacity: 0.2, marginBottom: '16px' }} />
+                <h3 style={{ color: 'var(--text-primary)' }}>{t('channel.no_notifications_title')}</h3>
+                <p style={{ marginTop: '8px' }}>
+                  {isModerator ? t('channel.no_notifications_moderator') : t('channel.no_notifications_member')}
+                </p>
+              </div>
+            ) : (
+              channelMessages.map(({ msg, count }: any) => {
+                const isMe = msg.senderId === user?.userId;
+                const dateObj = new Date(Number(msg.sentAt.microsSinceUnixEpoch / 1000n));
+                const isToday = new Date().toDateString() === dateObj.toDateString();
+                const timeString = isToday ? dateObj.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : dateObj.toLocaleString([], { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' });
 
-              return (
-                <div
-                  key={msg.messageId}
-                  className="glass-panel"
-                  style={{
-                    padding: '16px 20px',
-                    backgroundColor: 'rgba(255, 255, 255, 0.03)',
-                    border: '1px solid rgba(255, 255, 255, 0.04)',
-                    borderLeft: `3px solid ${getMessageBorderColor(msg.messageId, isMe)}`,
-                    borderRadius: '12px',
-                    boxShadow: '0 4px 20px rgba(0, 0, 0, 0.15)',
-                    cursor: isModerator ? 'pointer' : 'default',
-                    userSelect: 'none',
-                    display: 'flex',
-                    flexDirection: 'column',
-                    gap: '8px',
-                    transition: 'all 0.2s ease',
-                  }}
-                  onClick={() => { if (isModerator) setContextMsg(msg); }}
-                >
-                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                    <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                      <span style={{ fontSize: '0.8rem', color: 'var(--text-secondary)' }}>
-                        {timeString}
-                      </span>
-                      {count > 1 && (
-                        <span style={{
-                          fontSize: '0.7rem',
-                          fontWeight: 600,
-                          color: '#fff',
-                          backgroundColor: 'var(--accent-color)',
-                          padding: '2px 8px',
-                          borderRadius: '12px'
-                        }}>
-                          {count}x
+                return (
+                  <div
+                    key={msg.messageId}
+                    className="glass-panel"
+                    style={{
+                      padding: '16px 20px',
+                      backgroundColor: 'rgba(255, 255, 255, 0.03)',
+                      border: '1px solid rgba(255, 255, 255, 0.04)',
+                      borderLeft: `3px solid ${getMessageBorderColor(msg.messageId, isMe)}`,
+                      borderRadius: '12px',
+                      boxShadow: '0 4px 20px rgba(0, 0, 0, 0.15)',
+                      cursor: isModerator ? 'pointer' : 'default',
+                      userSelect: 'none',
+                      display: 'flex',
+                      flexDirection: 'column',
+                      gap: '8px',
+                      transition: 'all 0.2s ease',
+                    }}
+                    onClick={() => { if (isModerator) setContextMsg(msg); }}
+                  >
+                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                      <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                        <span style={{ fontSize: '0.8rem', color: 'var(--text-secondary)' }}>
+                          {timeString}
+                        </span>
+                        {count > 1 && (
+                          <span style={{
+                            fontSize: '0.7rem',
+                            fontWeight: 600,
+                            color: '#fff',
+                            backgroundColor: 'var(--accent-color)',
+                            padding: '2px 8px',
+                            borderRadius: '12px'
+                          }}>
+                            {count}x
+                          </span>
+                        )}
+                      </div>
+
+                      {/* Delivery status icons — moderators and above only */}
+                      {isModerator && hasDevices && (
+                        <span style={{ display: 'flex', gap: '8px', background: 'rgba(0,0,0,0.2)', padding: '4px 8px', borderRadius: '12px', alignItems: 'center' }}>
+                          {connectedDevices.map((d: any) => (
+                            <StatusIcon
+                              key={d.displayId.toString()}
+                              status={getDeliveryStatus(msg.messageId, d.displayId)}
+                              nodeStatus={getNodeStatus(d)}
+                              deviceName={d.name}
+                              t={t}
+                            />
+                          ))}
                         </span>
                       )}
                     </div>
-
-                    {/* Delivery status icons — moderators and above only */}
-                    {isModerator && hasDevices && (
-                      <span style={{ display: 'flex', gap: '8px', background: 'rgba(0,0,0,0.2)', padding: '4px 8px', borderRadius: '12px', alignItems: 'center' }}>
-                        {connectedDevices.map((d: any) => (
-                          <StatusIcon
-                            key={d.displayId.toString()}
-                            status={getDeliveryStatus(msg.messageId, d.displayId)}
-                            nodeStatus={getNodeStatus(d)}
-                            deviceName={d.name}
-                            t={t}
-                          />
-                        ))}
-                      </span>
-                    )}
+                    <div style={{ fontSize: '1.05rem', lineHeight: '1.4', wordBreak: 'break-word', color: 'rgba(255,255,255,0.9)' }}>
+                      {msg.content}
+                    </div>
                   </div>
-                  <div style={{ fontSize: '1.05rem', lineHeight: '1.4', wordBreak: 'break-word', color: 'rgba(255,255,255,0.9)' }}>
-                    {msg.content}
-                  </div>
-                </div>
-              );
-            })
-          )}
+                );
+              })
+            )}
+          </div>
         </div>
       </div>
 

@@ -129,79 +129,81 @@ export const VenuePermissionsScreen = () => {
 
   return (
     <div className="app-container">
-      <div className="screen-header">
-        <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-          <button 
-            className="icon-button" 
-            onClick={() => navigate(`/venues/${venue.link}`)}
-          >
-            <ArrowLeft size={20} />
-          </button>
-          <h2>{t('venue_permissions.title', { name: venue.name })}</h2>
-        </div>
-      </div>
-
-      <div className="flex-row" style={{ gap: '12px', flexWrap: 'wrap' }}>
-        <input 
-          type="text" 
-          placeholder={t('venue_permissions.search_placeholder')}
-          value={searchTerm} 
-          onChange={(e) => setSearchTerm(e.target.value)}
-          style={{ flex: '1 1 200px', padding: '10px 14px', borderRadius: '8px', border: '1px solid var(--surface-border)', background: 'var(--surface-color)' }}
-        />
-        <select 
-          value={roleFilter} 
-          onChange={(e) => setRoleFilter(e.target.value)}
-          style={{ flex: '1 1 150px', padding: '10px 14px', borderRadius: '8px', border: '1px solid var(--surface-border)', background: 'var(--surface-color)' }}
-        >
-          <option value="">{t('venue_permissions.filters.all_roles')}</option>
-          <option value="Owner">{t('roles.owner')}</option>
-          <option value="Admin">{t('roles.admin')}</option>
-          <option value="Moderator">{t('roles.moderator')}</option>
-          <option value="Member">{t('roles.member')}</option>
-          <option value="Blocked">{t('roles.blocked')}</option>
-        </select>
-      </div>
-
-      <div className="flex-col" style={{ marginTop: '24px', gap: '12px' }}>
-        {filteredMembers.map((member) => {
-          const badge = getRoleBadgeColor(member.highestRole, member.isBlocked);
-          return (
-            <div 
-              key={member.userId.toString()}
-              className="glass-panel-interactive flex-row"
-              style={{ 
-                padding: '16px', 
-                alignItems: 'center', 
-                justifyContent: 'space-between', 
-                opacity: member.isBlocked ? 0.6 : 1,
-                gap: '12px',
-              }}
-              onClick={() => navigate(`/venues/${venue.link}/permissions/${member.userId}`)}
+      <div className="content-area">
+        <div className="screen-header">
+          <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+            <button 
+              className="icon-button" 
+              onClick={() => navigate(`/venues/${venue.link}`)}
             >
-              <div style={{ flex: 1, minWidth: 0 }}>
-                <h3 style={{ margin: 0, fontSize: '1.1rem', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
-                  {member.name} {member.isBlocked && t('venue_permissions.blocked_suffix')}
-                </h3>
+              <ArrowLeft size={20} />
+            </button>
+            <h2>{t('venue_permissions.title', { name: venue.name })}</h2>
+          </div>
+        </div>
+
+        <div className="flex-row" style={{ gap: '12px', flexWrap: 'wrap' }}>
+          <input 
+            type="text" 
+            placeholder={t('venue_permissions.search_placeholder')}
+            value={searchTerm} 
+            onChange={(e) => setSearchTerm(e.target.value)}
+            style={{ flex: '1 1 200px', padding: '10px 14px', borderRadius: '8px', border: '1px solid var(--surface-border)', background: 'var(--surface-color)' }}
+          />
+          <select 
+            value={roleFilter} 
+            onChange={(e) => setRoleFilter(e.target.value)}
+            style={{ flex: '1 1 150px', padding: '10px 14px', borderRadius: '8px', border: '1px solid var(--surface-border)', background: 'var(--surface-color)' }}
+          >
+            <option value="">{t('venue_permissions.filters.all_roles')}</option>
+            <option value="Owner">{t('roles.owner')}</option>
+            <option value="Admin">{t('roles.admin')}</option>
+            <option value="Moderator">{t('roles.moderator')}</option>
+            <option value="Member">{t('roles.member')}</option>
+            <option value="Blocked">{t('roles.blocked')}</option>
+          </select>
+        </div>
+
+        <div className="flex-col" style={{ marginTop: '24px', gap: '12px' }}>
+          {filteredMembers.map((member) => {
+            const badge = getRoleBadgeColor(member.highestRole, member.isBlocked);
+            return (
+              <div 
+                key={member.userId.toString()}
+                className="glass-panel-interactive flex-row"
+                style={{ 
+                  padding: '16px', 
+                  alignItems: 'center', 
+                  justifyContent: 'space-between', 
+                  opacity: member.isBlocked ? 0.6 : 1,
+                  gap: '12px',
+                }}
+                onClick={() => navigate(`/venues/${venue.link}/permissions/${member.userId}`)}
+              >
+                <div style={{ flex: 1, minWidth: 0 }}>
+                  <h3 style={{ margin: 0, fontSize: '1.1rem', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                    {member.name} {member.isBlocked && t('venue_permissions.blocked_suffix')}
+                  </h3>
+                </div>
+                <span style={{
+                  background: badge.bg,
+                  color: badge.text,
+                  padding: '4px 8px',
+                  borderRadius: '12px',
+                  fontSize: '0.8rem',
+                  fontWeight: 600,
+                  whiteSpace: 'nowrap',
+                  flexShrink: 0,
+                }}>
+                  {member.isBlocked ? t('roles.blocked') : t(`roles.${member.highestRole}`)}
+                </span>
               </div>
-              <span style={{
-                background: badge.bg,
-                color: badge.text,
-                padding: '4px 8px',
-                borderRadius: '12px',
-                fontSize: '0.8rem',
-                fontWeight: 600,
-                whiteSpace: 'nowrap',
-                flexShrink: 0,
-              }}>
-                {member.isBlocked ? t('roles.blocked') : t(`roles.${member.highestRole}`)}
-              </span>
-            </div>
-          );
-        })}
-        {filteredMembers.length === 0 && (
-           <p style={{ textAlign: 'center', color: 'var(--text-secondary)', padding: '24px' }}>{t('venue_permissions.no_members')}</p>
-        )}
+            );
+          })}
+          {filteredMembers.length === 0 && (
+            <p style={{ textAlign: 'center', color: 'var(--text-secondary)', padding: '24px' }}>{t('venue_permissions.no_members')}</p>
+          )}
+        </div>
       </div>
     </div>
   );

@@ -128,20 +128,20 @@ export const ChannelSettingsScreen = () => {
 
   return (
     <div className="app-container">
-      <div className="screen-header">
-        <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-          <button
-            className="icon-button"
-            onClick={() => navigate(`/venues/${venue.link}/channels/${channel.channelId}`)}
-            aria-label="Back to channel"
-          >
-            <ArrowLeft size={20} />
-          </button>
-          <h2>{t('channel_settings.title', { name: channel.name })}</h2>
+      <div className="content-area">
+        <div className="screen-header">
+          <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+            <button
+              className="icon-button"
+              onClick={() => navigate(`/venues/${venue.link}/channels/${channel.channelId}`)}
+              aria-label="Back to channel"
+            >
+              <ArrowLeft size={20} />
+            </button>
+            <h2>{t('channel_settings.title', { name: channel.name })}</h2>
+          </div>
         </div>
-      </div>
 
-      <div className="content-area" style={{ flex: 1, padding: '24px 0', width: '100%' }}>
         <form onSubmit={handleUpdate} className="glass-panel flex-col" style={{ padding: '24px' }}>
           {errorText && (
             <div style={{
@@ -156,7 +156,7 @@ export const ChannelSettingsScreen = () => {
               alignItems: 'center',
               gap: '8px'
             }}>
-               <AlertTriangle size={18} style={{ flexShrink: 0 }} /> {errorText}
+              <AlertTriangle size={18} style={{ flexShrink: 0 }} /> {errorText}
             </div>
           )}
 

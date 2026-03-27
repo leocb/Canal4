@@ -283,27 +283,27 @@ export const SendMessageScreen = () => {
 
   return (
     <div className="app-container">
-      <div className="screen-header">
-        <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-          <button
-            className="icon-button"
-            onClick={() => {
-              if (selectedTemplateId && channelTemplates.length > 1) {
-                setSelectedTemplateId(null);
-                setFieldValues({});
-                setFieldErrors({});
-              } else {
-                navigate(-1);
-              }
-            }}
-          >
-            <ArrowLeft size={20} style={{ transform: 'translateY(1px)' }} />
-          </button>
-          <h2>{t('send_message.title')}</h2>
+      <div className="content-area">
+        <div className="screen-header">
+          <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+            <button
+              className="icon-button"
+              onClick={() => {
+                if (selectedTemplateId && channelTemplates.length > 1) {
+                  setSelectedTemplateId(null);
+                  setFieldValues({});
+                  setFieldErrors({});
+                } else {
+                  navigate(-1);
+                }
+              }}
+            >
+              <ArrowLeft size={20} style={{ transform: 'translateY(1px)' }} />
+            </button>
+            <h2>{t('send_message.title')}</h2>
+          </div>
         </div>
-      </div>
 
-      <div className="content-area" style={{ flex: 1, padding: '16px', overflowY: 'auto' }}>
         {!selectedTemplateId ? (
           <div className="flex-col" style={{ gap: '16px', maxWidth: '600px', margin: '0 auto' }}>
             <h3 style={{ marginBottom: '8px' }}>{t('send_message.select_template')}</h3>
