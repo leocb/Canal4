@@ -66,7 +66,7 @@ export const AddNodeScreen = () => {
   };
 
   return (
-    <div className="app-container" style={{ alignItems: 'center', justifyContent: 'center' }}>
+    <div className="app-container" style={{ alignItems: 'center', justifyContent: 'flex-start' }}>
       <div className="screen-header" style={{ width: '100%', maxWidth: '400px' }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
           <button 
