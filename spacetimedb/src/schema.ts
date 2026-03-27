@@ -422,15 +422,22 @@ export const ChannelView = spacetimedb.view({ name: "channel_view", public: true
 });
 
 export const VenueMemberView = spacetimedb.view({ name: "venue_member_view", public: true }, t.array(VenueMember.rowType), (ctx) => {
+  if (!ctx.sender) return [];
+  const senderHex = ctx.sender.toHexString();
   const venueIds = new Set<bigint>();
-  const ui = ctx.db.UserIdentity.identity.find(ctx.sender);
-  if (ui) {
-    for (const m of ctx.db.VenueMember.venue_member_user_id.filter(ui.userId)) {
-      venueIds.add(m.venueId);
+
+  for (const ui of ctx.db.UserIdentity) {
+    if (ui.identity.toHexString() === senderHex) {
+      for (const m of ctx.db.VenueMember.venue_member_user_id.filter(ui.userId)) {
+        venueIds.add(m.venueId);
+      }
+      break;
     }
   }
-  for (const d of ctx.db.DisplayDevice.display_device_identity.filter(ctx.sender)) {
-    venueIds.add(d.venueId);
+  for (const d of ctx.db.DisplayDevice) {
+    if (d.identity.toHexString() === senderHex) {
+      venueIds.add(d.venueId);
+    }
   }
 
   const results = [];
@@ -443,15 +450,22 @@ export const VenueMemberView = spacetimedb.view({ name: "venue_member_view", pub
 });
 
 export const ChannelMemberRoleView = spacetimedb.view({ name: "channel_member_role_view", public: true }, t.array(ChannelMemberRole.rowType), (ctx) => {
+  if (!ctx.sender) return [];
+  const senderHex = ctx.sender.toHexString();
   const venueIds = new Set<bigint>();
-  const ui = ctx.db.UserIdentity.identity.find(ctx.sender);
-  if (ui) {
-    for (const m of ctx.db.VenueMember.venue_member_user_id.filter(ui.userId)) {
-      venueIds.add(m.venueId);
+
+  for (const ui of ctx.db.UserIdentity) {
+    if (ui.identity.toHexString() === senderHex) {
+      for (const m of ctx.db.VenueMember.venue_member_user_id.filter(ui.userId)) {
+        venueIds.add(m.venueId);
+      }
+      break;
     }
   }
-  for (const d of ctx.db.DisplayDevice.display_device_identity.filter(ctx.sender)) {
-    venueIds.add(d.venueId);
+  for (const d of ctx.db.DisplayDevice) {
+    if (d.identity.toHexString() === senderHex) {
+      venueIds.add(d.venueId);
+    }
   }
 
   const results = [];
@@ -466,21 +480,36 @@ export const ChannelMemberRoleView = spacetimedb.view({ name: "channel_member_ro
 });
 
 export const NotificationFilterView = spacetimedb.view({ name: "notification_filter_view", public: true }, t.array(NotificationFilter.rowType), (ctx) => {
-  const ui = ctx.db.UserIdentity.identity.find(ctx.sender);
+  if (!ctx.sender) return [];
+  const senderHex = ctx.sender.toHexString();
+  let ui = null;
+  for (const row of ctx.db.UserIdentity) {
+    if (row.identity.toHexString() === senderHex) {
+      ui = row;
+      break;
+    }
+  }
   if (!ui) return [];
   return [...ctx.db.NotificationFilter.notification_filter_user_id.filter(ui.userId)];
 });
 
 export const MessageTemplateView = spacetimedb.view({ name: "message_template_view", public: true }, t.array(MessageTemplate.rowType), (ctx) => {
+  if (!ctx.sender) return [];
+  const senderHex = ctx.sender.toHexString();
   const venueIds = new Set<bigint>();
-  const ui = ctx.db.UserIdentity.identity.find(ctx.sender);
-  if (ui) {
-    for (const m of ctx.db.VenueMember.venue_member_user_id.filter(ui.userId)) {
-      venueIds.add(m.venueId);
+
+  for (const ui of ctx.db.UserIdentity) {
+    if (ui.identity.toHexString() === senderHex) {
+      for (const m of ctx.db.VenueMember.venue_member_user_id.filter(ui.userId)) {
+        venueIds.add(m.venueId);
+      }
+      break;
     }
   }
-  for (const d of ctx.db.DisplayDevice.display_device_identity.filter(ctx.sender)) {
-    venueIds.add(d.venueId);
+  for (const d of ctx.db.DisplayDevice) {
+    if (d.identity.toHexString() === senderHex) {
+      venueIds.add(d.venueId);
+    }
   }
 
   const results = [];
@@ -495,15 +524,22 @@ export const MessageTemplateView = spacetimedb.view({ name: "message_template_vi
 });
 
 export const MessageView = spacetimedb.view({ name: "message_view", public: true }, t.array(Message.rowType), (ctx) => {
+  if (!ctx.sender) return [];
+  const senderHex = ctx.sender.toHexString();
   const venueIds = new Set<bigint>();
-  const ui = ctx.db.UserIdentity.identity.find(ctx.sender);
-  if (ui) {
-    for (const m of ctx.db.VenueMember.venue_member_user_id.filter(ui.userId)) {
-      venueIds.add(m.venueId);
+
+  for (const ui of ctx.db.UserIdentity) {
+    if (ui.identity.toHexString() === senderHex) {
+      for (const m of ctx.db.VenueMember.venue_member_user_id.filter(ui.userId)) {
+        venueIds.add(m.venueId);
+      }
+      break;
     }
   }
-  for (const d of ctx.db.DisplayDevice.display_device_identity.filter(ctx.sender)) {
-    venueIds.add(d.venueId);
+  for (const d of ctx.db.DisplayDevice) {
+    if (d.identity.toHexString() === senderHex) {
+      venueIds.add(d.venueId);
+    }
   }
 
   const results = [];
@@ -518,15 +554,22 @@ export const MessageView = spacetimedb.view({ name: "message_view", public: true
 });
 
 export const DisplayDeviceView = spacetimedb.view({ name: "display_device_view", public: true }, t.array(DisplayDevice.rowType), (ctx) => {
+  if (!ctx.sender) return [];
+  const senderHex = ctx.sender.toHexString();
   const venueIds = new Set<bigint>();
-  const ui = ctx.db.UserIdentity.identity.find(ctx.sender);
-  if (ui) {
-    for (const m of ctx.db.VenueMember.venue_member_user_id.filter(ui.userId)) {
-      venueIds.add(m.venueId);
+
+  for (const ui of ctx.db.UserIdentity) {
+    if (ui.identity.toHexString() === senderHex) {
+      for (const m of ctx.db.VenueMember.venue_member_user_id.filter(ui.userId)) {
+        venueIds.add(m.venueId);
+      }
+      break;
     }
   }
-  for (const d of ctx.db.DisplayDevice.display_device_identity.filter(ctx.sender)) {
-    venueIds.add(d.venueId);
+  for (const d of ctx.db.DisplayDevice) {
+    if (d.identity.toHexString() === senderHex) {
+      venueIds.add(d.venueId);
+    }
   }
 
   const results = [];
@@ -539,19 +582,34 @@ export const DisplayDeviceView = spacetimedb.view({ name: "display_device_view",
 });
 
 export const DisplayPairingPinView = spacetimedb.view({ name: "display_pairing_pin_view", public: true }, t.array(DisplayPairingPin.rowType), (ctx) => {
-  return ctx.from.DisplayPairingPin.where((p: any) => p.identity.eq(ctx.sender));
+  if (!ctx.sender) return [];
+  const senderHex = ctx.sender.toHexString();
+  const results = [];
+  for (const p of ctx.db.DisplayPairingPin) {
+    if (p.identity.toHexString() === senderHex) {
+      results.push(p);
+    }
+  }
+  return results;
 });
 
 export const MessageDeliveryStatusView = spacetimedb.view({ name: "message_delivery_status_view", public: true }, t.array(MessageDeliveryStatus.rowType), (ctx) => {
+  if (!ctx.sender) return [];
+  const senderHex = ctx.sender.toHexString();
   const venueIds = new Set<bigint>();
-  const ui = ctx.db.UserIdentity.identity.find(ctx.sender);
-  if (ui) {
-    for (const m of ctx.db.VenueMember.venue_member_user_id.filter(ui.userId)) {
-      venueIds.add(m.venueId);
+
+  for (const ui of ctx.db.UserIdentity) {
+    if (ui.identity.toHexString() === senderHex) {
+      for (const m of ctx.db.VenueMember.venue_member_user_id.filter(ui.userId)) {
+        venueIds.add(m.venueId);
+      }
+      break;
     }
   }
-  for (const d of ctx.db.DisplayDevice.display_device_identity.filter(ctx.sender)) {
-    venueIds.add(d.venueId);
+  for (const d of ctx.db.DisplayDevice) {
+    if (d.identity.toHexString() === senderHex) {
+      venueIds.add(d.venueId);
+    }
   }
 
   const results = [];
@@ -568,7 +626,7 @@ export const MessageDeliveryStatusView = spacetimedb.view({ name: "message_deliv
 });
 
 export const VenueInviteTokenView = spacetimedb.anonymousView({ name: "venue_invite_token_view", public: true }, t.array(VenueInviteToken.rowType), (ctx) => {
-  return ctx.from.VenueInviteToken;
+  return [...ctx.db.VenueInviteToken];
 });
 
 export default spacetimedb;
