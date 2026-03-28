@@ -54,6 +54,7 @@ jobs:
             display/dist/*.exe
             display/dist/*.zip
             display/dist/*.yml
+            !display/dist/builder-debug.yml
           if-no-files-found: error
 
   publish-latest:
