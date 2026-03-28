@@ -6,6 +6,7 @@
   "main": "./out/main/index.js",
   "author": "github.com/leocb",
   "homepage": "https://github.com/leocb/canal4",
+  "repository": "https://github.com/leocb/canal4",
   "scripts": {
     "format": "prettier --write .",
     "lint": "eslint --cache .",
