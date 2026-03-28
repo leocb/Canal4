@@ -33,9 +33,9 @@ mac:
       arch: [x64, arm64]
     - target: zip
       arch: [x64, arm64]
+  artifactName: ${productName}-${version}-mac-${arch}.${ext}
 
 dmg:
-  artifactName: ${productName}-${version}-mac-${arch}.${ext}
   title: ${productName} ${version}
   background: null
   contents:
@@ -45,9 +45,6 @@ dmg:
       y: 220
       type: link
       path: /Applications
-
-zip:
-  artifactName: ${productName}-${version}-mac-${arch}.${ext}
 
 # ─── Windows ──────────────────────────────────────────────────────────────────
 win:
