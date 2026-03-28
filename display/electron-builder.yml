@@ -79,9 +79,3 @@ appImage:
   artifactName: ${productName}-${version}-${arch}.${ext}
 
 npmRebuild: false
-
-publish:
-  provider: github
-  owner: leocb
-  repo: Canal4
-  releaseType: release
