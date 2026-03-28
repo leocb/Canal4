@@ -1,0 +1,64 @@
+name: Trigger New Release
+
+on:
+  workflow_dispatch:
+    inputs:
+      version_type:
+        description: 'What kind of version bump?'
+        required: true
+        default: 'patch'
+        type: choice
+        options:
+          - patch
+          - minor
+          - major
+
+jobs:
+  bump-version:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          # We need a token that can bypass branch protection if main is protected.
+          # Otherwise GITHUB_TOKEN works fine for simple repos.
+          token: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+
+      - name: Git Configuration
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+
+      - name: Bump Version in Apps
+        id: bump
+        run: |
+          # 1. Update Display app
+          cd display
+          npm version ${{ github.event.inputs.version_type }} --no-git-tag-version
+          NEW_VERSION=$(node -p "require('./package.json').version")
+          
+          # 2. Update Webapp
+          cd ../webapp
+          npm version $NEW_VERSION --no-git-tag-version
+          
+          echo "new_version=$NEW_VERSION" >> $GITHUB_OUTPUT
+          echo "tag_name=v$NEW_VERSION" >> $GITHUB_OUTPUT
+
+      - name: Commit and Push Changes
+        run: |
+          git add display/package.json display/package-lock.json webapp/package.json webapp/package-lock.json
+          git commit -m "chore: release version ${{ steps.bump.outputs.new_version }}"
+          git push origin main
+
+      - name: Create and Push Tag
+        run: |
+          git tag ${{ steps.bump.outputs.tag_name }}
+          git push origin ${{ steps.bump.outputs.tag_name }}
