@@ -5,6 +5,7 @@ import { autoUpdater } from 'electron-updater'
 import icon from '../../resources/icon.png?asset'
 
 app.commandLine.appendSwitch('disable-renderer-backgrounding');
+app.setName('Canal4');
 
 let tray: Tray | null = null;
 let tickerWindow: BrowserWindow | null = null;
@@ -331,6 +332,20 @@ app.whenReady().then(async () => {
     const windowHeight = params.height || 80;
     const y = params.position === 'top' ? offsetY : offsetY + height - windowHeight;
     tickerWindow.setBounds({ x: startX, y, width, height: windowHeight });
+  });
+
+  ipcMain.handle('get-login-item-settings', () => {
+    return app.getLoginItemSettings().openAtLogin;
+  });
+
+  ipcMain.handle('set-login-item-settings', (_event, openAtLogin: boolean) => {
+    app.setLoginItemSettings({
+      openAtLogin,
+      openAsHidden: true, // Keep it silent in background
+      path: process.execPath,
+      name: 'Canal4'
+    });
+    return app.getLoginItemSettings().openAtLogin;
   });
 
   // App is fundamentally a background tray app, we only show Settings if opened directly on MacOS

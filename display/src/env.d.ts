@@ -14,6 +14,8 @@ interface Window {
     hideTicker: () => void,
     updateTickerPosition: (position: 'top' | 'bottom', displayId?: number, height?: number) => void,
     updateTray: (params: { settingsLabel: string; quitLabel: string; tooltip: string }) => void,
+    getLoginItemSettings: () => Promise<boolean>,
+    setLoginItemSettings: (openAtLogin: boolean) => Promise<boolean>,
   }
 }
 declare module '*?asset' {

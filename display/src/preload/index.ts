@@ -16,6 +16,8 @@ const api = {
   hideTicker: () => ipcRenderer.send('hide-ticker'),
   updateTickerPosition: (position: 'top' | 'bottom', displayId?: number, height?: number) => ipcRenderer.send('update-ticker-position', { position, displayId, height }),
   updateTray: (params: { settingsLabel: string; quitLabel: string; tooltip: string }) => ipcRenderer.send('update-tray', params),
+  getLoginItemSettings: () => ipcRenderer.invoke('get-login-item-settings'),
+  setLoginItemSettings: (openAtLogin: boolean) => ipcRenderer.invoke('set-login-item-settings', openAtLogin),
 }
 
 // Use `contextBridge` APIs to expose Electron APIs to

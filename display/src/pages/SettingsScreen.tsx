@@ -151,6 +151,7 @@ export const SettingsScreen = () => {
   const activeTab: Tab = (tab as Tab) || 'pairing';
   const [tickerSettings, setTickerSettingsState] = useState<TickerSettings>(loadTickerSettings());
   const [showLangMenu, setShowLangMenu] = useState(false);
+  const [openAtLogin, setOpenAtLogin] = useState(false);
 
   const [tempStUri, setTempStUri] = useState(stUri);
   const [tempStDb, setTempStDb] = useState(stDb);
@@ -205,6 +206,10 @@ export const SettingsScreen = () => {
       window.api.getFonts().then(fonts => {
         setSystemFonts(fonts.sort());
       }).catch(err => console.error("Could not fetch fonts:", err));
+    }
+
+    if (window.api?.getLoginItemSettings) {
+      window.api.getLoginItemSettings().then(setOpenAtLogin);
     }
   }, []);
 
@@ -808,6 +813,56 @@ export const SettingsScreen = () => {
                   )}
                 </div>
               )}
+            </section>
+
+            {/* General Settings */}
+            <section style={sectionStyle}>
+              <h3 style={{ fontSize: '1rem', margin: '0 0 16px' }}>{t('settings.general.title')}</h3>
+              
+              <div 
+                style={{ 
+                  display: 'flex', 
+                  alignItems: 'center', 
+                  justifyContent: 'space-between', 
+                  padding: '16px', 
+                  background: 'rgba(255,255,255,0.03)', 
+                  borderRadius: '12px', 
+                  border: '1px solid rgba(255,255,255,0.06)',
+                  cursor: 'pointer'
+                }}
+                onClick={async () => {
+                  if (window.api?.setLoginItemSettings) {
+                    const newVal = !openAtLogin;
+                    const result = await window.api.setLoginItemSettings(newVal);
+                    setOpenAtLogin(result);
+                  }
+                }}
+              >
+                <div style={{ flex: 1 }}>
+                  <div style={{ fontSize: '0.9rem', fontWeight: 600, color: '#F8FAFC' }}>{t('settings.general.start_with_system')}</div>
+                  <div style={{ fontSize: '0.75rem', color: '#94A3B8', marginTop: '4px' }}>{t('settings.general.start_with_system_helper')}</div>
+                </div>
+                <div style={{ 
+                  width: '42px', 
+                  height: '24px', 
+                  borderRadius: '12px', 
+                  background: openAtLogin ? '#3B82F6' : 'rgba(255,255,255,0.1)',
+                  position: 'relative',
+                  transition: 'all 0.2s',
+                  flexShrink: 0
+                }}>
+                  <div style={{ 
+                    width: '18px', 
+                    height: '18px', 
+                    borderRadius: '50%', 
+                    background: '#fff', 
+                    position: 'absolute', 
+                    top: '3px', 
+                    left: openAtLogin ? '21px' : '3px',
+                    transition: 'all 0.2s'
+                  }} />
+                </div>
+              </div>
             </section>
 
             {/* Display & Position */}

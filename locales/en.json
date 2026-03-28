@@ -502,8 +502,12 @@
     "tabs": {
       "logs": "Messages",
       "pairing": "Pairing",
-      "settings": "Settings",
-      "general": "General"
+      "settings": "Settings"
+    },
+    "general": {
+      "title": "General",
+      "start_with_system": "Start with system",
+      "start_with_system_helper": "Automatically start Canal4 when you log in to your computer."
     },
     "common": {
       "quit": "Quit Canal4",
