@@ -52,13 +52,19 @@ jobs:
           cd ../webapp
           npm version $NEW_VERSION --no-git-tag-version
           
+          # 3. Update SpacetimeDB module
+          cd ../spacetimedb
+          npm version $NEW_VERSION --no-git-tag-version
+          
           echo "new_version=$NEW_VERSION" >> $GITHUB_OUTPUT
           echo "tag_name=v$NEW_VERSION" >> $GITHUB_OUTPUT
 
       - name: Commit and Push
         run: |
           VERSION=$(node -p "require('./display/package.json').version")
-          git add display/package.json display/package-lock.json webapp/package.json webapp/package-lock.json
+          git add display/package.json display/package-lock.json \
+                  webapp/package.json webapp/package-lock.json \
+                  spacetimedb/package.json spacetimedb/package-lock.json
           git commit -m "chore: release version $VERSION"
           git tag v$VERSION
           git push origin main --tags
