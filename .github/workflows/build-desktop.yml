@@ -2,8 +2,10 @@ name: Build & Release Desktop Apps
 
 on:
   push:
-    branches: [ "main" ]
     tags: [ "v*" ]
+  workflow_run:
+    workflows: ["Trigger New Release"]
+    types: [ "completed" ]
   workflow_dispatch:
 
 env:
@@ -13,7 +15,10 @@ jobs:
   build:
     name: Build for ${{ matrix.os }}
     runs-on: ${{ matrix.os }}
-    if: github.repository_owner == 'leocb'
+    if: |
+      github.repository_owner == 'leocb' && 
+      (github.event_name == 'workflow_run' ? github.event.workflow_run.conclusion == 'success' : true)
+
     strategy:
       matrix:
         os: [macos-latest, windows-latest]
@@ -57,48 +62,25 @@ jobs:
             !display/dist/builder-debug.yml
           if-no-files-found: error
 
-  publish-latest:
-    name: Update Latest Development Build
-    needs: build
-    runs-on: ubuntu-latest
-    if: github.ref == 'refs/heads/main'
-    permissions:
-      contents: write
-    steps:
-      - name: Download all artifacts
-        uses: actions/download-artifact@v4
-        with:
-          path: release-artifacts
-          merge-multiple: true
-
-      - name: Update Latest Release
-        uses: softprops/action-gh-release@v2
-        with:
-          tag_name: latest
-          name: "Development Build (Latest)"
-          body: |
-            This release contains the latest automated builds from the `main` branch.
-            **Warning:** These builds are for testing purposes and may be unstable.
-            
-            Last updated: ${{ github.event.head_commit.timestamp }}
-          files: |
-            release-artifacts/*.dmg
-            release-artifacts/*.exe
-            release-artifacts/*.zip
-            release-artifacts/*.yml
-          prerelease: true
-          make_latest: false
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-
   release-versioned:
     name: Official Versioned Release
     needs: build
     runs-on: ubuntu-latest
-    if: startsWith(github.ref, 'refs/tags/v')
+    if: |
+      (github.event_name == 'workflow_run' && github.event.workflow_run.conclusion == 'success') || 
+      startsWith(github.ref, 'refs/tags/v')
     permissions:
       contents: write
     steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
+
+      - name: Get Version from Package
+        id: pkg_version
+        run: |
+          VERSION=v$(node -p "require('./display/package.json').version")
+          echo "tag_name=$VERSION" >> $GITHUB_OUTPUT
+
       - name: Download all artifacts
         uses: actions/download-artifact@v4
         with:
@@ -108,6 +90,7 @@ jobs:
       - name: Create Versioned Release
         uses: softprops/action-gh-release@v2
         with:
+          tag_name: ${{ steps.pkg_version.outputs.tag_name }}
           files: |
             release-artifacts/*.dmg
             release-artifacts/*.exe
