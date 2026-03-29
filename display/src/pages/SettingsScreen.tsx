@@ -5,6 +5,7 @@ import { useParams, useNavigate } from 'react-router-dom';
 import { tables, reducers } from '../module_bindings';
 import { useConnectivity } from '../SpacetimeDBProvider';
 import { useTranslation } from 'react-i18next';
+import pkg from '../../package.json';
 
 
 type Tab = 'logs' | 'pairing' | 'settings';
@@ -1113,6 +1114,10 @@ export const SettingsScreen = () => {
               </div>
               <style>{`@keyframes marquee { 0% { transform: translateX(0) } 100% { transform: translateX(-100%) } }`}</style>
             </section>
+            
+            <div style={{ textAlign: 'center', marginTop: '12px', opacity: 0.4, fontSize: '0.75rem' }}>
+              {t('common.version', { version: pkg.version })}
+            </div>
 
           </div>
         )}

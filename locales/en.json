@@ -92,7 +92,8 @@
     "retrying_in": "Retrying in",
     "try_now": "Try connect now",
     "times": "times",
-    "connection_error": "Connection Error"
+    "connection_error": "Connection Error",
+    "version": "Version {{version}}"
   },
   "breadcrumb": {
     "new_venue": "New Venue",

@@ -6,6 +6,7 @@ import { useReducer } from 'spacetimedb/react';
 import { useAuth } from '../hooks/useAuth';
 import { useTranslation } from 'react-i18next';
 import { usePasskeys } from '../hooks/usePasskeys';
+import pkg from '../../package.json';
 
 export const LoginScreen = () => {
   const { t, i18n } = useTranslation();
@@ -309,6 +310,9 @@ export const LoginScreen = () => {
           </div>
 
           <div style={{ marginTop: '32px', fontSize: '0.8rem', color: 'var(--text-secondary)' }}>
+            <div style={{ marginBottom: '4px', opacity: 0.6 }}>
+              {t('common.version', { version: pkg.version })}
+            </div>
             <a href="https://github.com/leocb" target="_blank" rel="noreferrer" style={{ color: 'inherit' }}>
               {t('login.copyright')}
             </a>

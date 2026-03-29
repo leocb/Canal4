@@ -92,7 +92,8 @@
     "retrying_in": "Tentando novamente em",
     "try_now": "Conectar agora",
     "times": "vezes",
-    "connection_error": "Erro de Conexão"
+    "connection_error": "Erro de Conexão",
+    "version": "Versão {{version}}"
   },
   "breadcrumb": {
     "new_venue": "Novo Local",
