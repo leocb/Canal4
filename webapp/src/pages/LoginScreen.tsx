@@ -83,6 +83,9 @@ export const LoginScreen = () => {
     setLoading(true);
     try {
       await upgradePasskey(lastCredentialId, grandfatheredName);
+      // Immediately authenticate to link the new identity
+      await authenticatePasskey(identity ?? undefined);
+
       // navigation handled by useEffect when user model arrives
     } catch (err: any) {
       if (err.message !== 'login.passkey_cancelled') {

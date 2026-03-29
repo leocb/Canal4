@@ -565,23 +565,13 @@ export const upgrade_grandfathered_passkey = spacetimedb.reducer(
       passkeyCredentialId: "", // Clear the old system field
     });
 
-    // 4. Link identity for this session so the user is logged in
-    const existingUi = ctx.db.UserIdentity.identity.find(ctx.sender);
-    if (existingUi) {
-      ctx.db.UserIdentity.identity.update({
-        ...existingUi,
-        userId: user.userId,
-        lastLogin: ctx.timestamp,
-      });
-    } else {
-      ctx.db.UserIdentity.insert({
-        identity: ctx.sender,
-        userId: user.userId,
-        lastLogin: ctx.timestamp,
-      });
-    }
+    // 4. MIGRATION COMPLETE.
+    // We intentionally DO NOT link the identity here to separate the migration
+    // from the session materialization. The frontend will follow up with 
+    // authenticatePasskey() using the new credential.
   }
 );
+
 
 
 
