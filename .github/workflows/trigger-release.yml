@@ -55,13 +55,10 @@ jobs:
           echo "new_version=$NEW_VERSION" >> $GITHUB_OUTPUT
           echo "tag_name=v$NEW_VERSION" >> $GITHUB_OUTPUT
 
-      - name: Commit and Push Changes
+      - name: Commit and Push
         run: |
+          VERSION=$(node -p "require('./display/package.json').version")
           git add display/package.json display/package-lock.json webapp/package.json webapp/package-lock.json
-          git commit -m "chore: release version ${{ steps.bump.outputs.new_version }}"
-          git push origin main
-
-      - name: Create and Push Tag
-        run: |
-          git tag ${{ steps.bump.outputs.tag_name }}
-          git push origin ${{ steps.bump.outputs.tag_name }}
+          git commit -m "chore: release version $VERSION"
+          git tag v$VERSION
+          git push origin main --tags
