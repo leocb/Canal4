@@ -12,12 +12,13 @@ let tickerWindow: BrowserWindow | null = null;
 let settingsWindow: BrowserWindow | null = null;
 let updateWindow: BrowserWindow | null = null;
 let updateCheckTimer: ReturnType<typeof setInterval> | null = null;
+let powerSaveBlockerId: number = -1;
 
 // ─── Auto-Updater ─────────────────────────────────────────────────────────────
 
 autoUpdater.autoDownload = false;          // We control when to download
-autoUpdater.autoInstallOnAppQuit = false;  // We control when to install
-autoUpdater.logger = null;                 // Suppress built-in file logging
+autoUpdater.autoInstallOnAppQuit = true;   // Allow it to install on quit if triggered
+autoUpdater.logger = console;              // Log to console for debugging in dev
 
 /**
  * Trigger an update check. If an update is available it downloads and then
@@ -102,6 +103,16 @@ async function triggerUpdateCheckAndInstall(isManual = false): Promise<void> {
       if (!updateWindow) {
         await createUpdateWindow();
       }
+
+      // Latest macOS specific check: app must be in /Applications for updates to work reliably due to translocation
+      if (process.platform === 'darwin' && !app.isInApplicationsFolder()) {
+        const errorKey = 'updater.error_translocation';
+        console.warn(`[Updater] Reporting translocation error (not in Applications folder)`);
+        updateWindow?.webContents.send('update-error', errorKey);
+        cleanup();
+        return;
+      }
+
       updateWindow?.webContents.send('update-status', 'available', info.version);
       autoUpdater.downloadUpdate().catch((e) => {
         console.error('[Updater] Download failed:', e.message);
@@ -121,7 +132,35 @@ async function triggerUpdateCheckAndInstall(isManual = false): Promise<void> {
       cleanup();
       // Wait a bit so the user can see it's ready
       setTimeout(() => {
+        console.log('[Updater] Finalizing update... Closing windows and stopping background tasks.');
+
+        // High-compatibility approach for macOS:
+        autoUpdater.autoInstallOnAppQuit = true;
+
+        // STOP power save blockers
+        try {
+          powerSaveBlocker.stop(powerSaveBlockerId);
+        } catch (e) { /* ignore */ }
+
+        // Close all windows except the update window
+        BrowserWindow.getAllWindows().forEach(win => {
+          if (win !== updateWindow) win.destroy();
+        });
+
+        // Some macOS versions need the app to be visible to quit & install correctly
+        if (process.platform === 'darwin') {
+          app.dock?.show();
+        }
+
+        console.log('[Updater] Calling quitAndInstall()...');
         autoUpdater.quitAndInstall(false, true);
+
+        // Safety fallback: if the app is still running after 5 seconds, force a quit.
+        // electron-updater should have already triggered the swap.
+        setTimeout(() => {
+          console.warn('[Updater] quitAndInstall timed out — forcing app.quit()');
+          app.quit();
+        }, 8000);
       }, 2000);
     };
 
@@ -284,6 +323,7 @@ function createTray() {
 
   if (is.dev) {
     menuItems.push({ label: 'DEBUG: Simulate Update (Success)', click: () => simulateUpdateFlow() });
+    menuItems.push({ label: 'DEBUG: Simulate Update (Translocation)', click: () => simulateUpdateTranslocationErrorFlow() });
     menuItems.push({ label: 'DEBUG: Simulate Update (Error)', click: () => simulateUpdateErrorFlow() });
     menuItems.push({ type: 'separator' });
   }
@@ -305,6 +345,7 @@ ipcMain.on('update-tray', (_event, { settingsLabel, quitLabel, tooltip }) => {
 
   if (is.dev) {
     menuItems.push({ label: 'DEBUG: Simulate Update (Success)', click: () => simulateUpdateFlow() });
+    menuItems.push({ label: 'DEBUG: Simulate Update (Translocation)', click: () => simulateUpdateTranslocationErrorFlow() });
     menuItems.push({ label: 'DEBUG: Simulate Update (Error)', click: () => simulateUpdateErrorFlow() });
     menuItems.push({ type: 'separator' });
   }
@@ -335,7 +376,7 @@ app.whenReady().then(async () => {
   createTickerWindow()
   schedulePeriodicUpdateCheck()
 
-  powerSaveBlocker.start('prevent-app-suspension');
+  powerSaveBlockerId = powerSaveBlocker.start('prevent-app-suspension');
 
   // Persistent storage for machine ID and Auth Token
   const fs = require('fs');
@@ -476,11 +517,11 @@ async function simulateUpdateFlow(): Promise<void> {
   }
 
   send('update-status', 'ready');
-  console.log('[Updater] Simulation complete. In a real update, the app would restart now.');
+  console.log('[Updater Simulation] In a real update, the app would restart now.');
 
-  // We don't actually restart in simulation
+  // No relaunch in simulation
   setTimeout(() => {
-    // updateWindow?.close();
+    updateWindow?.close();
   }, 5000);
 }
 
@@ -496,10 +537,26 @@ async function simulateUpdateErrorFlow(): Promise<void> {
   console.log('[Updater] Error simulation complete. Window should stay open.');
 }
 
+async function simulateUpdateTranslocationErrorFlow(): Promise<void> {
+  await createUpdateWindow();
+
+  const send = (channel: string, ...args: any[]) => updateWindow?.webContents.send(channel, ...args);
+
+  send('update-status', 'checking');
+  await new Promise(r => setTimeout(r, 1000));
+
+  send('update-error', 'updater.error_translocation');
+  console.log('[Updater Simulation] Translocation error simulation complete. Window should stay open.');
+}
+
 ipcMain.on('simulate-update', () => {
   simulateUpdateFlow().catch(console.error);
 });
 
 ipcMain.on('simulate-update-error', () => {
   simulateUpdateErrorFlow().catch(console.error);
+});
+
+ipcMain.on('simulate-update-translocation', () => {
+  simulateUpdateTranslocationErrorFlow().catch(console.error);
 });

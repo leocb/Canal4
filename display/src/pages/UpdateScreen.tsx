@@ -92,7 +92,7 @@ export function UpdateScreen() {
       {status === 'error' && (
         <div style={{ textAlign: 'center', maxWidth: '100%' }}>
           <p style={{ fontSize: '12px', color: '#ff4444', marginBottom: '20px', wordBreak: 'break-all' }}>
-            {error || t('updater.error_helper')}
+            {error && error.includes('updater.') ? t(error) : error || t('updater.error_helper')}
           </p>
           <button
             onClick={handleClose}
