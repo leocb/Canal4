@@ -155,10 +155,7 @@ export type PasskeyChallengeSelfView = __Infer<typeof PasskeyChallengeSelfView>;
 
 export const User = __t.object("User", {
   userId: __t.u64(),
-  email: __t.option(__t.string()),
-  passkeyCredentialId: __t.option(__t.string()),
   name: __t.string(),
-  pushToken: __t.option(__t.string()),
   createdAt: __t.timestamp(),
 });
 export type User = __Infer<typeof User>;

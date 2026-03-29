@@ -52,7 +52,6 @@ import ExtendSessionReducer from "./extend_session_reducer";
 import JoinVenueReducer from "./join_venue_reducer";
 import LeaveVenueReducer from "./leave_venue_reducer";
 import LoginWithPasskeyReducer from "./login_with_passkey_reducer";
-import MigrateGrandfatheredAccountReducer from "./migrate_grandfathered_account_reducer";
 import PingReducer from "./ping_reducer";
 import RegisterDisplayToVenueReducer from "./register_display_to_venue_reducer";
 import RegisterNewUserWithPasskeyReducer from "./register_new_user_with_passkey_reducer";
@@ -68,7 +67,6 @@ import UpdateChannelReducer from "./update_channel_reducer";
 import UpdateDisplayNameReducer from "./update_display_name_reducer";
 import UpdateMessageDeliveryStatusReducer from "./update_message_delivery_status_reducer";
 import UpdateMessageTemplateReducer from "./update_message_template_reducer";
-import UpdatePushTokenReducer from "./update_push_token_reducer";
 import UpdateUserNameReducer from "./update_user_name_reducer";
 import UpdateVenueReducer from "./update_venue_reducer";
 
@@ -262,9 +260,6 @@ const tablesSchema = __schema({
     indexes: [
       { accessor: 'user_name', name: 'user_name_idx_btree', algorithm: 'btree', columns: [
         'name',
-      ] },
-      { accessor: 'user_passkey_credential_id', name: 'user_passkey_credential_id_idx_btree', algorithm: 'btree', columns: [
-        'passkeyCredentialId',
       ] },
       { accessor: 'userId', name: 'user_user_id_idx_btree', algorithm: 'btree', columns: [
         'userId',
@@ -470,7 +465,6 @@ const reducersSchema = __reducers(
   __reducerSchema("join_venue", JoinVenueReducer),
   __reducerSchema("leave_venue", LeaveVenueReducer),
   __reducerSchema("login_with_passkey", LoginWithPasskeyReducer),
-  __reducerSchema("migrate_grandfathered_account", MigrateGrandfatheredAccountReducer),
   __reducerSchema("ping", PingReducer),
   __reducerSchema("register_display_to_venue", RegisterDisplayToVenueReducer),
   __reducerSchema("register_new_user_with_passkey", RegisterNewUserWithPasskeyReducer),
@@ -486,7 +480,6 @@ const reducersSchema = __reducers(
   __reducerSchema("update_display_name", UpdateDisplayNameReducer),
   __reducerSchema("update_message_delivery_status", UpdateMessageDeliveryStatusReducer),
   __reducerSchema("update_message_template", UpdateMessageTemplateReducer),
-  __reducerSchema("update_push_token", UpdatePushTokenReducer),
   __reducerSchema("update_user_name", UpdateUserNameReducer),
   __reducerSchema("update_venue", UpdateVenueReducer),
 );

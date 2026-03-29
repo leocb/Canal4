@@ -12,9 +12,6 @@ import {
 
 export default __t.row({
   userId: __t.u64().name("user_id"),
-  email: __t.option(__t.string()),
-  passkeyCredentialId: __t.option(__t.string()).name("passkey_credential_id"),
   name: __t.string(),
-  pushToken: __t.option(__t.string()).name("push_token"),
   createdAt: __t.timestamp().name("created_at"),
 });
