@@ -10,6 +10,7 @@ app.setName('Canal4');
 let tray: Tray | null = null;
 let tickerWindow: BrowserWindow | null = null;
 let settingsWindow: BrowserWindow | null = null;
+let updateWindow: BrowserWindow | null = null;
 let updateCheckTimer: ReturnType<typeof setInterval> | null = null;
 
 // ─── Auto-Updater ─────────────────────────────────────────────────────────────
@@ -23,62 +24,132 @@ autoUpdater.logger = null;                 // Suppress built-in file logging
  * calls quitAndInstall(true, true) so the OS relaunches into the new version.
  * Always resolves (never rejects) — callers can safely await it.
  */
-function triggerUpdateCheckAndInstall(): Promise<void> {
-  return new Promise((resolve) => {
-    if (is.dev) {
-      console.log('[Updater] Skipping update check in dev mode.');
-      resolve();
-      return;
+function createUpdateWindow(): Promise<void> {
+  const url = is.dev && process.env['ELECTRON_RENDERER_URL']
+    ? `${process.env['ELECTRON_RENDERER_URL']}/#/update`
+    : `file://${join(__dirname, '../renderer/index.html')}#/update`;
+
+  if (updateWindow) {
+    updateWindow.loadURL(url)
+    updateWindow.focus()
+    return Promise.resolve();
+  }
+
+  updateWindow = new BrowserWindow({
+    width: 450,
+    height: 300,
+    show: false,
+    frame: false,
+    resizable: false,
+    center: true,
+    alwaysOnTop: false,
+    backgroundColor: '#000000',
+    webPreferences: {
+      preload: join(__dirname, '../preload/index.js'),
+      sandbox: false,
+      webSecurity: !is.dev,
     }
+  })
+
+  return new Promise((resolve) => {
+    updateWindow?.on('ready-to-show', () => {
+      updateWindow?.show()
+    })
+
+    updateWindow?.webContents.once('dom-ready', () => {
+      resolve();
+    })
+
+    updateWindow?.on('closed', () => {
+      updateWindow = null;
+    })
+
+    updateWindow?.loadURL(url)
+  });
+}
+
+/**
+ * Trigger an update check. If an update is available it downloads and then
+ * calls quitAndInstall(true, true) so the OS relaunches into the new version.
+ */
+async function triggerUpdateCheckAndInstall(isManual = false): Promise<void> {
+  if (is.dev) {
+    console.log('[Updater] Skipping update check in dev mode.');
+    return;
+  }
+
+  if (!updateWindow && !isManual) {
+    await createUpdateWindow();
+  }
+
+  return new Promise((resolve) => {
 
     let settled = false;
     const settle = () => { if (!settled) { settled = true; resolve(); } };
 
     const onNotAvailable = () => {
       console.log('[Updater] App is up-to-date.');
-      cleanup();
-      settle();
+      updateWindow?.webContents.send('update-status', 'up-to-date');
+      setTimeout(() => {
+        cleanup();
+        updateWindow?.close();
+        settle();
+      }, 1500);
+    };
+
+    const onAvailable = async (info: { version: string }) => {
+      console.log(`[Updater] Update available: v${info.version} — downloading…`);
+      if (!updateWindow) {
+        await createUpdateWindow();
+      }
+      updateWindow?.webContents.send('update-status', 'available', info.version);
+      autoUpdater.downloadUpdate().catch((e) => {
+        console.error('[Updater] Download failed:', e.message);
+        updateWindow?.webContents.send('update-error', e.message);
+        cleanup();
+        // Don't settle immediately if there's an error so user can see it
+      });
+    };
+
+    const onProgress = (progressObj: any) => {
+      updateWindow?.webContents.send('update-progress', progressObj.percent);
     };
 
     const onDownloaded = (info: { version: string }) => {
       console.log(`[Updater] Update v${info.version} downloaded — relaunching now.`);
+      updateWindow?.webContents.send('update-status', 'ready');
       cleanup();
-      // silent=true, forceRunAfter=true → quit + relaunch automatically
-      autoUpdater.quitAndInstall(true, true);
-      // settle() intentionally NOT called — the process is about to quit & relaunch
-    };
-
-    const onAvailable = (info: { version: string }) => {
-      console.log(`[Updater] Update available: v${info.version} — downloading…`);
-      autoUpdater.downloadUpdate().catch((e) => {
-        console.error('[Updater] Download failed:', e.message);
-        cleanup();
-        settle();
-      });
+      // Wait a bit so the user can see it's ready
+      setTimeout(() => {
+        autoUpdater.quitAndInstall(false, true);
+      }, 2000);
     };
 
     const onError = (err: Error) => {
       console.error('[Updater] Update check error:', err.message);
+      updateWindow?.webContents.send('update-error', err.message);
       cleanup();
-      settle();
+      // settle() is not called here to keep the window open for the user
     };
 
     const cleanup = () => {
       autoUpdater.removeListener('update-not-available', onNotAvailable);
       autoUpdater.removeListener('update-available', onAvailable);
+      autoUpdater.removeListener('download-progress', onProgress);
       autoUpdater.removeListener('update-downloaded', onDownloaded);
       autoUpdater.removeListener('error', onError);
     };
 
-    autoUpdater.once('update-not-available', onNotAvailable);
-    autoUpdater.once('update-available', onAvailable);
-    autoUpdater.once('update-downloaded', onDownloaded);
-    autoUpdater.once('error', onError);
+    autoUpdater.on('update-not-available', onNotAvailable);
+    autoUpdater.on('update-available', onAvailable);
+    autoUpdater.on('download-progress', onProgress);
+    autoUpdater.on('update-downloaded', onDownloaded);
+    autoUpdater.on('error', onError);
 
     autoUpdater.checkForUpdates().catch((e) => {
       console.error('[Updater] checkForUpdates failed:', e.message);
+      updateWindow?.webContents.send('update-error', e.message);
       cleanup();
-      settle();
     });
   });
 }
@@ -110,7 +181,8 @@ function schedulePeriodicUpdateCheck(): void {
 
   updateCheckTimer = setInterval(() => {
     console.log('[Updater] Scheduled 12-hour update check…');
-    triggerUpdateCheckAndInstall();
+    // triggerUpdateCheckAndInstall(true) means it will only open the window if an update is available
+    triggerUpdateCheckAndInstall(true);
   }, 12 * 60 * 60 * 1_000);
 }
 
@@ -205,22 +277,41 @@ function createTray() {
   }
 
   tray = new Tray(trayIcon)
-  const contextMenu = Menu.buildFromTemplate([
+  const menuItems: any[] = [
     { label: 'Settings', click: () => createSettingsWindow('settings') },
-    { type: 'separator' },
-    { label: 'Quit Canal4', click: () => { app.quit() } }
-  ])
+    { type: 'separator' }
+  ];
+
+  if (is.dev) {
+    menuItems.push({ label: 'DEBUG: Simulate Update (Success)', click: () => simulateUpdateFlow() });
+    menuItems.push({ label: 'DEBUG: Simulate Update (Error)', click: () => simulateUpdateErrorFlow() });
+    menuItems.push({ type: 'separator' });
+  }
+
+  menuItems.push({ label: 'Quit Canal4', click: () => { app.quit() } });
+
+  const contextMenu = Menu.buildFromTemplate(menuItems)
   tray.setToolTip('Canal4 Display node')
   tray.setContextMenu(contextMenu)
 }
 
 ipcMain.on('update-tray', (_event, { settingsLabel, quitLabel, tooltip }) => {
   if (!tray) return;
-  const contextMenu = Menu.buildFromTemplate([
+
+  const menuItems: any[] = [
     { label: settingsLabel, click: () => createSettingsWindow('settings') },
-    { type: 'separator' },
-    { label: quitLabel, click: () => { app.quit() } }
-  ])
+    { type: 'separator' }
+  ];
+
+  if (is.dev) {
+    menuItems.push({ label: 'DEBUG: Simulate Update (Success)', click: () => simulateUpdateFlow() });
+    menuItems.push({ label: 'DEBUG: Simulate Update (Error)', click: () => simulateUpdateErrorFlow() });
+    menuItems.push({ type: 'separator' });
+  }
+
+  menuItems.push({ label: quitLabel, click: () => { app.quit() } });
+
+  const contextMenu = Menu.buildFromTemplate(menuItems)
   tray.setToolTip(tooltip)
   tray.setContextMenu(contextMenu)
 });
@@ -365,3 +456,50 @@ app.on('before-quit', () => {
     updateCheckTimer = null;
   }
 })
+
+// ─── Testing / Debugging ──────────────────────────────────────────────────────
+
+async function simulateUpdateFlow(): Promise<void> {
+  await createUpdateWindow();
+
+  const send = (channel: string, ...args: any[]) => updateWindow?.webContents.send(channel, ...args);
+
+  send('update-status', 'checking');
+  await new Promise(r => setTimeout(r, 2000));
+
+  send('update-status', 'available', '1.2.3');
+  await new Promise(r => setTimeout(r, 1500));
+
+  for (let i = 0; i <= 100; i += 5) {
+    send('update-progress', i);
+    await new Promise(r => setTimeout(r, 200));
+  }
+
+  send('update-status', 'ready');
+  console.log('[Updater] Simulation complete. In a real update, the app would restart now.');
+
+  // We don't actually restart in simulation
+  setTimeout(() => {
+    // updateWindow?.close();
+  }, 5000);
+}
+
+async function simulateUpdateErrorFlow(): Promise<void> {
+  await createUpdateWindow();
+
+  const send = (channel: string, ...args: any[]) => updateWindow?.webContents.send(channel, ...args);
+
+  send('update-status', 'checking');
+  await new Promise(r => setTimeout(r, 1000));
+
+  send('update-error', 'Mock Error: Signature verify failed (Code: 1234)');
+  console.log('[Updater] Error simulation complete. Window should stay open.');
+}
+
+ipcMain.on('simulate-update', () => {
+  simulateUpdateFlow().catch(console.error);
+});
+
+ipcMain.on('simulate-update-error', () => {
+  simulateUpdateErrorFlow().catch(console.error);
+});

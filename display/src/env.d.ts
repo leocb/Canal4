@@ -16,6 +16,9 @@ interface Window {
     updateTray: (params: { settingsLabel: string; quitLabel: string; tooltip: string }) => void,
     getLoginItemSettings: () => Promise<boolean>,
     setLoginItemSettings: (openAtLogin: boolean) => Promise<boolean>,
+    onUpdateStatus: (callback: (status: string, version?: string) => void) => void,
+    onUpdateProgress: (callback: (percent: number) => void) => void,
+    onUpdateError: (callback: (error: string) => void) => void,
   }
 }
 declare module '*?asset' {

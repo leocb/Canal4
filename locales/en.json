@@ -602,5 +602,16 @@
       "not_connected_error": "Not connected to database — check Settings → SpacetimeDB Connection",
       "no_venues": "No venues"
     }
+  },
+  "updater": {
+    "title": "Canal4 Update",
+    "checking": "Checking for updates...",
+    "available": "New version available: v{{version}}",
+    "downloading": "Downloading update...",
+    "ready": "Update downloaded! Restarting...",
+    "up_to_date": "Canal4 is up-to-date.",
+    "error": "Update failed",
+    "error_helper": "An error occurred while trying to update Canal4.",
+    "close": "Close"
   }
 }

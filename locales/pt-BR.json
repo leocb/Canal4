@@ -602,5 +602,16 @@
       "not_connected_error": "Não conectado ao banco de dados — verifique Configurações → Conexão SpacetimeDB",
       "no_venues": "Nenhum local"
     }
+  },
+  "updater": {
+    "title": "Atualização do Canal4",
+    "checking": "Verificando se há atualizações...",
+    "available": "Nova versão disponível: v{{version}}",
+    "downloading": "Baixando atualização...",
+    "ready": "Atualização baixada! Reiniciando...",
+    "up_to_date": "O Canal4 está atualizado.",
+    "error": "Falha na atualização",
+    "error_helper": "Ocorreu um erro ao tentar atualizar o Canal4.",
+    "close": "Fechar"
   }
 }

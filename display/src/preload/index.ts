@@ -18,6 +18,15 @@ const api = {
   updateTray: (params: { settingsLabel: string; quitLabel: string; tooltip: string }) => ipcRenderer.send('update-tray', params),
   getLoginItemSettings: () => ipcRenderer.invoke('get-login-item-settings'),
   setLoginItemSettings: (openAtLogin: boolean) => ipcRenderer.invoke('set-login-item-settings', openAtLogin),
+  onUpdateStatus: (callback: (status: string, version?: string) => void) => {
+    ipcRenderer.on('update-status', (_event, status, version) => callback(status, version))
+  },
+  onUpdateProgress: (callback: (percent: number) => void) => {
+    ipcRenderer.on('update-progress', (_event, percent) => callback(percent))
+  },
+  onUpdateError: (callback: (error: string) => void) => {
+    ipcRenderer.on('update-error', (_event, error) => callback(error))
+  },
 }
 
 // Use `contextBridge` APIs to expose Electron APIs to
