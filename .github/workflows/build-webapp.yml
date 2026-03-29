@@ -16,7 +16,7 @@ jobs:
     runs-on: ubuntu-latest
     if: |
       github.repository_owner == 'leocb' && 
-      (github.event_name == 'workflow_run' ? github.event.workflow_run.conclusion == 'success' : true)
+      (github.event_name != 'workflow_run' || github.event.workflow_run.conclusion == 'success')
 
     permissions:
       contents: read
