@@ -24,6 +24,7 @@ import ExtendSessionReducer from "../extend_session_reducer";
 import JoinVenueReducer from "../join_venue_reducer";
 import LeaveVenueReducer from "../leave_venue_reducer";
 import LoginWithPasskeyReducer from "../login_with_passkey_reducer";
+import MigrateGrandfatheredAccountReducer from "../migrate_grandfathered_account_reducer";
 import PingReducer from "../ping_reducer";
 import RegisterDisplayToVenueReducer from "../register_display_to_venue_reducer";
 import RegisterNewUserWithPasskeyReducer from "../register_new_user_with_passkey_reducer";
@@ -42,7 +43,6 @@ import UpdateMessageTemplateReducer from "../update_message_template_reducer";
 import UpdatePushTokenReducer from "../update_push_token_reducer";
 import UpdateUserNameReducer from "../update_user_name_reducer";
 import UpdateVenueReducer from "../update_venue_reducer";
-import UpgradeGrandfatheredPasskeyReducer from "../upgrade_grandfathered_passkey_reducer";
 
 export type BlockUserParams = __Infer<typeof BlockUserReducer>;
 export type CreateChannelParams = __Infer<typeof CreateChannelReducer>;
@@ -62,6 +62,7 @@ export type ExtendSessionParams = __Infer<typeof ExtendSessionReducer>;
 export type JoinVenueParams = __Infer<typeof JoinVenueReducer>;
 export type LeaveVenueParams = __Infer<typeof LeaveVenueReducer>;
 export type LoginWithPasskeyParams = __Infer<typeof LoginWithPasskeyReducer>;
+export type MigrateGrandfatheredAccountParams = __Infer<typeof MigrateGrandfatheredAccountReducer>;
 export type PingParams = __Infer<typeof PingReducer>;
 export type RegisterDisplayToVenueParams = __Infer<typeof RegisterDisplayToVenueReducer>;
 export type RegisterNewUserWithPasskeyParams = __Infer<typeof RegisterNewUserWithPasskeyReducer>;
@@ -80,5 +81,4 @@ export type UpdateMessageTemplateParams = __Infer<typeof UpdateMessageTemplateRe
 export type UpdatePushTokenParams = __Infer<typeof UpdatePushTokenReducer>;
 export type UpdateUserNameParams = __Infer<typeof UpdateUserNameReducer>;
 export type UpdateVenueParams = __Infer<typeof UpdateVenueReducer>;
-export type UpgradeGrandfatheredPasskeyParams = __Infer<typeof UpgradeGrandfatheredPasskeyReducer>;
 

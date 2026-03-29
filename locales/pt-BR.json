@@ -63,6 +63,7 @@
     "upgrade_button": "Atualizar Conta",
     "upgrade_user_handle": "Usuário Atualizado",
     "error_upgrade": "A atualização falhou. Tente novamente.",
+    "upgrade_success": "Agora você pode entrar usando sua nova chave de acesso",
     "copyright": "Criado por github.com/leocb"
   },
   "nav": {

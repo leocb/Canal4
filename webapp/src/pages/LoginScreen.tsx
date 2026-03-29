@@ -17,6 +17,8 @@ export const LoginScreen = () => {
   const [loading, setLoading] = useState(false);
   const [errorText, setErrorText] = useState('');
   const [view, setView] = useState<'selection' | 'name'>('selection');
+  const [successText, setSuccessText] = useState('');
+
 
   const updateUserName = useReducer(reducers.updateUserName);
   const { createPasskey, authenticatePasskey, upgradePasskey, lastCredentialId } = usePasskeys();
@@ -54,11 +56,13 @@ export const LoginScreen = () => {
 
   const handleNewUser = async () => {
     setErrorText('');
+    setSuccessText('');
     setView('name');
   };
 
   const handleHaveAccount = async () => {
     setErrorText('');
+    setSuccessText('');
     setLoading(true);
     try {
       await authenticatePasskey(identity ?? undefined);
@@ -80,13 +84,15 @@ export const LoginScreen = () => {
   const handleUpgrade = async () => {
     if (!lastCredentialId) return;
     setErrorText('');
+    setSuccessText('');
     setLoading(true);
     try {
       await upgradePasskey(lastCredentialId, grandfatheredName);
-      // Immediately authenticate to link the new identity
-      await authenticatePasskey(identity ?? undefined);
-
-      // navigation handled by useEffect when user model arrives
+      
+      // Decoupled: Show Success and reset state
+      setIsGrandfathered(false);
+      setSuccessText(t('login.upgrade_success'));
+      // No automatic login
     } catch (err: any) {
       if (err.message !== 'login.passkey_cancelled') {
         setErrorText(t(err.message) || t('login.error_upgrade'));
@@ -128,22 +134,43 @@ export const LoginScreen = () => {
           <h2 style={{ marginBottom: '24px', fontSize: '1.8rem' }}>{t('login.title')}</h2>
 
           {errorText && (
-              <div style={{
-                color: 'var(--error-color)',
-                marginBottom: '16px',
-                fontSize: '0.9rem',
-                padding: '12px',
-                background: 'rgba(255,80,80,0.1)',
-                borderRadius: '8px',
-                border: '1px solid var(--error-color)',
-                display: 'flex',
-                alignItems: 'center',
-                gap: '8px',
-                textAlign: 'left'
-              }}>
-                <AlertTriangle size={18} style={{ flexShrink: 0 }} /> {errorText}
-              </div>
+            <div style={{
+              color: 'var(--error-color)',
+              marginBottom: '16px',
+              fontSize: '0.9rem',
+              padding: '12px',
+              background: 'rgba(255,80,80,0.1)',
+              borderRadius: '8px',
+              border: '1px solid var(--error-color)',
+              display: 'flex',
+              alignItems: 'center',
+              gap: '12px',
+              textAlign: 'left'
+            }}>
+              <AlertTriangle size={20} style={{ flexShrink: 0 }} />
+              <span>{errorText}</span>
+            </div>
           )}
+
+          {successText && (
+            <div style={{
+              color: '#10b981',
+              marginBottom: '16px',
+              fontSize: '0.9rem',
+              padding: '12px',
+              background: 'rgba(16,185,129,0.1)',
+              borderRadius: '8px',
+              border: '1px solid #10b981',
+              display: 'flex',
+              alignItems: 'center',
+              gap: '12px',
+              textAlign: 'left'
+            }}>
+              <LogIn size={20} style={{ flexShrink: 0 }} />
+              <span>{successText}</span>
+            </div>
+          )}
+
 
           {view === 'selection' && (
             <div className="flex-col" style={{ gap: '20px' }}>

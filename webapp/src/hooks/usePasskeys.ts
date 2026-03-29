@@ -25,7 +25,7 @@ export function usePasskeys() {
   const loginWithPasskey = useReducer(reducers.loginWithPasskey);
   const registerPasskey = useReducer(reducers.registerPasskey);
   const createPasskeyChallenge = useReducer(reducers.createPasskeyChallenge);
-  const upgradeGrandfatheredPasskey = useReducer(reducers.upgradeGrandfatheredPasskey);
+  const migrateGrandfatheredAccount = useReducer(reducers.migrateGrandfatheredAccount);
   const handleCeremonyError = (error: any) => {
     if (error?.name === 'NotAllowedError') throw new Error('login.passkey_cancelled');
     if (error?.name === 'AbortError') throw new Error('login.passkey_aborted');
@@ -267,8 +267,8 @@ export function usePasskeys() {
     try {
       const credential = await startRegistration({ optionsJSON: options });
 
-      // 4. Upgrade in backend
-      await upgradeGrandfatheredPasskey({
+      // 4. Upgrade in backend (Rename: migration only, session deferred)
+      await migrateGrandfatheredAccount({
         oldCredentialId,
         newCredentialId: credential.id,
         attestationObject: credential.response.attestationObject,

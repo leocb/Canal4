@@ -52,6 +52,7 @@ import ExtendSessionReducer from "./extend_session_reducer";
 import JoinVenueReducer from "./join_venue_reducer";
 import LeaveVenueReducer from "./leave_venue_reducer";
 import LoginWithPasskeyReducer from "./login_with_passkey_reducer";
+import MigrateGrandfatheredAccountReducer from "./migrate_grandfathered_account_reducer";
 import PingReducer from "./ping_reducer";
 import RegisterDisplayToVenueReducer from "./register_display_to_venue_reducer";
 import RegisterNewUserWithPasskeyReducer from "./register_new_user_with_passkey_reducer";
@@ -70,7 +71,6 @@ import UpdateMessageTemplateReducer from "./update_message_template_reducer";
 import UpdatePushTokenReducer from "./update_push_token_reducer";
 import UpdateUserNameReducer from "./update_user_name_reducer";
 import UpdateVenueReducer from "./update_venue_reducer";
-import UpgradeGrandfatheredPasskeyReducer from "./upgrade_grandfathered_passkey_reducer";
 
 // Import all procedure arg schemas
 
@@ -166,6 +166,9 @@ const tablesSchema = __schema({
   DisplayPairingPin: __table({
     name: 'display_pairing_pin',
     indexes: [
+      { accessor: 'display_pairing_pin_identity', name: 'display_pairing_pin_identity_idx_btree', algorithm: 'btree', columns: [
+        'identity',
+      ] },
       { accessor: 'pin', name: 'display_pairing_pin_pin_idx_btree', algorithm: 'btree', columns: [
         'pin',
       ] },
@@ -467,6 +470,7 @@ const reducersSchema = __reducers(
   __reducerSchema("join_venue", JoinVenueReducer),
   __reducerSchema("leave_venue", LeaveVenueReducer),
   __reducerSchema("login_with_passkey", LoginWithPasskeyReducer),
+  __reducerSchema("migrate_grandfathered_account", MigrateGrandfatheredAccountReducer),
   __reducerSchema("ping", PingReducer),
   __reducerSchema("register_display_to_venue", RegisterDisplayToVenueReducer),
   __reducerSchema("register_new_user_with_passkey", RegisterNewUserWithPasskeyReducer),
@@ -485,7 +489,6 @@ const reducersSchema = __reducers(
   __reducerSchema("update_push_token", UpdatePushTokenReducer),
   __reducerSchema("update_user_name", UpdateUserNameReducer),
   __reducerSchema("update_venue", UpdateVenueReducer),
-  __reducerSchema("upgrade_grandfathered_passkey", UpgradeGrandfatheredPasskeyReducer),
 );
 
 /** The schema information for all procedures in this module. This is defined the same way as the procedures would have been defined in the server. */

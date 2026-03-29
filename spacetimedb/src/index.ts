@@ -447,7 +447,7 @@ export const login_with_passkey = spacetimedb.reducer(
   (ctx, { credentialId, authenticatorData, clientDataJson, signature }) => {
     // 1. Lookup credential via index in the NEW system (UserAuth)
     let authRecord = ctx.db.UserAuth.user_auth_credential_id.filter(credentialId).next().value;
-    
+
     // 2. If not in the new system, check the OLD system (User.passkeyCredentialId)
     if (!authRecord) {
       const oldUser = ctx.db.User.user_passkey_credential_id.filter(credentialId).next().value;
@@ -529,7 +529,7 @@ export const login_with_passkey = spacetimedb.reducer(
   }
 );
 
-export const upgrade_grandfathered_passkey = spacetimedb.reducer(
+export const migrate_grandfathered_account = spacetimedb.reducer(
   { oldCredentialId: t.string(), newCredentialId: t.string(), attestationObject: t.string(), clientDataJson: t.string() },
   (ctx, { oldCredentialId, newCredentialId, attestationObject, clientDataJson }) => {
     // 1. Verify we HAVE a user for this old credential
@@ -569,8 +569,10 @@ export const upgrade_grandfathered_passkey = spacetimedb.reducer(
     // We intentionally DO NOT link the identity here to separate the migration
     // from the session materialization. The frontend will follow up with 
     // authenticatePasskey() using the new credential.
+    console.log("[migrate_grandfathered_account] COMPLETED");
   }
 );
+
 
 
 
@@ -1208,7 +1210,7 @@ export const create_display_pin = spacetimedb.reducer(
   (ctx, { displayUid }) => {
     // We allow anonymous callers to generate a PIN.
     const sender = ctx.sender;
-    
+
     // Clean up existing pins for this displayUid + identity
     for (const p of ctx.db.DisplayPairingPin) {
       if (p.displayUid === displayUid && p.identity.isEqual(sender)) {

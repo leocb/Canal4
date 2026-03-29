@@ -63,6 +63,7 @@
     "upgrade_button": "Update Account",
     "upgrade_user_handle": "Upgraded User",
     "error_upgrade": "Upgrade failed. Please try again.",
+    "upgrade_success": "You can now login using the new passkey",
     "copyright": "Made by github.com/leocb"
   },
   "nav": {
