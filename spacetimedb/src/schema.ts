@@ -30,15 +30,11 @@ export const User = table(
     public: false,
     indexes: [
       { name: "user_name", accessor: "user_name", algorithm: "btree", columns: ["name"] },
-      { name: "user_passkey_credential_id", accessor: "user_passkey_credential_id", algorithm: "btree", columns: ["passkeyCredentialId"] },
     ] as const,
   },
   {
     userId: t.u64().primaryKey().autoInc(),
-    email: t.string().optional(),
-    passkeyCredentialId: t.string().optional(), // left in so I don't have to delete the database, but nothing should be stored here
     name: t.string(),
-    pushToken: t.string().optional(),
     createdAt: t.timestamp(),
   }
 );

@@ -20,10 +20,8 @@ export const LoginScreen = () => {
   const [successText, setSuccessText] = useState('');
 
 
-  const updateUserName = useReducer(reducers.updateUserName);
-  const { createPasskey, authenticatePasskey, upgradePasskey, lastCredentialId } = usePasskeys();
-  const [isGrandfathered, setIsGrandfathered] = useState(false);
-  const [grandfatheredName, setGrandfatheredName] = useState<string>('');
+   const updateUserName = useReducer(reducers.updateUserName);
+  const { createPasskey, authenticatePasskey } = usePasskeys();
   const [showMenu, setShowMenu] = useState(false);
   const menuRef = useRef<HTMLDivElement>(null);
 
@@ -67,13 +65,7 @@ export const LoginScreen = () => {
     try {
       await authenticatePasskey(identity ?? undefined);
     } catch (err: any) {
-      if (err.message.startsWith('api_errors.grandfathered_passkey')) {
-        const parts = err.message.split(':');
-        const name = parts.length > 1 ? parts[1] : '';
-        setGrandfatheredName(name);
-        setIsGrandfathered(true);
-        setErrorText(t('api_errors.grandfathered_passkey', { name }));
-      } else if (err.message !== 'login.passkey_cancelled') {
+      if (err.message !== 'login.passkey_cancelled') {
         setErrorText(t(err.message) || t('login.error_passkey'));
       }
     } finally {
@@ -81,29 +73,6 @@ export const LoginScreen = () => {
     }
   };
 
-  const handleUpgrade = async () => {
-    if (!lastCredentialId) return;
-    setErrorText('');
-    setSuccessText('');
-    setLoading(true);
-    try {
-      await upgradePasskey(lastCredentialId, grandfatheredName);
-      
-      // CRITICAL: Converge the desynced identities by calling 
-      // authenticatePasskey() immediately after migration. This ensures 
-      // the main session claims the newly created userId.
-      await authenticatePasskey();
-
-      setIsGrandfathered(false);
-      setSuccessText(t('login.upgrade_success'));
-    } catch (err: any) {
-      if (err.message !== 'login.passkey_cancelled') {
-        setErrorText(t(err.message) || t('login.error_upgrade'));
-      }
-    } finally {
-      setLoading(false);
-    }
-  };
 
   const handleNameSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -201,53 +170,29 @@ export const LoginScreen = () => {
                   {t('login.new_here')}
                </button>
 
-               {isGrandfathered ? (
-                 <button 
-                   className="primary-button"
-                   onClick={handleUpgrade}
-                   disabled={loading || !connected || !lastCredentialId}
-                   aria-label={t('login.upgrade_button')}
-                   style={{ 
-                       display: 'flex', 
-                       alignItems: 'center', 
-                       justifyContent: 'center', 
-                       gap: '12px', 
-                       padding: '18px',
-                       fontSize: '1.1rem',
-                       background: 'var(--success-color)', // Green for success/upgrade
-                       border: 'none',
-                       boxShadow: '0 4px 15px rgba(20, 200, 20, 0.2)',
-                       transition: 'transform 0.2s, box-shadow 0.2s'
-                   }}
-                 >
-                   {loading ? <Loader2 className="animate-spin" size={24} /> : <LogIn size={24} />}
-                   {t('login.upgrade_button')}
-                 </button>
-               ) : (
-                 <button 
-                   className="secondary-button"
-                   onClick={handleHaveAccount}
-                   disabled={loading || !connected}
-                   aria-label={t('login.have_account')}
-                   style={{ 
-                       display: 'flex', 
-                       alignItems: 'center', 
-                       justifyContent: 'center', 
-                       gap: '12px', 
-                       padding: '18px',
-                       fontSize: '1.1rem',
-                       background: 'rgba(255,255,255,0.05)',
-                       border: '1px solid rgba(255,255,255,0.1)',
-                       backdropFilter: 'blur(10px)',
-                       transition: 'background 0.2s'
-                   }}
-                   onMouseEnter={(e) => { e.currentTarget.style.background = 'rgba(255,255,255,0.1)'; }}
-                   onMouseLeave={(e) => { e.currentTarget.style.background = 'rgba(255,255,255,0.05)'; }}
-                 >
-                   {loading ? <Loader2 className="animate-spin" size={24} /> : <LogIn size={24} />}
-                   {t('login.have_account')}
-                 </button>
-               )}
+               <button 
+                className="secondary-button"
+                onClick={handleHaveAccount}
+                disabled={loading || !connected}
+                aria-label={t('login.have_account')}
+                style={{ 
+                    display: 'flex', 
+                    alignItems: 'center', 
+                    justifyContent: 'center', 
+                    gap: '12px', 
+                    padding: '18px',
+                    fontSize: '1.1rem',
+                    background: 'rgba(255,255,255,0.05)',
+                    border: '1px solid rgba(255,255,255,0.1)',
+                    backdropFilter: 'blur(10px)',
+                    transition: 'background 0.2s'
+                }}
+                onMouseEnter={(e) => { e.currentTarget.style.background = 'rgba(255,255,255,0.1)'; }}
+                onMouseLeave={(e) => { e.currentTarget.style.background = 'rgba(255,255,255,0.05)'; }}
+              >
+                {loading ? <Loader2 className="animate-spin" size={24} /> : <LogIn size={24} />}
+                {t('login.have_account')}
+              </button>
 
                {!connected && (
                  <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px', color: 'var(--text-secondary)', fontSize: '0.9rem', marginTop: '8px' }}>

@@ -25,7 +25,6 @@ export function usePasskeys() {
   const loginWithPasskey = useReducer(reducers.loginWithPasskey);
   const registerPasskey = useReducer(reducers.registerPasskey);
   const createPasskeyChallenge = useReducer(reducers.createPasskeyChallenge);
-  const migrateGrandfatheredAccount = useReducer(reducers.migrateGrandfatheredAccount);
   const handleCeremonyError = (error: any) => {
     if (error?.name === 'NotAllowedError') throw new Error('login.passkey_cancelled');
     if (error?.name === 'AbortError') throw new Error('login.passkey_aborted');
@@ -228,66 +227,11 @@ export function usePasskeys() {
     }
   };
 
-  /**
-   * Upgrades a grandfathered passkey to the new system.
-   */
-  const upgradePasskey = async (oldCredentialId: string, name?: string) => {
-    const activeIdentity = identity;
-    if (!activeIdentity) throw new Error('login.passkey_no_identity');
-
-    // 1. Get a fresh server-issued challenge
-    const challenge = await requestChallenge(activeIdentity);
-
-    // 2. Prepare registration options
-    const options: PublicKeyCredentialCreationOptionsJSON = {
-      challenge,
-      rp: {
-        name: t('app.name'),
-        id: window.location.hostname,
-      },
-      user: {
-        id: btoa(String.fromCharCode(...activeIdentity.toUint8Array()))
-          .replace(/\+/g, '-').replace(/\//g, '_').replace(/=/g, ''),
-        name: name || t('login.upgrade_user_handle'),
-        displayName: name || t('login.upgrade_user_handle'),
-      },
-      pubKeyCredParams: [
-        { alg: -7, type: 'public-key' },
-        { alg: -257, type: 'public-key' },
-      ],
-      timeout: 60000,
-      attestation: 'none',
-      authenticatorSelection: {
-        residentKey: 'required',
-        userVerification: 'required',
-      },
-    };
-
-    // 3. Perform registration ceremony
-    try {
-      const credential = await startRegistration({ optionsJSON: options });
-
-      // 4. Upgrade in backend (Rename: migration only, session deferred)
-      await migrateGrandfatheredAccount({
-        oldCredentialId,
-        newCredentialId: credential.id,
-        attestationObject: credential.response.attestationObject,
-        clientDataJson: credential.response.clientDataJSON,
-      });
-
-      return credential;
-    } catch (error: any) {
-      handleCeremonyError(error);
-    }
-  };
-
 
   return {
     createPasskey,
     authenticatePasskey,
     addPasskey,
-    upgradePasskey,
-    lastCredentialId: lastCredentialIdRef.current,
     isReady: connected,
   };
 }

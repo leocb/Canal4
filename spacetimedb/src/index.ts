@@ -259,10 +259,7 @@ export const register_new_user_with_passkey = spacetimedb.reducer(
     // 5. Create user and auth
     const user = ctx.db.User.insert({
       userId: 0n,
-      email: undefined,
-      passkeyCredentialId: undefined,
       name: trimmedName,
-      pushToken: undefined,
       createdAt: ctx.timestamp,
     });
 
@@ -445,16 +442,11 @@ export const register_passkey = spacetimedb.reducer(
 export const login_with_passkey = spacetimedb.reducer(
   { credentialId: t.string(), authenticatorData: t.string(), clientDataJson: t.string(), signature: t.string() },
   (ctx, { credentialId, authenticatorData, clientDataJson, signature }) => {
-    // 1. Lookup credential via index in the NEW system (UserAuth)
+    // 1. Lookup credential via index in the system (UserAuth)
     let authRecord = ctx.db.UserAuth.user_auth_credential_id.filter(credentialId).next().value;
 
-    // 2. If not in the new system, check the OLD system (User.passkeyCredentialId)
+    // 2. If not in the system, throw error
     if (!authRecord) {
-      const oldUser = ctx.db.User.user_passkey_credential_id.filter(credentialId).next().value;
-      if (oldUser) {
-        // Return a specific error code + name that the frontend can use to start the upgrade
-        throw new SenderError("api_errors.grandfathered_passkey:" + oldUser.name);
-      }
       throw new SenderError("api_errors.passkey_not_found");
     }
 
@@ -529,74 +521,6 @@ export const login_with_passkey = spacetimedb.reducer(
   }
 );
 
-export const migrate_grandfathered_account = spacetimedb.reducer(
-  { oldCredentialId: t.string(), newCredentialId: t.string(), attestationObject: t.string(), clientDataJson: t.string() },
-  (ctx, { oldCredentialId, newCredentialId, attestationObject, clientDataJson }) => {
-    // 1. Verify we HAVE a user for this old credential
-    const user = ctx.db.User.user_passkey_credential_id.filter(oldCredentialId).next().value;
-    if (!user) throw new SenderError("api_errors.user_not_found");
-
-    // 2. Verify and extract the NEW passkey
-    const clientData = decodeClientDataJSON(clientDataJson);
-    const challengeFromClient = verifyClientData(clientData, "webauthn.create");
-    consumeChallenge(ctx, challengeFromClient);
-
-    const attestationBytes = new Uint8Array(isoBase64URL.toBuffer(attestationObject) as any);
-    const decodedAttestation = decodeAttestationObject(attestationBytes as any) as Map<string, any>;
-    const authDataBuffer = decodedAttestation.get('authData') as Uint8Array;
-    if (!authDataBuffer) throw new SenderError("api_errors.invalid_attestation");
-
-    verifyAuthenticatorData(authDataBuffer);
-    const parsedAuthData = parseAuthenticatorData(authDataBuffer);
-    if (!parsedAuthData.credentialPublicKey) throw new SenderError("api_errors.invalid_attestation");
-
-    verifyRpId(authDataBuffer, clientData.origin);
-    const publicKeyBase64 = isoBase64URL.fromBuffer(parsedAuthData.credentialPublicKey as any);
-
-    // 3. Migrate: Insert into UserAuth and Clear the old field in User
-    ctx.db.UserAuth.insert({
-      userId: user.userId,
-      passkeyCredentialId: newCredentialId,
-      passkeyPublicKey: publicKeyBase64,
-    });
-
-    ctx.db.User.userId.update({
-      ...user,
-      passkeyCredentialId: "", // Clear the old system field
-    });
-
-
-    // 4. MIGRATION COMPLETE.
-    const existing = ctx.db.UserIdentity.identity.find(ctx.sender);
-    if (existing) {
-      if (existing.userId !== user.userId) {
-        ctx.db.UserIdentity.identity.delete(ctx.sender);
-        ctx.db.UserIdentity.insert({
-          identity: ctx.sender,
-          userId: user.userId,
-          lastLogin: ctx.timestamp,
-        });
-      }
-    } else {
-      ctx.db.UserIdentity.insert({
-        identity: ctx.sender,
-        userId: user.userId,
-        lastLogin: ctx.timestamp,
-      });
-    }
-    console.log(`[migrate_grandfathered_account] COMPLETED SUCCESSFULLY for ${user.name}`);
-  }
-);
-
-export const update_push_token = spacetimedb.reducer(
-  { token: t.string() },
-  (ctx, { token }) => {
-    const userId = getUserId(ctx);
-    const user = ctx.db.User.userId.find(userId);
-    if (!user) throw new SenderError("api_errors.user_not_found");
-    ctx.db.User.userId.update({ ...user, pushToken: token });
-  }
-);
 
 /*** VENUE & CHANNEL MANAGEMENT ***/
 

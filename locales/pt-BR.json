@@ -60,10 +60,6 @@
     "error_update_name": "Erro ao atualizar nome",
     "passkey_no_identity": "Identidade não encontrada para operação de chave de acesso.",
     "passkey_challenge_timeout": "Tempo esgotado aguardando o desafio de segurança.",
-    "upgrade_button": "Atualizar Conta",
-    "upgrade_user_handle": "Usuário Atualizado",
-    "error_upgrade": "A atualização falhou. Tente novamente.",
-    "upgrade_success": "Agora você pode entrar usando sua nova chave de acesso",
     "copyright": "Criado por github.com/leocb"
   },
   "nav": {
@@ -494,9 +490,7 @@
     "user_not_verified": "A identidade do usuário não pôde ser verificada pela chave de acesso.",
     "invalid_rp_id": "Erro de segurança: Origem não correspondente.",
     "invalid_public_key": "Falha ao decodificar a chave pública da chave de acesso.",
-    "invalid_name_length": "O nome deve ter entre 1 e 64 caracteres.",
-    "grandfathered_passkey": "Sua conta ({{name}}) usa um sistema de segurança antigo. Clique em Atualizar para protegê-la.",
-    "error_upgrade": "Falha na atualização. Tente novamente."
+    "invalid_name_length": "O nome deve ter entre 1 e 64 caracteres."
   },
   "settings": {
     "title": "Configurações",
