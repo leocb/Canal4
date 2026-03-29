@@ -614,5 +614,11 @@
     "error_helper": "An error occurred while trying to update Canal4.",
     "error_translocation": "Please move Canal4 to your Applications folder to enable automatic updates.",
     "close": "Close"
+  },
+  "pwa": {
+    "install_title": "Install Canal4",
+    "install_helper": "Add Canal4 to your home screen for a better experience and quick access.",
+    "install_button": "Install",
+    "dismiss_button": "Maybe later"
   }
 }

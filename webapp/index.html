@@ -7,6 +7,18 @@
     <title>Canal4</title>
     <!-- Runtime configuration injected at boot time by Nginx -->
     <script src="/config.js"></script>
+    <link rel="manifest" href="/manifest.json" />
+    <meta name="theme-color" content="#3B82F6" />
+    <link rel="apple-touch-icon" href="/assets/icon-192.png" />
+    <script>
+      if ('serviceWorker' in navigator) {
+        window.addEventListener('load', () => {
+          navigator.serviceWorker.register('/sw.js').catch(err => {
+            console.log('SW registration failed: ', err);
+          });
+        });
+      }
+    </script>
   </head>
   <body>
     <div id="root"></div>

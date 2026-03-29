@@ -1,5 +1,5 @@
 import { useNavigate, useLocation } from 'react-router-dom';
-import { Bell, Pencil } from 'lucide-react';
+import { Pencil } from 'lucide-react';
 import { useAuth } from '../hooks/useAuth';
 import { useTranslation } from 'react-i18next';
 
@@ -16,11 +16,11 @@ const NavBar = () => {
     <nav className="nav-bar">
       <div style={{ display: 'flex', alignItems: 'center', gap: '12px', flex: 1 }}>
         <div
-          style={{ width: '32px', height: '32px', borderRadius: '8px', background: 'var(--accent-color)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}
+          style={{ width: '32px', height: '32px', borderRadius: '10px', background: 'var(--accent-color)', display: 'flex', alignItems: 'center', justifyContent: 'center', overflow: 'hidden', boxShadow: '0 0 18px rgba(255, 255, 255, 0.25)' }}
         >
-          <Bell size={18} color="white" />
+          <img src="/assets/icon-192.png" alt="Canal4 Logo" style={{ width: '100%', height: '100%', objectFit: 'contain' }} />
         </div>
-        <span style={{ fontWeight: 600, fontSize: '1.1rem', cursor: 'pointer' }} onClick={() => navigate('/')}>
+        <span style={{ fontWeight: 600, fontSize: '1.2rem', cursor: 'pointer', letterSpacing: '-0.02em' }} onClick={() => navigate('/')}>
           {t('app.name')}
         </span>
       </div>

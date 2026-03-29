@@ -9,6 +9,7 @@ import NavBar from './components/NavBar';
 import ReconnectingOverlay from './components/ReconnectingOverlay';
 import ProtectedRoute from './components/ProtectedRoute';
 import { Breadcrumbs } from './components/Breadcrumbs';
+import { PWAInstallPrompt } from './components/PWAInstallPrompt';
 
 // Named imports for screen components
 import { LoginScreen } from './pages/LoginScreen';
@@ -81,6 +82,7 @@ function AppContent() {
           <Route path="*" element={<Navigate to="/venues" replace />} />
         </Route>
       </Routes>
+      <PWAInstallPrompt />
     </>
   );
 }
