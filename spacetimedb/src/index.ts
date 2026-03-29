@@ -565,17 +565,28 @@ export const migrate_grandfathered_account = spacetimedb.reducer(
       passkeyCredentialId: "", // Clear the old system field
     });
 
+
     // 4. MIGRATION COMPLETE.
-    // We intentionally DO NOT link the identity here to separate the migration
-    // from the session materialization. The frontend will follow up with 
-    // authenticatePasskey() using the new credential.
-    console.log("[migrate_grandfathered_account] COMPLETED");
+    const existing = ctx.db.UserIdentity.identity.find(ctx.sender);
+    if (existing) {
+      if (existing.userId !== user.userId) {
+        ctx.db.UserIdentity.identity.delete(ctx.sender);
+        ctx.db.UserIdentity.insert({
+          identity: ctx.sender,
+          userId: user.userId,
+          lastLogin: ctx.timestamp,
+        });
+      }
+    } else {
+      ctx.db.UserIdentity.insert({
+        identity: ctx.sender,
+        userId: user.userId,
+        lastLogin: ctx.timestamp,
+      });
+    }
+    console.log(`[migrate_grandfathered_account] COMPLETED SUCCESSFULLY for ${user.name}`);
   }
 );
-
-
-
-
 
 export const update_push_token = spacetimedb.reducer(
   { token: t.string() },

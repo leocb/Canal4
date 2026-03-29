@@ -89,10 +89,13 @@ export const LoginScreen = () => {
     try {
       await upgradePasskey(lastCredentialId, grandfatheredName);
       
-      // Decoupled: Show Success and reset state
+      // CRITICAL: Converge the desynced identities by calling 
+      // authenticatePasskey() immediately after migration. This ensures 
+      // the main session claims the newly created userId.
+      await authenticatePasskey();
+
       setIsGrandfathered(false);
       setSuccessText(t('login.upgrade_success'));
-      // No automatic login
     } catch (err: any) {
       if (err.message !== 'login.passkey_cancelled') {
         setErrorText(t(err.message) || t('login.error_upgrade'));

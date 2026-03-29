@@ -79,8 +79,8 @@ export const UserIdentity = table(
  * Expires after 2 minutes.
  */
 export const PasskeyChallenge = table(
-  { 
-    name: "passkey_challenge", 
+  {
+    name: "passkey_challenge",
     public: false,
   },
   {
@@ -240,8 +240,8 @@ export const DisplayDevice = table(
 );
 
 export const DisplayPairingPin = table(
-  { 
-    name: "display_pairing_pin", 
+  {
+    name: "display_pairing_pin",
     public: false,
     indexes: [{ name: "display_pairing_pin_identity", accessor: "display_pairing_pin_identity", algorithm: "btree", columns: ["identity"] }] as const,
   },
@@ -340,9 +340,11 @@ export const UserView = spacetimedb.view({ name: "user_view", public: true }, t.
   return Array.from(results.values());
 });
 
+
 export const UserIdentitySelfView = spacetimedb.view({ name: "user_identity_self_view", public: true }, t.array(UserIdentity.rowType), (ctx) => {
   if (!ctx.sender) return [];
   const ui = ctx.db.UserIdentity.identity.find(ctx.sender);
+  console.log("UserIdentitySelfView", ctx.sender, ui);
   return ui ? [ui] : [];
 });
 
@@ -432,7 +434,7 @@ export const ChannelMemberRoleView = spacetimedb.view({ name: "channel_member_ro
     // Optimization: Filter directly by user_id instead of joining Venue -> Channel -> Role
     return [...ctx.db.ChannelMemberRole.channel_member_role_user_id.filter(ui.userId)];
   }
-  
+
   // Display Case: Must still join via Venue
   for (const d of ctx.db.DisplayDevice.display_device_identity.filter(sender)) {
     venueIds.add(d.venueId);
@@ -454,7 +456,7 @@ export const NotificationFilterView = spacetimedb.view({ name: "notification_fil
   if (!sender) return [];
   const ui = ctx.db.UserIdentity.identity.find(sender);
   if (!ui) return [];
-  
+
   // Optimization: Filter directly by user_id
   return [...ctx.db.NotificationFilter.notification_filter_user_id.filter(ui.userId)];
 });
