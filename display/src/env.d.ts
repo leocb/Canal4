@@ -19,6 +19,8 @@ interface Window {
     onUpdateStatus: (callback: (status: string, version?: string) => void) => void,
     onUpdateProgress: (callback: (percent: number) => void) => void,
     onUpdateError: (callback: (error: string) => void) => void,
+    openExternal: (url: string) => void,
+    closeUpdateWindow: () => void,
   }
 }
 declare module '*?asset' {

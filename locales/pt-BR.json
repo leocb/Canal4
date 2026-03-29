@@ -613,6 +613,9 @@
     "error": "Falha na atualização",
     "error_helper": "Ocorreu um erro ao tentar atualizar o Canal4.",
     "error_translocation": "Por favor, mova o Canal4 para a pasta Aplicativos para ativar as atualizações automáticas.",
+    "macos_notice": "Atualizações automáticas estão desativadas no macOS. Baixe a versão mais recente em nosso GitHub.",
+    "github_button": "Ver no GitHub",
+    "skip_button": "Ignorar por agora",
     "close": "Fechar"
   },
   "pwa": {

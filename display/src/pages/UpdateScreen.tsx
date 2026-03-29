@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 
-type UpdateStatus = 'checking' | 'available' | 'downloading' | 'ready' | 'up-to-date' | 'error';
+type UpdateStatus = 'checking' | 'available' | 'downloading' | 'ready' | 'up-to-date' | 'error' | 'macos-manual';
 
 export function UpdateScreen() {
   const { t } = useTranslation();
@@ -9,7 +9,7 @@ export function UpdateScreen() {
   const [progress, setProgress] = useState(0);
   const [version, setVersion] = useState('');
   const [error, setError] = useState<string | null>(null);
-
+  const [showCancel, setShowCancel] = useState(false);
   useEffect(() => {
     if (!window.api) return;
 
@@ -28,10 +28,27 @@ export function UpdateScreen() {
       setStatus('error');
       setError(err);
     });
+
+    // Show cancel button if things take too long
+    const timer = setTimeout(() => {
+      setShowCancel(true);
+    }, 8000);
+
+    return () => clearTimeout(timer);
   }, []);
 
   const handleClose = () => {
-    window.close();
+    if (window.api?.closeUpdateWindow) {
+      window.api.closeUpdateWindow();
+    } else {
+      window.close();
+    }
+  };
+
+  const handleGithub = () => {
+    if (window.api?.openExternal) {
+      window.api.openExternal('https://github.com/leocb/Canal4/releases');
+    }
   };
 
   return (
@@ -63,6 +80,7 @@ export function UpdateScreen() {
           {status === 'ready' && t('updater.ready')}
           {status === 'up-to-date' && t('updater.up_to_date')}
           {status === 'error' && t('updater.error')}
+          {status === 'macos-manual' && t('updater.macos_notice')}
         </p>
       </div>
 
@@ -89,11 +107,49 @@ export function UpdateScreen() {
         </div>
       )}
 
-      {status === 'error' && (
-        <div style={{ textAlign: 'center', maxWidth: '100%' }}>
-          <p style={{ fontSize: '12px', color: '#ff4444', marginBottom: '20px', wordBreak: 'break-all' }}>
-            {error && error.includes('updater.') ? t(error) : error || t('updater.error_helper')}
-          </p>
+      {status === 'macos-manual' && (
+        <div style={{ display: 'flex', gap: '12px', WebkitAppRegion: 'no-drag' } as any}>
+          <button
+            onClick={handleGithub}
+            style={{
+              padding: '10px 24px',
+              backgroundColor: '#3B82F6',
+              color: '#fff',
+              border: 'none',
+              borderRadius: '8px',
+              cursor: 'pointer',
+              fontSize: '14px',
+              fontWeight: 600,
+              boxShadow: '0 4px 12px rgba(59, 130, 246, 0.3)'
+            } as any}
+          >
+            {t('updater.github_button')}
+          </button>
+          <button
+            onClick={handleClose}
+            style={{
+              padding: '10px 24px',
+              backgroundColor: 'transparent',
+              color: '#999',
+              border: '1px solid #444',
+              borderRadius: '8px',
+              cursor: 'pointer',
+              fontSize: '14px',
+              fontWeight: 500
+            } as any}
+          >
+            {t('updater.skip_button')}
+          </button>
+        </div>
+      )}
+
+      {(status === 'error' || (showCancel && status !== 'ready' && status !== 'up-to-date')) && status !== 'macos-manual' && (
+        <div style={{ textAlign: 'center', maxWidth: '100%', WebkitAppRegion: 'no-drag' } as any}>
+          {status === 'error' && (
+            <p style={{ fontSize: '12px', color: '#ff4444', marginBottom: '20px', wordBreak: 'break-all' }}>
+              {error && error.includes('updater.') ? t(error) : error || t('updater.error_helper')}
+            </p>
+          )}
           <button
             onClick={handleClose}
             style={{
@@ -101,14 +157,13 @@ export function UpdateScreen() {
               backgroundColor: '#333',
               color: '#fff',
               border: 'none',
-              borderRadius: '4px',
+              borderRadius: '6px',
               cursor: 'pointer',
               fontSize: '13px',
-              fontWeight: 500,
-              WebkitAppRegion: 'no-drag'
+              fontWeight: 500
             } as any}
           >
-            {t('updater.close')}
+            {status === 'error' ? t('updater.close') : t('common.cancel')}
           </button>
         </div>
       )}

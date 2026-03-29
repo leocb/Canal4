@@ -27,6 +27,8 @@ const api = {
   onUpdateError: (callback: (error: string) => void) => {
     ipcRenderer.on('update-error', (_event, error) => callback(error))
   },
+  openExternal: (url: string) => ipcRenderer.send('open-external', url),
+  closeUpdateWindow: () => ipcRenderer.send('close-update-window'),
 }
 
 // Use `contextBridge` APIs to expose Electron APIs to

@@ -1,4 +1,4 @@
-import { app, BrowserWindow, Tray, Menu, screen, ipcMain, nativeImage, powerSaveBlocker } from 'electron'
+import { app, BrowserWindow, Tray, Menu, screen, ipcMain, nativeImage, powerSaveBlocker, shell } from 'electron'
 import { join } from 'path'
 import { electronApp, optimizer, is } from '@electron-toolkit/utils'
 import { autoUpdater } from 'electron-updater'
@@ -99,16 +99,15 @@ async function triggerUpdateCheckAndInstall(isManual = false): Promise<void> {
     };
 
     const onAvailable = async (info: { version: string }) => {
-      console.log(`[Updater] Update available: v${info.version} — downloading…`);
+      console.log(`[Updater] Update available: v${info.version}`);
       if (!updateWindow) {
         await createUpdateWindow();
       }
 
-      // Latest macOS specific check: app must be in /Applications for updates to work reliably due to translocation
-      if (process.platform === 'darwin' && !app.isInApplicationsFolder()) {
-        const errorKey = 'updater.error_translocation';
-        console.warn(`[Updater] Reporting translocation error (not in Applications folder)`);
-        updateWindow?.webContents.send('update-error', errorKey);
+      // macOS specific change: point user to GitHub release page instead of auto-downloading
+      if (process.platform === 'darwin') {
+        console.log('[Updater] System is macOS — requiring manual download.');
+        updateWindow?.webContents.send('update-status', 'macos-manual', info.version);
         cleanup();
         return;
       }
@@ -118,7 +117,6 @@ async function triggerUpdateCheckAndInstall(isManual = false): Promise<void> {
         console.error('[Updater] Download failed:', e.message);
         updateWindow?.webContents.send('update-error', e.message);
         cleanup();
-        // Don't settle immediately if there's an error so user can see it
       });
     };
 
@@ -133,9 +131,6 @@ async function triggerUpdateCheckAndInstall(isManual = false): Promise<void> {
       // Wait a bit so the user can see it's ready
       setTimeout(() => {
         console.log('[Updater] Finalizing update... Closing windows and stopping background tasks.');
-
-        // High-compatibility approach for macOS:
-        autoUpdater.autoInstallOnAppQuit = true;
 
         // STOP power save blockers
         try {
@@ -154,13 +149,6 @@ async function triggerUpdateCheckAndInstall(isManual = false): Promise<void> {
 
         console.log('[Updater] Calling quitAndInstall()...');
         autoUpdater.quitAndInstall(false, true);
-
-        // Safety fallback: if the app is still running after 5 seconds, force a quit.
-        // electron-updater should have already triggered the swap.
-        setTimeout(() => {
-          console.warn('[Updater] quitAndInstall timed out — forcing app.quit()');
-          app.quit();
-        }, 8000);
       }, 2000);
     };
 
@@ -397,6 +385,8 @@ app.whenReady().then(async () => {
   }
 
   // Handle IPC requests
+  ipcMain.on('open-external', (_event, url) => shell.openExternal(url));
+  ipcMain.on('close-update-window', () => updateWindow?.close());
   ipcMain.handle('get-machine-id', () => displayData.id);
   ipcMain.handle('get-token', () => displayData.token);
   ipcMain.handle('get-displays', () => {
@@ -559,4 +549,9 @@ ipcMain.on('simulate-update-error', () => {
 
 ipcMain.on('simulate-update-translocation', () => {
   simulateUpdateTranslocationErrorFlow().catch(console.error);
+});
+
+ipcMain.on('simulate-macos-update', async () => {
+  await createUpdateWindow();
+  updateWindow?.webContents.send('update-status', 'macos-manual', '1.2.3');
 });

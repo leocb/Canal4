@@ -613,6 +613,9 @@
     "error": "Update failed",
     "error_helper": "An error occurred while trying to update Canal4.",
     "error_translocation": "Please move Canal4 to your Applications folder to enable automatic updates.",
+    "macos_notice": "Standard updates are disabled on macOS. Please download the latest version from our releases page.",
+    "github_button": "View on GitHub",
+    "skip_button": "Skip for now",
     "close": "Close"
   },
   "pwa": {
