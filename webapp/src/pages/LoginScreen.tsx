@@ -1,5 +1,6 @@
 import { AlertTriangle, UserPlus, LogIn, Loader2, Languages, ChevronDown } from 'lucide-react';
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect } from 'react';
+import { DropdownMenu, DropdownMenuItem } from '../components/DropdownMenu';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { reducers } from '../module_bindings/index.ts';
 import { useReducer } from 'spacetimedb/react';
@@ -7,6 +8,8 @@ import { useAuth } from '../hooks/useAuth';
 import { useTranslation } from 'react-i18next';
 import { usePasskeys } from '../hooks/usePasskeys';
 import pkg from '../../package.json';
+
+const SUPPORTED_LANGUAGES = ['en', 'pt-BR'] as const;
 
 export const LoginScreen = () => {
   const { t, i18n } = useTranslation();
@@ -21,21 +24,8 @@ export const LoginScreen = () => {
   const [successText, setSuccessText] = useState('');
 
 
-   const updateUserName = useReducer(reducers.updateUserName);
+  const updateUserName = useReducer(reducers.updateUserName);
   const { createPasskey, authenticatePasskey } = usePasskeys();
-  const [showMenu, setShowMenu] = useState(false);
-  const menuRef = useRef<HTMLDivElement>(null);
-
-  // Close menu on click outside
-  useEffect(() => {
-    const handleClickOutside = (event: MouseEvent) => {
-      if (menuRef.current && !menuRef.current.contains(event.target as Node)) {
-        setShowMenu(false);
-      }
-    };
-    document.addEventListener("mousedown", handleClickOutside);
-    return () => document.removeEventListener("mousedown", handleClickOutside);
-  }, []);
 
   // If already logged in and has a name, navigate away
   useEffect(() => {
@@ -147,46 +137,46 @@ export const LoginScreen = () => {
 
           {view === 'selection' && (
             <div className="flex-col" style={{ gap: '20px' }}>
-               <button 
-                  className="primary-button"
-                  onClick={handleNewUser}
-                  disabled={loading || !connected}
-                  aria-label={t('login.new_here')}
-                  style={{ 
-                      display: 'flex', 
-                      alignItems: 'center', 
-                      justifyContent: 'center', 
-                      gap: '12px', 
-                      padding: '18px',
-                      fontSize: '1.1rem',
-                      background: 'linear-gradient(135deg, var(--accent-color) 0%, #7e57c2 100%)',
-                      border: 'none',
-                      boxShadow: '0 4px 15px rgba(100, 100, 255, 0.2)',
-                      transition: 'transform 0.2s, box-shadow 0.2s'
-                  }}
-                  onMouseEnter={(e) => { e.currentTarget.style.transform = 'translateY(-2px)'; e.currentTarget.style.boxShadow = '0 6px 20px rgba(100, 100, 255, 0.3)'; }}
-                  onMouseLeave={(e) => { e.currentTarget.style.transform = 'translateY(0)'; e.currentTarget.style.boxShadow = '0 4px 15px rgba(100, 100, 255, 0.2)'; }}
-               >
-                  {loading ? <Loader2 className="animate-spin" size={24} /> : <UserPlus size={24} />}
-                  {t('login.new_here')}
-               </button>
+              <button
+                className="primary-button"
+                onClick={handleNewUser}
+                disabled={loading || !connected}
+                aria-label={t('login.new_here')}
+                style={{
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  gap: '12px',
+                  padding: '18px',
+                  fontSize: '1.1rem',
+                  background: 'linear-gradient(135deg, var(--accent-color) 0%, #7e57c2 100%)',
+                  border: 'none',
+                  boxShadow: '0 4px 15px rgba(100, 100, 255, 0.2)',
+                  transition: 'transform 0.2s, box-shadow 0.2s'
+                }}
+                onMouseEnter={(e) => { e.currentTarget.style.transform = 'translateY(-2px)'; e.currentTarget.style.boxShadow = '0 6px 20px rgba(100, 100, 255, 0.3)'; }}
+                onMouseLeave={(e) => { e.currentTarget.style.transform = 'translateY(0)'; e.currentTarget.style.boxShadow = '0 4px 15px rgba(100, 100, 255, 0.2)'; }}
+              >
+                {loading ? <Loader2 className="animate-spin" size={24} /> : <UserPlus size={24} />}
+                {t('login.new_here')}
+              </button>
 
-               <button 
+              <button
                 className="secondary-button"
                 onClick={handleHaveAccount}
                 disabled={loading || !connected}
                 aria-label={t('login.have_account')}
-                style={{ 
-                    display: 'flex', 
-                    alignItems: 'center', 
-                    justifyContent: 'center', 
-                    gap: '12px', 
-                    padding: '18px',
-                    fontSize: '1.1rem',
-                    background: 'rgba(255,255,255,0.05)',
-                    border: '1px solid rgba(255,255,255,0.1)',
-                    backdropFilter: 'blur(10px)',
-                    transition: 'background 0.2s'
+                style={{
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  gap: '12px',
+                  padding: '18px',
+                  fontSize: '1.1rem',
+                  background: 'rgba(255,255,255,0.05)',
+                  border: '1px solid rgba(255,255,255,0.1)',
+                  backdropFilter: 'blur(10px)',
+                  transition: 'background 0.2s'
                 }}
                 onMouseEnter={(e) => { e.currentTarget.style.background = 'rgba(255,255,255,0.1)'; }}
                 onMouseLeave={(e) => { e.currentTarget.style.background = 'rgba(255,255,255,0.05)'; }}
@@ -195,12 +185,12 @@ export const LoginScreen = () => {
                 {t('login.have_account')}
               </button>
 
-               {!connected && (
-                 <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px', color: 'var(--text-secondary)', fontSize: '0.9rem', marginTop: '8px' }}>
-                   <Loader2 className="animate-spin" size={16} />
-                   {t('common.connecting')}
-                 </div>
-               )}
+              {!connected && (
+                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px', color: 'var(--text-secondary)', fontSize: '0.9rem', marginTop: '8px' }}>
+                  <Loader2 className="animate-spin" size={16} />
+                  {t('common.connecting')}
+                </div>
+              )}
             </div>
           )}
 
@@ -247,66 +237,32 @@ export const LoginScreen = () => {
           )}
 
           <div style={{ display: 'flex', justifyContent: 'center', marginTop: '24px' }}>
-            <div style={{ position: 'relative', minWidth: '160px' }} ref={menuRef}>
-              <button
-                className="secondary"
-                style={{ 
-                  width: '100%', 
-                  display: 'flex', 
-                  alignItems: 'center', 
-                  justifyContent: 'space-between', 
-                  padding: '10px 16px',
-                  fontSize: '0.9rem' 
-                }}
-                onClick={() => setShowMenu(!showMenu)}
-                type="button"
-                aria-label={t('common.language')}
-                aria-expanded={showMenu}
-              >
-                <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                  <Languages size={18} />
-                  <span>{i18n.resolvedLanguage === 'en' ? t('languages.en') : t('languages.pt-BR')}</span>
-                </div>
-                <ChevronDown size={16} style={{ 
-                  transform: showMenu ? 'rotate(180deg)' : 'none', 
-                  transition: 'transform 0.2s',
-                  opacity: 0.7 
-                }} />
-              </button>
-              
-              {showMenu && (
-                <div className="dropdown-menu glass-panel" style={{ 
-                  position: 'absolute', 
-                  bottom: 'calc(100% + 8px)', 
-                  left: 0,
-                  right: 0,
-                  zIndex: 100, 
-                  display: 'flex', 
-                  flexDirection: 'column' 
-                }}>
-                  <button
-                    className="dropdown-item"
-                    style={{
-                      color: i18n.resolvedLanguage === 'en' ? 'var(--accent-color)' : 'inherit',
-                      fontWeight: i18n.resolvedLanguage === 'en' ? 600 : 400
-                    }}
-                    onClick={() => { i18n.changeLanguage('en'); setShowMenu(false); }}
-                  >
-                    {t('languages.en')}
-                  </button>
-                  <button
-                    className="dropdown-item"
-                    style={{
-                      color: i18n.resolvedLanguage === 'pt-BR' ? 'var(--accent-color)' : 'inherit',
-                      fontWeight: i18n.resolvedLanguage === 'pt-BR' ? 600 : 400
-                    }}
-                    onClick={() => { i18n.changeLanguage('pt-BR'); setShowMenu(false); }}
-                  >
-                    {t('languages.pt-BR')}
-                  </button>
-                </div>
-              )}
-            </div>
+            <DropdownMenu
+              minWidth="160px"
+              trigger={
+                <button
+                  className="dropdown-trigger dropdown-trigger-small"
+                  type="button"
+                  aria-label={t('common.language')}
+                >
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                    <Languages size={18} />
+                    <span>{t(`languages.${i18n.resolvedLanguage}`)}</span>
+                  </div>
+                  <ChevronDown size={16} />
+                </button>
+              }
+            >
+              {SUPPORTED_LANGUAGES.map((lang) => (
+                <DropdownMenuItem
+                  key={lang}
+                  selected={i18n.resolvedLanguage === lang}
+                  onClick={() => i18n.changeLanguage(lang)}
+                >
+                  {t(`languages.${lang}`)}
+                </DropdownMenuItem>
+              ))}
+            </DropdownMenu>
           </div>
 
           <div style={{ marginTop: '32px', fontSize: '0.8rem', color: 'var(--text-secondary)' }}>

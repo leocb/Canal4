@@ -1,4 +1,4 @@
-import { useState, useRef, useEffect } from 'react';
+import { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { useTable, useReducer } from 'spacetimedb/react';
 import { tables, reducers } from '../module_bindings/index.ts';
@@ -6,6 +6,7 @@ import { useReadyTable } from '../hooks/useReadyTable';
 import { useAuth } from '../hooks/useAuth';
 import { MoreVertical, Settings, Send, History, LayoutTemplate, Repeat, Trash2, UserX, Clock, Play, CheckCircle2, AlertCircle, WifiOff, Monitor, XCircle, ArrowLeft } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
+import { DropdownMenu } from '../components/DropdownMenu';
 
 export const ChannelScreen = () => {
   const { t } = useTranslation();
@@ -29,17 +30,6 @@ export const ChannelScreen = () => {
 
   const [contextMsg, setContextMsg] = useState<any | null>(null);
 
-  // Menu state
-  const [showMenu, setShowMenu] = useState(false);
-  const menuRef = useRef<HTMLDivElement>(null);
-
-  useEffect(() => {
-    const handler = (e: MouseEvent) => {
-      if (menuRef.current && !menuRef.current.contains(e.target as Node)) setShowMenu(false);
-    };
-    document.addEventListener('mousedown', handler);
-    return () => document.removeEventListener('mousedown', handler);
-  }, []);
 
   const venue = venues.find((v: any) => v.link === venueLink);
   const channelIdBigInt = BigInt(channelId || 0);
@@ -240,21 +230,21 @@ export const ChannelScreen = () => {
 
               {/* 3-dot menu — only shown if user can manage the channel */}
               {canUpdate && (
-                <div style={{ position: 'relative' }} ref={menuRef}>
-                  <button className="icon-button" onClick={() => setShowMenu(s => !s)} aria-label={t('aria.toggle_menu')}>
-                    <MoreVertical size={20} />
+                <DropdownMenu
+                  trigger={
+                    <button className="icon-button" aria-label={t('aria.toggle_menu')}>
+                      <MoreVertical size={20} />
+                    </button>
+                  }
+                  minWidth="180px"
+                >
+                  <button className="dropdown-item" onClick={() => navigate(`/venues/${venue.link}/channels/${channel.channelId}/settings`)}>
+                    <Settings size={16} /> {t('channel.settings_button')}
                   </button>
-                  {showMenu && (
-                    <div className="dropdown-menu glass-panel" style={{ position: 'absolute', right: 0, top: '48px', zIndex: 100, minWidth: '180px', display: 'flex', flexDirection: 'column' }}>
-                      <button className="dropdown-item" onClick={() => { setShowMenu(false); navigate(`/venues/${venue.link}/channels/${channel.channelId}/settings`); }}>
-                        <Settings size={16} /> {t('channel.settings_button')}
-                      </button>
-                      <button className="dropdown-item" onClick={() => { setShowMenu(false); navigate(`/venues/${venue.link}/channels/${channel.channelId}/templates`); }}>
-                        <LayoutTemplate size={16} /> {t('channel.templates_button')}
-                      </button>
-                    </div>
-                  )}
-                </div>
+                  <button className="dropdown-item" onClick={() => navigate(`/venues/${venue.link}/channels/${channel.channelId}/templates`)}>
+                    <LayoutTemplate size={16} /> {t('channel.templates_button')}
+                  </button>
+                </DropdownMenu>
               )}
             </div>
           </div>

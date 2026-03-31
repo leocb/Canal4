@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { Trash2, ArrowLeft, AlertTriangle } from 'lucide-react';
+import { Dropdown } from '../components/Dropdown';
 import { useAuth } from '../hooks/useAuth';
 import { useTable, useReducer } from 'spacetimedb/react';
 import { reducers, tables } from '../module_bindings/index.ts';
@@ -187,18 +188,19 @@ export const ChannelSettingsScreen = () => {
 
           <div style={{ marginBottom: '16px' }}>
             <label style={{ display: 'block', marginBottom: '8px', fontWeight: 500, fontSize: '0.9rem' }}>{t('channel_settings.min_role_label')}</label>
-            <select
+            <Dropdown
               value={minRole}
-              onChange={(e) => setMinRole(e.target.value)}
+              onChange={setMinRole}
               disabled={loading}
-              style={{ width: '100%', padding: '12px 16px', borderRadius: '12px', background: 'rgba(255, 255, 255, 0.05)', border: '1px solid var(--surface-border)', color: 'var(--text-primary)', outline: 'none' }}
-            >
-              {ROLES.map(r => (
-                <option key={r} value={r} style={{ background: '#1c1c1e' }}>
-                  {t(`roles.${r.toLowerCase()}`)}
-                </option>
-              ))}
-            </select>
+              options={ROLES.map(r => {
+                const roleVal = r.toLowerCase();
+                return {
+                  value: roleVal,
+                  label: t(`roles.${roleVal}`),
+                  color: roleVal === 'owner' ? '#eab308' : roleVal === 'admin' ? '#38bdf8' : roleVal === 'moderator' ? '#34d399' : undefined
+                };
+              })}
+            />
           </div>
 
           <div style={{ marginBottom: '24px' }}>

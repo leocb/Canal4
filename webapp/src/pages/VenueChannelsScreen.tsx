@@ -1,8 +1,9 @@
-import { useState, useRef, useEffect } from 'react';
+import { useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { useTable, useReducer } from 'spacetimedb/react';
 import { tables, reducers } from '../module_bindings/index.ts';
 import { MoreVertical, Plus, Monitor, Settings, Shield, UserPlus, Bell, LogOut, Copy, Check, X, Share, AlertTriangle, ArrowLeft } from 'lucide-react';
+import { DropdownMenu } from '../components/DropdownMenu';
 import { useReadyTable } from '../hooks/useReadyTable';
 import { useAuth } from '../hooks/useAuth';
 import QRCode from "react-qr-code";
@@ -21,8 +22,6 @@ export const VenueChannelsScreen = () => {
   const leaveVenue = useReducer(reducers.leaveVenue);
   const createInviteToken = useReducer(reducers.createInviteToken);
 
-  const [showMenu, setShowMenu] = useState(false);
-  const menuRef = useRef<HTMLDivElement>(null);
   const [showInvite, setShowInvite] = useState(false);
   const [inviteToken, setInviteToken] = useState<string>('');
   const [showLeaveConfirm, setShowLeaveConfirm] = useState(false);
@@ -30,16 +29,6 @@ export const VenueChannelsScreen = () => {
   const [leaveErrorText, setLeaveErrorText] = useState('');
   const [copied, setCopied] = useState(false);
 
-  // Close menu on click outside
-  useEffect(() => {
-    const handleClickOutside = (event: MouseEvent) => {
-      if (menuRef.current && !menuRef.current.contains(event.target as Node)) {
-        setShowMenu(false);
-      }
-    };
-    document.addEventListener("mousedown", handleClickOutside);
-    return () => document.removeEventListener("mousedown", handleClickOutside);
-  }, []);
 
   const venue = venues.find(v => v.link === venueLink);
   const venueIdBigInt = venue ? venue.venueId : 0n;
@@ -135,7 +124,6 @@ export const VenueChannelsScreen = () => {
   };
 
   const handleOpenInvite = () => {
-    setShowMenu(false);
     if (!venue) return;
     const newToken = Math.random().toString(36).substring(2, 10);
     setInviteToken(newToken);
@@ -160,7 +148,6 @@ export const VenueChannelsScreen = () => {
   };
 
   const handleLeaveVenueClick = () => {
-    setShowMenu(false);
     setShowLeaveConfirm(true);
   };
 
@@ -194,50 +181,48 @@ export const VenueChannelsScreen = () => {
               <h2>{venue.name}</h2>
             </div>
             <div style={{ display: 'flex', gap: '8px' }}>
-              <div style={{ position: 'relative' }} ref={menuRef}>
-                <button
-                  className="icon-button"
-                  onClick={() => setShowMenu(!showMenu)}
-                  aria-label={t('aria.toggle_menu')}
-                >
-                  <MoreVertical size={20} />
-                </button>
-                {showMenu && (
-                  <div className="dropdown-menu glass-panel" style={{ position: 'absolute', right: 0, top: '48px', zIndex: 100, minWidth: '200px', display: 'flex', flexDirection: 'column' }}>
-                    {isOwner && (
-                      <button className="dropdown-item" onClick={() => { setShowMenu(false); navigate(`/venues/${venue.link}/channels/new`); }}>
-                        <Plus size={16} /> {t('venue_channels.menu.new_channel')}
-                      </button>
-                    )}
-                    {canManageDisplays && (
-                      <button className="dropdown-item" onClick={() => { setShowMenu(false); navigate(`/venues/${venue.link}/desktop-displays`); }}>
-                        <Monitor size={16} /> {t('venue_channels.menu.display_nodes')}
-                      </button>
-                    )}
-                    {isOwner && (
-                      <button className="dropdown-item" onClick={() => { setShowMenu(false); navigate(`/venues/${venue.link}/settings`); }}>
-                        <Settings size={16} /> {t('venue_channels.menu.venue_settings')}
-                      </button>
-                    )}
-                    {canManageDisplays && (
-                      <button className="dropdown-item" onClick={() => { setShowMenu(false); navigate(`/venues/${venue.link}/permissions`); }}>
-                        <Shield size={16} /> {t('venue_channels.menu.permissions')}
-                      </button>
-                    )}
-                    <div className="dropdown-divider" />
-                    <button className="dropdown-item" onClick={handleOpenInvite}>
-                      <UserPlus size={16} /> {t('venue_channels.menu.invite')}
-                    </button>
-                    <button className="dropdown-item" onClick={() => { setShowMenu(false); alert(t('venue_channels.menu.notifications_not_impl')); }}>
-                      <Bell size={16} /> {t('venue_channels.menu.notifications')}
-                    </button>
-                    <div className="dropdown-divider" />
-                    <button className="dropdown-item danger" onClick={handleLeaveVenueClick}>
-                      <LogOut size={16} /> {t('venue_channels.menu.leave_venue')}
-                    </button>
-                  </div>
+              <DropdownMenu
+                trigger={
+                  <button
+                    className="icon-button"
+                    aria-label={t('aria.toggle_menu')}
+                  >
+                    <MoreVertical size={20} />
+                  </button>
+                }
+              >
+                {isOwner && (
+                  <button className="dropdown-item" onClick={() => navigate(`/venues/${venue.link}/channels/new`)}>
+                    <Plus size={16} /> {t('venue_channels.menu.new_channel')}
+                  </button>
                 )}
-              </div>
+                {canManageDisplays && (
+                  <button className="dropdown-item" onClick={() => navigate(`/venues/${venue.link}/desktop-displays`)}>
+                    <Monitor size={16} /> {t('venue_channels.menu.display_nodes')}
+                  </button>
+                )}
+                {isOwner && (
+                  <button className="dropdown-item" onClick={() => navigate(`/venues/${venue.link}/settings`)}>
+                    <Settings size={16} /> {t('venue_channels.menu.venue_settings')}
+                  </button>
+                )}
+                {canManageDisplays && (
+                  <button className="dropdown-item" onClick={() => navigate(`/venues/${venue.link}/permissions`)}>
+                    <Shield size={16} /> {t('venue_channels.menu.permissions')}
+                  </button>
+                )}
+                <div className="dropdown-divider" />
+                <button className="dropdown-item" onClick={handleOpenInvite}>
+                  <UserPlus size={16} /> {t('venue_channels.menu.invite')}
+                </button>
+                <button className="dropdown-item" onClick={() => alert(t('venue_channels.menu.notifications_not_impl'))}>
+                  <Bell size={16} /> {t('venue_channels.menu.notifications')}
+                </button>
+                <div className="dropdown-divider" />
+                <button className="dropdown-item danger" onClick={handleLeaveVenueClick}>
+                  <LogOut size={16} /> {t('venue_channels.menu.leave_venue')}
+                </button>
+              </DropdownMenu>
             </div>
           </div>
 

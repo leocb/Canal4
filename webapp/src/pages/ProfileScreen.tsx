@@ -1,9 +1,10 @@
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../hooks/useAuth';
 import { useReducer } from 'spacetimedb/react';
 import { reducers } from '../module_bindings/index.ts';
-import { ArrowLeft, Trash2, Languages, LogOut, ChevronDown } from 'lucide-react';
+import { ArrowLeft, Trash2, Languages, LogOut } from 'lucide-react';
+import { Dropdown } from '../components/Dropdown';
 import { useTranslation, Trans } from 'react-i18next';
 
 export const ProfileScreen = () => {
@@ -17,19 +18,11 @@ export const ProfileScreen = () => {
 
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
   const [deleteConfirmationName, setDeleteConfirmationName] = useState('');
-  const [showLangMenu, setShowLangMenu] = useState(false);
-  const menuRef = useRef<HTMLDivElement>(null);
-
-  // Close menu on click outside
-  useEffect(() => {
-    const handleClickOutside = (event: MouseEvent) => {
-      if (menuRef.current && !menuRef.current.contains(event.target as Node)) {
-        setShowLangMenu(false);
-      }
-    };
-    document.addEventListener("mousedown", handleClickOutside);
-    return () => document.removeEventListener("mousedown", handleClickOutside);
-  }, []);
+  // Language selection options
+  const languageOptions = [
+    { value: 'en', label: t('languages.en') },
+    { value: 'pt-BR', label: t('languages.pt-BR') }
+  ];
 
   const updateUserName = useReducer(reducers.updateUserName);
   const deleteUserAccount = useReducer(reducers.deleteUserAccount);
@@ -142,61 +135,12 @@ export const ProfileScreen = () => {
               <span style={{ fontWeight: 600, fontSize: '0.9rem' }}>{t('common.language')}</span>
             </div>
             
-            <div style={{ position: 'relative' }} ref={menuRef}>
-                <button
-                  type="button"
-                  className="secondary"
-                  style={{
-                    width: '100%',
-                    display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: 'space-between',
-                    padding: '12px 16px',
-                    textAlign: 'left'
-                  }}
-                  onClick={() => setShowLangMenu(!showLangMenu)}
-                  aria-label={t('common.language')}
-                  aria-expanded={showLangMenu}
-                >
-                  <span>{i18n.resolvedLanguage === 'en' ? t('languages.en') : t('languages.pt-BR')}</span>
-                  <ChevronDown size={18} style={{ transform: showLangMenu ? 'rotate(180deg)' : 'none', transition: 'transform 0.2s' }} />
-                </button>
-
-              {showLangMenu && (
-                <div className="dropdown-menu glass-panel" style={{ 
-                  position: 'absolute', 
-                  top: 'calc(100% + 8px)',
-                  left: 0,
-                  right: 0,
-                  zIndex: 100, 
-                  display: 'flex', 
-                  flexDirection: 'column' 
-                }}>
-                  <button
-                    type="button"
-                    className="dropdown-item"
-                    style={{
-                      color: i18n.resolvedLanguage === 'en' ? 'var(--accent-color)' : 'inherit',
-                      fontWeight: i18n.resolvedLanguage === 'en' ? 600 : 400
-                    }}
-                    onClick={() => { i18n.changeLanguage('en'); setShowLangMenu(false); }}
-                  >
-                    {t('languages.en')}
-                  </button>
-                  <button
-                    type="button"
-                    className="dropdown-item"
-                    style={{
-                      color: i18n.resolvedLanguage === 'pt-BR' ? 'var(--accent-color)' : 'inherit',
-                      fontWeight: i18n.resolvedLanguage === 'pt-BR' ? 600 : 400
-                    }}
-                    onClick={() => { i18n.changeLanguage('pt-BR'); setShowLangMenu(false); }}
-                  >
-                    {t('languages.pt-BR')}
-                  </button>
-                </div>
-              )}
-            </div>
+            <Dropdown
+              value={i18n.resolvedLanguage || 'en'}
+              onChange={(val: string) => i18n.changeLanguage(val)}
+              options={languageOptions}
+              disabled={isSaving}
+            />
           </div>
 
           <button

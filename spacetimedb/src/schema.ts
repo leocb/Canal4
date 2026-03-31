@@ -132,7 +132,6 @@ export const VenueMember = table(
     indexes: [
       { name: "venue_member_venue_id", accessor: "venue_member_venue_id", algorithm: "btree", columns: ["venueId"] },
       { name: "venue_member_user_id", accessor: "venue_member_user_id", algorithm: "btree", columns: ["userId"] },
-      { name: "venue_member_composite", accessor: "venue_member_composite", algorithm: "btree", columns: ["venueId", "userId"] },
     ] as const,
   },
   {
@@ -152,7 +151,6 @@ export const ChannelMemberRole = table(
     indexes: [
       { name: "channel_member_role_channel_id", accessor: "channel_member_role_channel_id", algorithm: "btree", columns: ["channelId"] },
       { name: "channel_member_role_user_id", accessor: "channel_member_role_user_id", algorithm: "btree", columns: ["userId"] },
-      { name: "channel_member_role_composite", accessor: "channel_member_role_composite", algorithm: "btree", columns: ["channelId", "userId"] },
     ] as const,
   },
   {
@@ -169,7 +167,6 @@ export const NotificationFilter = table(
     indexes: [
       { name: "notification_filter_channel_id", accessor: "notification_filter_channel_id", algorithm: "btree", columns: ["channelId"] },
       { name: "notification_filter_user_id", accessor: "notification_filter_user_id", algorithm: "btree", columns: ["userId"] },
-      { name: "notification_filter_composite", accessor: "notification_filter_composite", algorithm: "btree", columns: ["channelId", "userId"] },
     ] as const,
   },
   {
@@ -256,7 +253,6 @@ export const MessageDeliveryStatus = table(
     indexes: [
       { name: "delivery_status_message_id", accessor: "delivery_status_message_id", algorithm: "btree", columns: ["messageId"] },
       { name: "delivery_status_display_id", accessor: "delivery_status_display_id", algorithm: "btree", columns: ["displayId"] },
-      { name: "delivery_status_composite", accessor: "delivery_status_composite", algorithm: "btree", columns: ["messageId", "displayId"] },
     ] as const,
   },
   {
@@ -365,7 +361,7 @@ export const VenueView = spacetimedb.view({ name: "venue_view", public: true }, 
     results.add(d.venueId);
   }
 
-  const finalVenues = [];
+  const finalVenues: any[] = [];
   for (const id of results) {
     const v = ctx.db.Venue.venueId.find(id);
     if (v) finalVenues.push(v);
@@ -421,18 +417,17 @@ export const VenueMemberView = spacetimedb.view({ name: "venue_member_view", pub
 });
 
 export const ChannelMemberRoleView = spacetimedb.view({ name: "channel_member_role_view", public: true }, t.array(ChannelMemberRole.rowType), (ctx) => {
-  const sender = typeof (ctx as any).sender === 'function' ? (ctx as any).sender() : (ctx as any).sender;
-  if (!sender) return [];
+  if (!ctx.sender) return [];
   const venueIds = new Set<bigint>();
 
-  const ui = ctx.db.UserIdentity.identity.find(sender);
+  const ui = ctx.db.UserIdentity.identity.find(ctx.sender);
   if (ui) {
-    // Optimization: Filter directly by user_id instead of joining Venue -> Channel -> Role
-    return [...ctx.db.ChannelMemberRole.channel_member_role_user_id.filter(ui.userId)];
+    for (const m of ctx.db.VenueMember.venue_member_user_id.filter(ui.userId)) {
+      venueIds.add(m.venueId);
+    }
   }
 
-  // Display Case: Must still join via Venue
-  for (const d of ctx.db.DisplayDevice.display_device_identity.filter(sender)) {
+  for (const d of ctx.db.DisplayDevice.display_device_identity.filter(ctx.sender)) {
     venueIds.add(d.venueId);
   }
 
@@ -448,9 +443,8 @@ export const ChannelMemberRoleView = spacetimedb.view({ name: "channel_member_ro
 });
 
 export const NotificationFilterView = spacetimedb.view({ name: "notification_filter_view", public: true }, t.array(NotificationFilter.rowType), (ctx) => {
-  const sender = typeof (ctx as any).sender === 'function' ? (ctx as any).sender() : (ctx as any).sender;
-  if (!sender) return [];
-  const ui = ctx.db.UserIdentity.identity.find(sender);
+  if (!ctx.sender) return [];
+  const ui = ctx.db.UserIdentity.identity.find(ctx.sender);
   if (!ui) return [];
 
   // Optimization: Filter directly by user_id
@@ -536,17 +530,16 @@ export const DisplayPairingPinView = spacetimedb.view({ name: "display_pairing_p
 });
 
 export const MessageDeliveryStatusView = spacetimedb.view({ name: "message_delivery_status_view", public: true }, t.array(MessageDeliveryStatus.rowType), (ctx) => {
-  const sender = typeof (ctx as any).sender === 'function' ? (ctx as any).sender() : (ctx as any).sender;
-  if (!sender) return [];
+  if (!ctx.sender) return [];
   const venueIds = new Set<bigint>();
 
-  const ui = ctx.db.UserIdentity.identity.find(sender);
+  const ui = ctx.db.UserIdentity.identity.find(ctx.sender);
   if (ui) {
     for (const m of ctx.db.VenueMember.venue_member_user_id.filter(ui.userId)) {
       venueIds.add(m.venueId);
     }
   }
-  for (const d of ctx.db.DisplayDevice.display_device_identity.filter(sender)) {
+  for (const d of ctx.db.DisplayDevice.display_device_identity.filter(ctx.sender)) {
     venueIds.add(d.venueId);
   }
 
@@ -563,10 +556,5 @@ export const MessageDeliveryStatusView = spacetimedb.view({ name: "message_deliv
   return results;
 });
 
-
-export const VenueInviteTokenView = spacetimedb.anonymousView({ name: "venue_invite_token_view", public: true }, t.array(VenueInviteToken.rowType), (ctx) => {
-  // Optimization: Use Query Builder for shared shared result sets
-  return ctx.from.VenueInviteToken;
-});
 
 export default spacetimedb;

@@ -84,6 +84,7 @@
     "move_up": "Mover para cima",
     "move_down": "Mover para baixo",
     "language": "Idioma",
+    "continue": "Continuar",
     "loading_profile": "Carregando Perfil...",
     "error_network": "Erro de rede. Verifique sua conexão ou o status do servidor.",
     "connecting": "Conectando ao Canal4",
@@ -276,7 +277,9 @@
     "help_member_desc": "Pode visualizar mensagens.",
     "apply_to_all_label": "Aplicar a mesma função em todos canais",
     "apply_button": "Aplicar",
-    "details_section": "Detalhes do usuário"
+    "details_section": "Detalhes do usuário",
+    "warning_same_role": "Alerta",
+    "warning_demote_impossible": "Se você promover este membro a {{role}}, vocês terão o mesmo nível de permissão e NÃO será possível rebaixá-lo depois. Continuar?"
   },
   "profile": {
     "title": "Seu Perfil",

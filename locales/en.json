@@ -83,6 +83,7 @@
     "move_up": "Move Up",
     "move_down": "Move Down",
     "language": "Language",
+    "continue": "Continue",
     "quit": "Quit Canal4",
     "loading_profile": "Loading Profile...",
     "error_network": "Network error. Check your connection or the server status.",
@@ -276,7 +277,9 @@
     "help_member_desc": "Can view messages",
     "apply_to_all_label": "Bulk Action: Set role for all channels",
     "apply_button": "Apply",
-    "details_section": "User Details"
+    "details_section": "User Details",
+    "warning_same_role": "Warning",
+    "warning_demote_impossible": "If you promote this member to {{role}}, you will have the same permission level and will NOT be able to demote them later. Continue?"
   },
   "profile": {
     "title": "Your Profile",

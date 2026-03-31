@@ -3,8 +3,9 @@ import { useNavigate, useParams } from 'react-router-dom';
 import { useAuth } from '../hooks/useAuth';
 import { useTable, useReducer } from 'spacetimedb/react';
 import { reducers, tables } from '../module_bindings/index.ts';
-import { ArrowLeft, Plus, Trash2, ArrowUp, ArrowDown, Settings2, Code, FileText, Check, AlertTriangle, ChevronDown } from 'lucide-react';
+import { ArrowLeft, Plus, Trash2, ArrowUp, ArrowDown, Settings2, Code, FileText, Check, AlertTriangle } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
+import { Dropdown } from '../components/Dropdown';
 
 interface TemplateField {
   id: string;
@@ -585,39 +586,15 @@ export const ChannelTemplateEditScreen = () => {
                             </h4>
                           </div>
                           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))', gap: '16px', marginBottom: '0' }}>
-                            <div style={{ position: 'relative' }}>
-                              <select
+                              <Dropdown
                                 value={field.type}
-                                onChange={(e) => handleChangeField(idx, 'type', e.target.value as any)}
-                                style={{
-                                  width: '100%',
-                                  appearance: 'none',
-                                  padding: '10px 14px',
-                                  paddingRight: '36px',
-                                  background: 'rgba(0, 0, 0, 0.3)',
-                                  borderRadius: 'var(--radius-md)',
-                                  border: '1px solid var(--surface-border)',
-                                  color: 'var(--text-primary)',
-                                  cursor: 'pointer',
-                                  fontSize: '0.9rem'
-                                }}
-                              >
-                                <option value="text">{t('template_edit.field.type.text')}</option>
-                                <option value="number">{t('template_edit.field.type.number')}</option>
-                                <option value="date">{t('template_edit.field.type.date')}</option>
-                              </select>
-                              <ChevronDown
-                                size={16}
-                                style={{
-                                  position: 'absolute',
-                                  right: '10px',
-                                  top: '50%',
-                                  transform: 'translateY(-50%)',
-                                  pointerEvents: 'none',
-                                  color: 'var(--text-secondary)'
-                                }}
+                                onChange={(val) => handleChangeField(idx, 'type', val as any)}
+                                options={[
+                                  { value: 'text', label: t('template_edit.field.type.text') },
+                                  { value: 'number', label: t('template_edit.field.type.number') },
+                                  { value: 'date', label: t('template_edit.field.type.date') }
+                                ]}
                               />
-                            </div>
 
                             <div style={{ display: 'flex', flexDirection: 'column', justifyContent: 'center' }}>
                               <label style={{ display: 'flex', alignItems: 'center', gap: '12px', cursor: 'pointer' }}>

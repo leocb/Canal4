@@ -124,8 +124,7 @@ export const SpacetimeDBProvider = ({ children }: { children: ReactNode }) => {
             tables.NotificationFilterView,
             tables.DisplayDeviceView,
             tables.DisplayPairingPinView,
-            tables.MessageDeliveryStatusView,
-            tables.VenueInviteTokenView
+            tables.MessageDeliveryStatusView
           ]);
         } catch (subErr) {
           console.error("[STDB] Critical failure during subscription setup:", subErr);

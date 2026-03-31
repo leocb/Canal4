@@ -3,6 +3,7 @@ import { useParams, useNavigate } from 'react-router-dom';
 import { useTable } from 'spacetimedb/react';
 import { tables } from '../module_bindings/index.ts';
 import { ArrowLeft } from 'lucide-react';
+import { Dropdown } from '../components/Dropdown';
 import { useAuth } from '../hooks/useAuth';
 import { useReadyTable } from '../hooks/useReadyTable';
 import { useTranslation } from 'react-i18next';
@@ -152,18 +153,20 @@ export const VenuePermissionsScreen = () => {
             style={{ flex: '1 1 200px', padding: '10px 14px', borderRadius: '8px', border: '1px solid var(--surface-border)', background: 'var(--surface-color)' }}
             aria-label={t('aria.search')}
           />
-          <select 
-            value={roleFilter} 
-            onChange={(e) => setRoleFilter(e.target.value)}
-            style={{ flex: '1 1 150px', padding: '10px 14px', borderRadius: '8px', border: '1px solid var(--surface-border)', background: 'var(--surface-color)' }}
-          >
-            <option value="">{t('venue_permissions.filters.all_roles')}</option>
-            <option value="Owner">{t('roles.owner')}</option>
-            <option value="Admin">{t('roles.admin')}</option>
-            <option value="Moderator">{t('roles.moderator')}</option>
-            <option value="Member">{t('roles.member')}</option>
-            <option value="Blocked">{t('roles.blocked')}</option>
-          </select>
+          <Dropdown
+            value={roleFilter}
+            onChange={setRoleFilter}
+            placeholder={t('venue_permissions.filters.all_roles')}
+            options={[
+              { value: '', label: t('venue_permissions.filters.all_roles') },
+              { value: 'Owner', label: t('roles.owner') },
+              { value: 'Admin', label: t('roles.admin') },
+              { value: 'Moderator', label: t('roles.moderator') },
+              { value: 'Member', label: t('roles.member') },
+              { value: 'Blocked', label: t('roles.blocked') }
+            ]}
+            style={{ flex: '1 1 150px' }}
+          />
         </div>
 
         <div className="flex-col" style={{ marginTop: '24px', gap: '12px' }}>
