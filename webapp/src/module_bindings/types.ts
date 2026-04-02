@@ -196,9 +196,6 @@ export const VenueInviteToken = __t.object("VenueInviteToken", {
 });
 export type VenueInviteToken = __Infer<typeof VenueInviteToken>;
 
-export const VenueInviteTokenView = __t.object("VenueInviteTokenView", {});
-export type VenueInviteTokenView = __Infer<typeof VenueInviteTokenView>;
-
 export const VenueMember = __t.object("VenueMember", {
   venueId: __t.u64(),
   userId: __t.u64(),

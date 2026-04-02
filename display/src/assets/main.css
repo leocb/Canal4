@@ -211,3 +211,105 @@ button.danger:hover {
     radial-gradient(circle at 85% 30%, rgba(16, 185, 129, 0.05), transparent 25%);
   background-attachment: fixed;
 }
+
+/* Dropdown Menu */
+.dropdown-menu {
+  padding: 6px;
+  border-radius: var(--radius-md) !important;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.4), 0 2px 8px rgba(0, 0, 0, 0.3);
+  animation: dropdown-in 0.2s ease-out;
+  transform-origin: top right;
+}
+
+@keyframes dropdown-in {
+  from {
+    opacity: 0;
+    transform: translateY(-12px);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.dropdown-trigger {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 8px 16px;
+  cursor: pointer;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: var(--radius-md);
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  font-size: 0.85rem;
+  min-height: 40px;
+  background: rgba(255, 255, 255, 0.03);
+  color: var(--text-primary);
+  width: 100%;
+}
+
+.dropdown-trigger:hover {
+  background: rgba(255, 255, 255, 0.06);
+  border-color: rgba(255, 255, 255, 0.2);
+}
+
+.dropdown-trigger.open {
+  border-color: var(--accent-color);
+  box-shadow: 0 0 20px rgba(56, 189, 248, 0.15);
+}
+
+.dropdown-trigger:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.dropdown-trigger-small {
+  padding: 10px 16px;
+  font-size: 0.9rem;
+  min-height: 40px;
+}
+
+.dropdown-item {
+  background: transparent;
+  color: var(--text-primary);
+  border: none;
+  padding: 8px 12px;
+  border-radius: 8px;
+  font-size: 0.85rem;
+  font-weight: 400;
+  text-align: left;
+  display: flex;
+  align-items: center;
+  justify-content: flex-start;
+  gap: 8px;
+  width: 100%;
+  transition: all 0.2s ease;
+  cursor: pointer;
+}
+
+.dropdown-item:hover {
+  background: var(--surface-hover);
+  transform: none;
+}
+
+.dropdown-item.selected {
+  background: rgba(255, 255, 255, 0.08);
+  font-weight: 600;
+}
+
+.dropdown-item.danger {
+  background: none;
+  border: none;
+  color: var(--error-color) !important;
+}
+
+.dropdown-item.danger:hover {
+  background: rgba(239, 68, 68, 0.1) !important;
+}
+
+.dropdown-divider {
+  height: 1px;
+  background: var(--surface-border);
+  margin: 6px 0;
+}

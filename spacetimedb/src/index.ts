@@ -31,7 +31,6 @@ export {
   DisplayDeviceView,
   DisplayPairingPinView,
   MessageDeliveryStatusView,
-  VenueInviteTokenView,
 } from "./schema";
 
 /*** USER AUTHENTICATION & MANAGEMENT ***/

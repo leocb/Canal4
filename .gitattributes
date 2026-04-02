@@ -1,0 +1,4 @@
+# Disable line-ending conversion for auto-generated module bindings
+/display/src/module_bindings/* text eol=lf
+/webapp/src/module_bindings/* text eol=lf
+

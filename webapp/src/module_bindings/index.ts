@@ -98,7 +98,6 @@ import UserIdentitySelfViewRow from "./user_identity_self_view_table";
 import UserViewRow from "./user_view_table";
 import VenueRow from "./venue_table";
 import VenueInviteTokenRow from "./venue_invite_token_table";
-import VenueInviteTokenViewRow from "./venue_invite_token_view_table";
 import VenueMemberRow from "./venue_member_table";
 import VenueMemberViewRow from "./venue_member_view_table";
 import VenueViewRow from "./venue_view_table";
@@ -129,10 +128,6 @@ const tablesSchema = __schema({
     indexes: [
       { accessor: 'channel_member_role_channel_id', name: 'channel_member_role_channel_id_idx_btree', algorithm: 'btree', columns: [
         'channelId',
-      ] },
-      { accessor: 'channel_member_role_composite', name: 'channel_member_role_channel_id_user_id_idx_btree', algorithm: 'btree', columns: [
-        'channelId',
-        'userId',
       ] },
       { accessor: 'channel_member_role_user_id', name: 'channel_member_role_user_id_idx_btree', algorithm: 'btree', columns: [
         'userId',
@@ -198,10 +193,6 @@ const tablesSchema = __schema({
       { accessor: 'delivery_status_display_id', name: 'message_delivery_status_display_id_idx_btree', algorithm: 'btree', columns: [
         'displayId',
       ] },
-      { accessor: 'delivery_status_composite', name: 'message_delivery_status_message_id_display_id_idx_btree', algorithm: 'btree', columns: [
-        'messageId',
-        'displayId',
-      ] },
       { accessor: 'delivery_status_message_id', name: 'message_delivery_status_message_id_idx_btree', algorithm: 'btree', columns: [
         'messageId',
       ] },
@@ -232,10 +223,6 @@ const tablesSchema = __schema({
     indexes: [
       { accessor: 'notification_filter_channel_id', name: 'notification_filter_channel_id_idx_btree', algorithm: 'btree', columns: [
         'channelId',
-      ] },
-      { accessor: 'notification_filter_composite', name: 'notification_filter_channel_id_user_id_idx_btree', algorithm: 'btree', columns: [
-        'channelId',
-        'userId',
       ] },
       { accessor: 'notification_filter_user_id', name: 'notification_filter_user_id_idx_btree', algorithm: 'btree', columns: [
         'userId',
@@ -337,10 +324,6 @@ const tablesSchema = __schema({
       { accessor: 'venue_member_venue_id', name: 'venue_member_venue_id_idx_btree', algorithm: 'btree', columns: [
         'venueId',
       ] },
-      { accessor: 'venue_member_composite', name: 'venue_member_venue_id_user_id_idx_btree', algorithm: 'btree', columns: [
-        'venueId',
-        'userId',
-      ] },
     ],
     constraints: [
     ],
@@ -422,13 +405,6 @@ const tablesSchema = __schema({
     constraints: [
     ],
   }, UserViewRow),
-  VenueInviteTokenView: __table({
-    name: 'venue_invite_token_view',
-    indexes: [
-    ],
-    constraints: [
-    ],
-  }, VenueInviteTokenViewRow),
   VenueMemberView: __table({
     name: 'venue_member_view',
     indexes: [

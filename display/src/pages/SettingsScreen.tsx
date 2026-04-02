@@ -6,9 +6,13 @@ import { tables, reducers } from '../module_bindings';
 import { useConnectivity } from '../SpacetimeDBProvider';
 import { useTranslation } from 'react-i18next';
 import pkg from '../../package.json';
+import { Dropdown } from '../components/Dropdown';
+import { DropdownMenu, DropdownMenuItem } from '../components/DropdownMenu';
 
 
 type Tab = 'logs' | 'pairing' | 'settings';
+
+const SUPPORTED_LANGUAGES = ['en', 'pt-BR'] as const;
 
 export interface TickerSettings {
   position: 'top' | 'bottom';
@@ -151,7 +155,6 @@ export const SettingsScreen = () => {
   const navigate = useNavigate();
   const activeTab: Tab = (tab as Tab) || 'pairing';
   const [tickerSettings, setTickerSettingsState] = useState<TickerSettings>(loadTickerSettings());
-  const [showLangMenu, setShowLangMenu] = useState(false);
   const [openAtLogin, setOpenAtLogin] = useState(false);
 
   const [tempStUri, setTempStUri] = useState(stUri);
@@ -198,7 +201,7 @@ export const SettingsScreen = () => {
         setMachineUid(id);
       }
     }
-    
+
     if (window.api?.getDisplays) {
       window.api.getDisplays().then(setDisplays);
     }
@@ -407,31 +410,29 @@ export const SettingsScreen = () => {
 
         </div>
 
-        <div style={{ position: 'relative' }}>
-          <button
-            onClick={() => setShowLangMenu(m => !m)}
-            title={t('common.language')}
-            style={{ padding: '8px', borderRadius: '8px', display: 'flex', alignItems: 'center', justifyContent: 'center', background: 'rgba(255,255,255,0.06)', border: '1px solid rgba(255,255,255,0.1)', color: '#94A3B8', cursor: 'pointer' }}
-          >
-            <Languages size={16} />
-          </button>
-          {showLangMenu && (
-            <>
-              <div style={{ position: 'fixed', inset: 0, zIndex: 999 }} onClick={() => setShowLangMenu(false)} />
-              <div style={{ position: 'absolute', top: 'calc(100% + 6px)', right: 0, minWidth: '160px', zIndex: 1000, background: 'rgba(15,15,25,0.95)', border: '1px solid rgba(255,255,255,0.12)', borderRadius: '10px', padding: '4px', boxShadow: '0 10px 25px -5px rgba(0,0,0,0.5)' }}>
-                {([['en', t('settings.languages.en')], ['pt-BR', t('settings.languages.pt-BR')]] as const).map(([code, label]) => (
-                  <button
-                    key={code}
-                    onClick={() => { i18n.changeLanguage(code); setShowLangMenu(false); }}
-                    style={{ width: '100%', textAlign: 'left', padding: '8px 12px', borderRadius: '6px', background: i18n.language === code ? 'rgba(59,130,246,0.15)' : 'transparent', color: i18n.language === code ? '#3B82F6' : '#94A3B8', border: 'none', cursor: 'pointer', fontSize: '0.85rem', display: 'block' }}
-                  >
-                    {label}
-                  </button>
-                ))}
-              </div>
-            </>
-          )}
-        </div>
+        <DropdownMenu
+          trigger={
+            <button
+              title={t('common.language')}
+              style={{ padding: '8px', borderRadius: '8px', display: 'flex', alignItems: 'center', justifyContent: 'center', background: 'rgba(255,255,255,0.06)', border: '1px solid rgba(255,255,255,0.1)', color: '#94A3B8', cursor: 'pointer' }}
+            >
+              <Languages size={16} />
+            </button>
+          }
+          align="right"
+          minWidth="160px"
+        >
+          {SUPPORTED_LANGUAGES.map((lang) => (
+            <DropdownMenuItem
+              key={lang}
+              selected={i18n.resolvedLanguage === lang}
+              onClick={() => i18n.changeLanguage(lang)}
+              color={i18n.resolvedLanguage === lang ? '#3B82F6' : undefined}
+            >
+              {t(`settings.languages.${lang}`)}
+            </DropdownMenuItem>
+          ))}
+        </DropdownMenu>
       </div>
 
       {/* Row 2: Tab Bar — centered tabs, full width */}
@@ -819,15 +820,15 @@ export const SettingsScreen = () => {
             {/* General Settings */}
             <section style={sectionStyle}>
               <h3 style={{ fontSize: '1rem', margin: '0 0 16px' }}>{t('settings.general.title')}</h3>
-              
-              <div 
-                style={{ 
-                  display: 'flex', 
-                  alignItems: 'center', 
-                  justifyContent: 'space-between', 
-                  padding: '16px', 
-                  background: 'rgba(255,255,255,0.03)', 
-                  borderRadius: '12px', 
+
+              <div
+                style={{
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'space-between',
+                  padding: '16px',
+                  background: 'rgba(255,255,255,0.03)',
+                  borderRadius: '12px',
                   border: '1px solid rgba(255,255,255,0.06)',
                   cursor: 'pointer'
                 }}
@@ -843,22 +844,22 @@ export const SettingsScreen = () => {
                   <div style={{ fontSize: '0.9rem', fontWeight: 600, color: '#F8FAFC' }}>{t('settings.general.start_with_system')}</div>
                   <div style={{ fontSize: '0.75rem', color: '#94A3B8', marginTop: '4px' }}>{t('settings.general.start_with_system_helper')}</div>
                 </div>
-                <div style={{ 
-                  width: '42px', 
-                  height: '24px', 
-                  borderRadius: '12px', 
+                <div style={{
+                  width: '42px',
+                  height: '24px',
+                  borderRadius: '12px',
                   background: openAtLogin ? '#3B82F6' : 'rgba(255,255,255,0.1)',
                   position: 'relative',
                   transition: 'all 0.2s',
                   flexShrink: 0
                 }}>
-                  <div style={{ 
-                    width: '18px', 
-                    height: '18px', 
-                    borderRadius: '50%', 
-                    background: '#fff', 
-                    position: 'absolute', 
-                    top: '3px', 
+                  <div style={{
+                    width: '18px',
+                    height: '18px',
+                    borderRadius: '50%',
+                    background: '#fff',
+                    position: 'absolute',
+                    top: '3px',
                     left: openAtLogin ? '21px' : '3px',
                     transition: 'all 0.2s'
                   }} />
@@ -871,24 +872,20 @@ export const SettingsScreen = () => {
               <h3 style={{ fontSize: '1rem', marginBottom: '16px', margin: '0 0 16px' }}>{t('settings.display.screen_position')}</h3>
 
               <label style={labelStyle}>{t('settings.display.monitor')}</label>
-              <select
-                value={selectedDisplay}
-                onFocus={() => {
-                  window.api?.getDisplays?.().then(setDisplays);
-                }}
-                onChange={e => {
-                  const v = parseInt(e.target.value);
-                  setSelectedDisplay(v);
-                  updateTickerSetting('displayId', v);
-                }}
-                style={selectStyle}
-              >
-                {displays.map((d, i) => (
-                  <option key={d.id} value={d.id}>
-                    {d.name ? t('settings.display.monitor_name', { num: i + 1, name: d.name }) : t('settings.display.monitor_fallback', { num: i + 1 })}
-                  </option>
-                ))}
-              </select>
+              <div onFocus={() => window.api?.getDisplays?.().then(setDisplays)}>
+                <Dropdown
+                  value={selectedDisplay.toString()}
+                  onChange={v => {
+                    const parsed = parseInt(v);
+                    setSelectedDisplay(parsed);
+                    updateTickerSetting('displayId', parsed);
+                  }}
+                  options={displays.map((d, i) => ({
+                    value: d.id.toString(),
+                    label: d.name ? t('settings.display.monitor_name', { num: i + 1, name: d.name }) : t('settings.display.monitor_fallback', { num: i + 1 })
+                  }))}
+                />
+              </div>
 
               <label style={{ ...labelStyle, marginTop: '14px' }}>{t('settings.display.screen_position')}</label>
               <div style={{ display: 'flex', gap: '8px' }}>
@@ -918,13 +915,15 @@ export const SettingsScreen = () => {
               <h3 style={{ fontSize: '1rem', marginBottom: '16px', margin: '0 0 16px' }}>{t('settings.display.typography')}</h3>
 
               <label style={labelStyle}>{t('settings.display.font')}</label>
-              <select
+              <Dropdown
                 value={tickerSettings.fontFamily}
-                onChange={e => updateTickerSetting('fontFamily', e.target.value)}
-                style={selectStyle}
-              >
-                {allFonts.map(f => <option key={f.value} value={f.value} disabled={f.disabled}>{f.label}</option>)}
-              </select>
+                onChange={v => updateTickerSetting('fontFamily', v)}
+                options={allFonts.map(f => ({
+                  value: f.value,
+                  label: f.label,
+                  disabled: f.disabled
+                }))}
+              />
 
               <div style={{ display: 'flex', gap: '12px', marginTop: '14px' }}>
                 <div style={{ flex: 1 }}>
@@ -938,15 +937,15 @@ export const SettingsScreen = () => {
                 </div>
                 <div style={{ flex: 1 }}>
                   <label style={labelStyle}>{t('settings.display.font_weight')}</label>
-                  <select
+                  <Dropdown
                     value={tickerSettings.fontWeight}
-                    onChange={e => updateTickerSetting('fontWeight', e.target.value as TickerSettings['fontWeight'])}
-                    style={selectStyle}
-                  >
-                    <option value="400">{t('settings.display.font_weight_regular')}</option>
-                    <option value="600">{t('settings.display.font_weight_semibold')}</option>
-                    <option value="700">{t('settings.display.font_weight_bold')}</option>
-                  </select>
+                    onChange={v => updateTickerSetting('fontWeight', v as TickerSettings['fontWeight'])}
+                    options={[
+                      { value: '400', label: t('settings.display.font_weight_regular') },
+                      { value: '600', label: t('settings.display.font_weight_semibold') },
+                      { value: '700', label: t('settings.display.font_weight_bold') }
+                    ]}
+                  />
                 </div>
               </div>
             </section>
@@ -1114,7 +1113,7 @@ export const SettingsScreen = () => {
               </div>
               <style>{`@keyframes marquee { 0% { transform: translateX(0) } 100% { transform: translateX(-100%) } }`}</style>
             </section>
-            
+
             <div style={{ textAlign: 'center', marginTop: '12px', opacity: 0.4, fontSize: '0.75rem' }}>
               {t('common.version', { version: pkg.version })}
             </div>
@@ -1143,16 +1142,7 @@ const labelStyle: React.CSSProperties = {
   textTransform: 'uppercase',
 };
 
-const selectStyle: React.CSSProperties = {
-  width: '100%',
-  background: 'rgba(0,0,0,0.3)',
-  border: '1px solid rgba(255,255,255,0.1)',
-  color: '#F8FAFC',
-  padding: '10px 14px',
-  borderRadius: '8px',
-  fontSize: '0.9rem',
-  outline: 'none',
-};
+
 
 const inputStyle: React.CSSProperties = {
   width: '100%',
