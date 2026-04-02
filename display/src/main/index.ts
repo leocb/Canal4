@@ -445,15 +445,27 @@ app.whenReady().then(async () => {
     tickerWindow?.hide();
   });
 
-  ipcMain.on('update-ticker-position', (_event, params: { position: 'top' | 'bottom', displayId?: number, height?: number }) => {
-    if (!tickerWindow) return;
+  let currentTickerConfig: { position: 'top' | 'bottom', displayId?: number, height?: number } | null = null;
+
+  const updateTickerPosition = () => {
+    if (!tickerWindow || !currentTickerConfig) return;
     const displays = screen.getAllDisplays();
-    const targetDisplay = displays.find(d => d.id === params.displayId) || screen.getPrimaryDisplay();
+    // Default to primary if the target didn't wake up yet or is disconnected
+    const targetDisplay = displays.find(d => d.id === currentTickerConfig!.displayId) || screen.getPrimaryDisplay();
     const { width, x: startX } = targetDisplay.bounds;
     const { height, y: offsetY } = targetDisplay.workArea;
-    const windowHeight = params.height || 80;
-    const y = params.position === 'top' ? offsetY : offsetY + height - windowHeight;
+    const windowHeight = currentTickerConfig.height || 80;
+    const y = currentTickerConfig.position === 'top' ? offsetY : offsetY + height - windowHeight;
     tickerWindow.setBounds({ x: startX, y, width, height: windowHeight });
+  };
+
+  screen.on('display-added', updateTickerPosition);
+  screen.on('display-removed', updateTickerPosition);
+  screen.on('display-metrics-changed', updateTickerPosition);
+
+  ipcMain.on('update-ticker-position', (_event, params: { position: 'top' | 'bottom', displayId?: number, height?: number }) => {
+    currentTickerConfig = params;
+    updateTickerPosition();
   });
 
   ipcMain.handle('get-login-item-settings', () => {
