@@ -48,6 +48,7 @@ export function loadTickerSettings(): TickerSettings {
 
 function saveTickerSettings(s: TickerSettings) {
   localStorage.setItem('ticker_settings', JSON.stringify(s));
+  window.api?.flushStorage();
 }
 
 // --- SVG Icons ---
@@ -198,6 +199,7 @@ export const SettingsScreen = () => {
       } else {
         const id = 'fallback_' + Math.random().toString(36).slice(2, 9);
         localStorage.setItem('fallback_uid', id);
+        window.api?.flushStorage();
         setMachineUid(id);
       }
     }
@@ -358,8 +360,10 @@ export const SettingsScreen = () => {
 
   const handleShowSample = () => {
     localStorage.removeItem('test_message');
+    window.api?.flushStorage();
     setTimeout(() => {
       localStorage.setItem('test_message', t('settings.display.test_message_sample', { time: new Date().toLocaleTimeString() }));
+      window.api?.flushStorage();
     }, 10);
   };
 
@@ -789,6 +793,7 @@ export const SettingsScreen = () => {
                               await window.api.resetIdentity();
                             } else {
                               localStorage.removeItem('auth_token');
+                              window.api?.flushStorage();
                               if (window.api?.setToken) window.api.setToken('');
                               window.location.reload();
                             }

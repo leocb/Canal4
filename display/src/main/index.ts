@@ -1,4 +1,4 @@
-import { app, BrowserWindow, Tray, Menu, screen, ipcMain, nativeImage, powerSaveBlocker, shell } from 'electron'
+import { app, BrowserWindow, Tray, Menu, screen, ipcMain, nativeImage, powerSaveBlocker, shell, session } from 'electron'
 import { join } from 'path'
 import { electronApp, optimizer, is } from '@electron-toolkit/utils'
 import { autoUpdater } from 'electron-updater'
@@ -391,6 +391,7 @@ app.whenReady().then(async () => {
   // Handle IPC requests
   ipcMain.on('open-external', (_event, url) => shell.openExternal(url));
   ipcMain.on('close-update-window', () => updateWindow?.close());
+  ipcMain.on('flush-storage', () => session.defaultSession.flushStorageData());
   ipcMain.handle('get-machine-id', () => displayData.id);
   ipcMain.handle('get-token', () => displayData.token);
   ipcMain.handle('get-displays', () => {

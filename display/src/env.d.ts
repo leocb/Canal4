@@ -21,6 +21,7 @@ interface Window {
     onUpdateError: (callback: (error: string) => void) => void,
     openExternal: (url: string) => void,
     closeUpdateWindow: () => void,
+    flushStorage: () => void,
   }
 }
 declare module '*?asset' {

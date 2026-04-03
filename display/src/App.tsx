@@ -31,7 +31,10 @@ function App() {
       window.api.getMachineId().then((uid: string) => setMachineUid(uid));
     } else {
       const id = localStorage.getItem('fallback_uid') || 'fallback_' + Math.random().toString(36).slice(2, 9);
-      if (!localStorage.getItem('fallback_uid')) localStorage.setItem('fallback_uid', id);
+      if (!localStorage.getItem('fallback_uid')) {
+        localStorage.setItem('fallback_uid', id);
+        window.api?.flushStorage?.();
+      }
       setMachineUid(id);
     }
   }, []);

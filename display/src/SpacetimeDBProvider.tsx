@@ -60,11 +60,13 @@ export const SpacetimeDBProvider = ({ children }: { children: ReactNode }) => {
   // Wrap setters to persist to localStorage
   const updateStUri = useCallback((u: string) => {
     localStorage.setItem("spacetime_uri", u);
+    window.api?.flushStorage?.();
     setStUri(u);
   }, []);
 
   const updateStDb = useCallback((db: string) => {
     localStorage.setItem("spacetime_db", db);
+    window.api?.flushStorage?.();
     setStDb(db);
   }, []);
 
@@ -79,6 +81,7 @@ export const SpacetimeDBProvider = ({ children }: { children: ReactNode }) => {
         if (sanitizedMain !== currentLocal) {
           if (sanitizedMain) localStorage.setItem("auth_token", sanitizedMain);
           else localStorage.removeItem("auth_token");
+          window.api?.flushStorage?.();
           setActiveToken(sanitizedMain);
         }
         setIsSyncingMain(false);
@@ -96,6 +99,7 @@ export const SpacetimeDBProvider = ({ children }: { children: ReactNode }) => {
           if (sanitizedNew !== prev) {
             if (sanitizedNew) localStorage.setItem("auth_token", sanitizedNew);
             else localStorage.removeItem("auth_token");
+            window.api?.flushStorage?.();
             return sanitizedNew;
           }
           return prev;
@@ -202,6 +206,7 @@ export const SpacetimeDBProvider = ({ children }: { children: ReactNode }) => {
         const currentLocal = localStorage.getItem("auth_token");
         if (token && token !== currentLocal) {
           localStorage.setItem("auth_token", token);
+          window.api?.flushStorage?.();
           setActiveToken(token);
           // @ts-ignore
           if (window.api?.setToken) window.api.setToken(token);
@@ -239,6 +244,7 @@ export const SpacetimeDBProvider = ({ children }: { children: ReactNode }) => {
 
         if (activeToken && isAuthError) {
           localStorage.removeItem("auth_token");
+          window.api?.flushStorage?.();
           setActiveToken(undefined);
           if (window.api?.setToken) {
             window.api.setToken('');
