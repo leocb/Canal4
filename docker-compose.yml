@@ -36,8 +36,7 @@ services:
     image: ghcr.io/leocb/canal4/module-init:latest
     pull_policy: always
     depends_on:
-      spacetimedb:
-        condition: service_healthy
+      - spacetimedb
     working_dir: /module
     env_file: .env # Portainer: use "stack.env" instead
     environment:
@@ -79,8 +78,7 @@ services:
       SPACETIMEDB_NAME: ${SPACETIMEDB_NAME}
       SPACETIMEDB_URI: ${SPACETIMEDB_URI}
     depends_on:
-      spacetimedb:
-        condition: service_healthy
+      - spacetimedb
     restart: unless-stopped
 
 volumes:

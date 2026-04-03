@@ -33,9 +33,6 @@ RUN echo 'server { \
 
 EXPOSE 80
 
-# Health check to ensure Nginx is serving the app
-HEALTHCHECK --interval=30s --timeout=5s --start-period=10s --retries=3 \
-    CMD wget --no-verbose --tries=1 --spider http://localhost:80/ || exit 1
 
 # Generate a config.js file on startup to inject runtime environment variables
 # into the browser-side code. This makes the image portable.
