@@ -1,6 +1,6 @@
 {
   "name": "spacetimedb-node-project",
-  "version": "2.1.4",
+  "version": "2.2.0",
   "description": "",
   "scripts": {
     "build": "spacetime build && spacetime generate --yes --include-private --lang typescript --out-dir ../webapp/src/module_bindings && spacetime generate --yes --include-private --lang typescript --out-dir ../display/src/module_bindings",

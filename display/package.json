@@ -1,7 +1,7 @@
 {
   "name": "canal4-display",
   "productName": "Canal4",
-  "version": "2.1.4",
+  "version": "2.2.0",
   "description": "Canal4 Display node application",
   "main": "./out/main/index.js",
   "author": "github.com/leocb",
