@@ -101,7 +101,7 @@ export const TickerScreen = () => {
                 const fontHeight = textMeasureRef.current.getBoundingClientRect().height;
                 const margin = Math.ceil(fontHeight * 0.10); // proportional 10% margin
                 const finalMargin = Math.max(margin, 4); // minimum 4px
-                const windowHeight = Math.ceil(fontHeight + finalMargin * 2) + 2; // +2px for border
+                const windowHeight = Math.ceil(fontHeight + finalMargin * 2); // No border anymore
 
                 console.log("[Ticker] Measured font height:", fontHeight, "Calculated window height:", windowHeight);
                 console.log("[Ticker] Updating window position to:", settings.position, "Display:", settings.displayId);
@@ -318,8 +318,8 @@ export const TickerScreen = () => {
                 display: 'flex',
                 alignItems: 'center',
                 background: settings.bgColor,
-                borderTop: (settings.position === 'bottom') ? '2px solid rgba(59,130,246,0.6)' : 'none',
-                borderBottom: (settings.position === 'top') ? '2px solid rgba(59,130,246,0.6)' : 'none',
+                borderTop: 'none',
+                borderBottom: 'none',
                 overflow: 'hidden',
                 fontFamily: settings.fontFamily,
                 color: settings.fgColor,
