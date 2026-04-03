@@ -60,8 +60,8 @@ nsis:
   uninstallDisplayName: ${productName}
   createDesktopShortcut: always
   createStartMenuShortcut: true
-  oneClick: false          # Show installer wizard (allows choosing install dir)
-  allowToChangeInstallationDirectory: true
+  oneClick: true           # Truly silent, no-interaction installer (fast and non-intrusive)
+  allowToChangeInstallationDirectory: false
   perMachine: false        # Per-user install by default (no admin required)
 
 # ─── Linux (kept for reference) ───────────────────────────────────────────────

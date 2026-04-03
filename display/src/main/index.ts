@@ -151,8 +151,8 @@ async function triggerUpdateCheckAndInstall(isManual = false): Promise<void> {
           app.dock?.show();
         }
 
-        console.log('[Updater] Calling quitAndInstall()...');
-        autoUpdater.quitAndInstall(false, true);
+        console.log('[Updater] Calling quitAndInstall(isSilent=true)...');
+        autoUpdater.quitAndInstall(true, true);
       }, 2000);
     };
 
