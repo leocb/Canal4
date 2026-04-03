@@ -472,7 +472,10 @@ app.whenReady().then(async () => {
   });
 
   ipcMain.handle('get-login-item-settings', () => {
-    return app.getLoginItemSettings().openAtLogin;
+    const settings = app.getLoginItemSettings({
+      path: process.execPath
+    });
+    return settings.openAtLogin || settings.executableWillLaunchAtLogin;
   });
 
   ipcMain.handle('set-login-item-settings', (_event, openAtLogin: boolean) => {
@@ -482,7 +485,8 @@ app.whenReady().then(async () => {
       path: process.execPath,
       name: 'Canal4'
     });
-    return app.getLoginItemSettings().openAtLogin;
+    const settings = app.getLoginItemSettings({ path: process.execPath });
+    return settings.openAtLogin || settings.executableWillLaunchAtLogin;
   });
 
   // App is fundamentally a background tray app, we only show Settings if opened directly on MacOS
