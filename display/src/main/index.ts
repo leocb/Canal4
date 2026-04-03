@@ -3,6 +3,8 @@ import { join } from 'path'
 import { electronApp, optimizer, is } from '@electron-toolkit/utils'
 import { autoUpdater } from 'electron-updater'
 import icon from '../../resources/icon.png?asset'
+import iconWin from '../../resources/icon.ico?asset'
+import trayIconAsset from '../../resources/tray-icon.png?asset'
 
 app.commandLine.appendSwitch('disable-renderer-backgrounding');
 app.setName('Canal4');
@@ -276,7 +278,7 @@ function createSettingsWindow(tab: 'logs' | 'settings' | 'pairing' = 'pairing'):
     show: false,
     title: "Canal4 Display node Settings",
     autoHideMenuBar: true,
-    ...(process.platform === 'linux' ? { icon } : {}),
+    icon: process.platform === 'win32' ? iconWin : icon,
     webPreferences: {
       preload: join(__dirname, '../preload/index.js'),
       sandbox: false,
@@ -296,14 +298,14 @@ function createSettingsWindow(tab: 'logs' | 'settings' | 'pairing' = 'pairing'):
 }
 
 function createTray() {
-  // On macOS, tray icons must be small template images (16x16 or 22x22)
-  let trayIcon = nativeImage.createFromPath(icon)
+  // Use the pre-resized tray icon (32x32); on macOS resize further to 16x16 template
+  let trayIconImage = nativeImage.createFromPath(trayIconAsset)
   if (process.platform === 'darwin') {
-    trayIcon = trayIcon.resize({ width: 16, height: 16 })
-    trayIcon.setTemplateImage(true)
+    trayIconImage = trayIconImage.resize({ width: 16, height: 16 })
+    trayIconImage.setTemplateImage(true)
   }
 
-  tray = new Tray(trayIcon)
+  tray = new Tray(trayIconImage)
   const menuItems: any[] = [
     { label: 'Settings', click: () => createSettingsWindow('settings') },
     { type: 'separator' }
