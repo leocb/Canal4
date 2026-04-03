@@ -93,10 +93,12 @@ async function triggerUpdateCheckAndInstall(isManual = false): Promise<void> {
     const onNotAvailable = () => {
       console.log('[Updater] App is up-to-date.');
       updateWindow?.webContents.send('update-status', 'up-to-date');
+      // settle() first so createTray() runs before the window closes —
+      // prevents a brief no-windows/no-tray state that can exit the process on Windows.
       setTimeout(() => {
         cleanup();
-        updateWindow?.close();
         settle();
+        setTimeout(() => updateWindow?.close(), 300);
       }, 1500);
     };
 
