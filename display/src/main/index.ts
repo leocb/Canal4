@@ -350,7 +350,7 @@ ipcMain.on('update-tray', (_event, { settingsLabel, quitLabel, tooltip }) => {
 });
 
 app.whenReady().then(async () => {
-  electronApp.setAppUserModelId('org.canal4.displaynode')
+  electronApp.setAppUserModelId('org.canal4.display')
 
   // Hide from macOS Dock — this is a background tray-only app
   if (process.platform === 'darwin') {
