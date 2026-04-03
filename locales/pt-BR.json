@@ -569,6 +569,8 @@
       "slow": "Lento",
       "fast": "Rápido",
       "repeat_count": "Repetição de mensagens",
+      "flash_on_new": "Piscar em novas mensagens",
+      "flash_on_new_helper": "Alterna rapidamente as cores algumas vezes quando uma nova mensagem começa.",
       "times": "vezes",
       "font_monospace": "Monoespaçada",
       "font_inter": "Inter",

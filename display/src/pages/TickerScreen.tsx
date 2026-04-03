@@ -14,6 +14,16 @@ function getAlphaFromColor(color: string): number {
     return 1;
 }
 
+function forceOpaque(color: string): string {
+    if (color.startsWith('rgba')) {
+        const parts = color.match(/[\d.]+/g);
+        if (parts && (parts.length === 3 || parts.length === 4)) {
+            return `rgb(${parts[0]}, ${parts[1]}, ${parts[2]})`;
+        }
+    }
+    return color;
+}
+
 export const TickerScreen = () => {
     const [messages] = useTable(tables.MessageView);
     const [devices] = useTable(tables.DisplayDeviceView);
@@ -26,11 +36,33 @@ export const TickerScreen = () => {
 
     const [machineUid, setMachineUid] = useState<string>('');
     const [activeMessage, setActiveMessage] = useState<{ id: bigint; displayId: bigint; text: string; repeat: number; totalRepeats: number; isTest?: boolean } | null>(null);
+    const [isFlashing, setIsFlashing] = useState(false);
     const isAnimating = useRef(false);
     const [settings, setSettings] = useState(loadTickerSettings());
     const marqueeRef = useRef<HTMLDivElement>(null);
     const textMeasureRef = useRef<HTMLSpanElement>(null);
     const [animationDuration, setAnimationDuration] = useState<number>(10); // fallback
+
+    useEffect(() => {
+        // Flash on new message only if the setting is on
+        const isActuallyNew = activeMessage && activeMessage.repeat === 0;
+        if (!isActuallyNew || !settings.flashOnNew) return;
+
+        console.log("[Ticker] Flashing for new message...");
+        let count = 0;
+        const intervalId = setInterval(() => {
+            setIsFlashing(prev => !prev);
+            count++;
+            if (count >= 6) { // 5 full swaps (bg-fg-bg-fg-bg)
+                clearInterval(intervalId);
+                setIsFlashing(false);
+            }
+        }, 200);
+        return () => {
+            clearInterval(intervalId);
+            setIsFlashing(false);
+        };
+    }, [activeMessage?.id, activeMessage?.repeat, settings.flashOnNew]);
 
     // Fix 1: Record start time with a generous buffer (5s behind) to avoid clock sync issues
     const [appStartTime] = useState<number>(() => Date.now());
@@ -74,8 +106,8 @@ export const TickerScreen = () => {
         } else {
             const id = localStorage.getItem('fallback_uid') || 'fallback_' + Math.random().toString(36).slice(2, 9);
             if (!localStorage.getItem('fallback_uid')) {
-              localStorage.setItem('fallback_uid', id);
-              window.api?.flushStorage?.();
+                localStorage.setItem('fallback_uid', id);
+                window.api?.flushStorage?.();
             }
             setMachineUid(id);
         }
@@ -317,12 +349,12 @@ export const TickerScreen = () => {
                 height: '100vh',
                 display: 'flex',
                 alignItems: 'center',
-                background: settings.bgColor,
+                background: isFlashing ? forceOpaque(settings.fgColor) : settings.bgColor,
                 borderTop: 'none',
                 borderBottom: 'none',
                 overflow: 'hidden',
                 fontFamily: settings.fontFamily,
-                color: settings.fgColor,
+                color: isFlashing ? forceOpaque(settings.bgColor) : settings.fgColor,
                 fontSize: `${settings.fontSize}px`,
                 fontWeight: settings.fontWeight,
                 whiteSpace: 'nowrap'

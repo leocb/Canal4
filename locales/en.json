@@ -569,6 +569,8 @@
       "slow": "Slow",
       "fast": "Fast",
       "repeat_count": "Repeat Count",
+      "flash_on_new": "Flash on new message",
+      "flash_on_new_helper": "Quickly swap colors a few times when a new message starts.",
       "times": "times",
       "font_monospace": "Monospace",
       "font_inter": "Inter",

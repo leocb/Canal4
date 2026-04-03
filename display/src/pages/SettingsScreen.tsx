@@ -24,6 +24,7 @@ export interface TickerSettings {
   fgColor: string;
   scrollSpeed: number; // pixels per second
   repeatCount: number;
+  flashOnNew: boolean;
 }
 
 const DEFAULT_TICKER_SETTINGS: TickerSettings = {
@@ -36,6 +37,7 @@ const DEFAULT_TICKER_SETTINGS: TickerSettings = {
   fgColor: '#ffffff',
   scrollSpeed: 150,
   repeatCount: 1,
+  flashOnNew: false,
 };
 
 export function loadTickerSettings(): TickerSettings {
@@ -465,11 +467,11 @@ export const SettingsScreen = () => {
       </div>
 
       {/* Content */}
-      <div style={{ flex: 1, overflowY: 'auto', padding: '24px' }}>
+      <div style={{ flex: 1, overflowY: 'auto', padding: '0 24px' }}>
 
         {/* === PAIRING TAB === */}
         {activeTab === 'pairing' && (
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '20px', maxWidth: '560px', margin: '0 auto' }}>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '20px', maxWidth: '560px', margin: '0 auto', paddingTop: '24px', paddingBottom: '120px' }}>
 
             {/* New Pairing Toast */}
             {newPairingToast && (
@@ -625,7 +627,7 @@ export const SettingsScreen = () => {
 
         {/* === LOGS TAB === */}
         {activeTab === 'logs' && (
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '20px', maxWidth: '600px', margin: '0 auto' }}>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '20px', maxWidth: '600px', margin: '0 auto', paddingTop: '24px', paddingBottom: '120px' }}>
 
             {/* Message list */}
             <h3 style={{ fontSize: '0.85rem', fontWeight: 600, color: '#475569', textTransform: 'uppercase', letterSpacing: '0.06em', margin: 0, borderBottom: '1px solid rgba(255,255,255,0.06)', paddingBottom: '10px' }}>{t('settings.logs.title')}</h3>
@@ -713,7 +715,7 @@ export const SettingsScreen = () => {
 
         {/* === SETTINGS TAB === */}
         {activeTab === 'settings' && (
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '24px', maxWidth: '560px', margin: '0 auto', paddingBottom: '40px' }}>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '24px', maxWidth: '560px', margin: '0 auto', paddingTop: '24px', paddingBottom: '120px' }}>
 
 
             {/* SpacetimeDB Connection */}
@@ -955,6 +957,75 @@ export const SettingsScreen = () => {
               </div>
             </section>
 
+
+            {/* Scroll & Repeat */}
+            <section style={sectionStyle}>
+              <h3 style={{ fontSize: '1rem', margin: '0 0 16px' }}>{t('settings.display.motion')}</h3>
+
+              <div style={{ flex: 1 }}>
+                <label style={labelStyle}>{t('settings.display.scroll_speed')}</label>
+                <input
+                  type="range" min={10} max={300} step={5}
+                  value={tickerSettings.scrollSpeed}
+                  onChange={e => updateTickerSetting('scrollSpeed', parseInt(e.target.value))}
+                  style={{ width: '100%', accentColor: '#3B82F6', marginBottom: '4px' }}
+                />
+                <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.72rem', color: '#475569' }}>
+                  <span>{t('settings.display.slow')}</span>
+                  <span style={{ color: '#3B82F6', fontWeight: 600 }}>{tickerSettings.scrollSpeed} px/s</span>
+                  <span>{t('settings.display.fast')}</span>
+                </div>
+              </div>
+
+              <div style={{ marginTop: '16px', display: 'flex', alignItems: 'flex-start', gap: '24px' }}>
+                <div style={{ flex: 1.5 }}>
+                  <label style={labelStyle}>{t('settings.display.flash_on_new')}</label>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginTop: '6px' }}>
+                    <div
+                      onClick={() => updateTickerSetting('flashOnNew', !tickerSettings.flashOnNew)}
+                      style={{
+                        width: '42px',
+                        height: '24px',
+                        borderRadius: '12px',
+                        background: tickerSettings.flashOnNew ? '#3B82F6' : 'rgba(255,255,255,0.1)',
+                        position: 'relative',
+                        cursor: 'pointer',
+                        transition: 'all 0.2s ease',
+                        border: '1px solid rgba(255,255,255,0.05)',
+                        flexShrink: 0
+                      }}
+                    >
+                      <div style={{
+                        position: 'absolute',
+                        top: '2px',
+                        left: tickerSettings.flashOnNew ? '20px' : '2px',
+                        width: '18px',
+                        height: '18px',
+                        borderRadius: '50%',
+                        background: '#fff',
+                        boxShadow: '0 2px 4px rgba(0,0,0,0.2)',
+                        transition: 'all 0.2s cubic-bezier(0.4, 0, 0.2, 1)'
+                      }} />
+                    </div>
+                    <span style={{ fontSize: '0.72rem', color: '#64748b', lineHeight: '1.2' }}>{t('settings.display.flash_on_new_helper')}</span>
+                  </div>
+                </div>
+
+                <div style={{ flex: 1 }}>
+                  <label style={labelStyle}>{t('settings.display.repeat_count')}</label>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+                    <input
+                      type="number" min={1} max={10}
+                      value={tickerSettings.repeatCount}
+                      onChange={e => updateTickerSetting('repeatCount', parseInt(e.target.value))}
+                      style={{ ...inputStyle, width: '100%' }}
+                    />
+                    <div style={{ fontSize: '0.8rem', color: '#64748b', whiteSpace: 'nowrap' }}>{t('settings.display.times')}</div>
+                  </div>
+                </div>
+              </div>
+            </section>
+
             {/* Colors */}
             <section style={sectionStyle}>
               <h3 style={{ fontSize: '1rem', margin: '0 0 16px' }}>{t('settings.display.colors')}</h3>
@@ -965,16 +1036,12 @@ export const SettingsScreen = () => {
                   <label style={labelStyle}>{t('settings.display.fg_color')}</label>
                   <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
                     <label style={{
-                      display: 'flex', alignItems: 'center', gap: '12px',
+                      display: 'flex', alignItems: 'center',
                       background: 'rgba(0,0,0,0.3)', border: '1px solid rgba(255,255,255,0.1)',
-                      borderRadius: '10px', padding: '10px 14px', cursor: 'pointer',
+                      borderRadius: '10px', overflow: 'hidden', cursor: 'pointer',
                     }}>
-                      <div style={{
-                        width: '36px', height: '36px', borderRadius: '8px',
-                        background: tickerSettings.fgColor,
-                        border: '2px solid rgba(255,255,255,0.15)',
-                        flexShrink: 0, position: 'relative', overflow: 'hidden',
-                      }}>
+                      <div className="checkerboard-pattern" style={{ flex: 1, height: '42px', position: 'relative' }}>
+                        <div style={{ position: 'absolute', inset: 0, background: tickerSettings.fgColor }} />
                         <input
                           type="color"
                           value={parseColorToHexAlpha(tickerSettings.fgColor).hex}
@@ -985,7 +1052,6 @@ export const SettingsScreen = () => {
                           style={{ opacity: 0, position: 'absolute', inset: 0, width: '100%', height: '100%', cursor: 'pointer', padding: 0, border: 'none' }}
                         />
                       </div>
-                      <span style={{ fontSize: '0.85rem', color: '#94A3B8', fontFamily: 'monospace' }}>{tickerSettings.fgColor}</span>
                     </label>
                     <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
                       <span style={{ fontSize: '0.65rem', color: '#64748B', fontWeight: 600, width: '36px' }}>{t('settings.display.alpha')}</span>
@@ -1007,19 +1073,11 @@ export const SettingsScreen = () => {
                   <label style={labelStyle}>{t('settings.display.bg_color')}</label>
                   <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
                     <label style={{
-                      display: 'flex', alignItems: 'center', gap: '12px',
+                      display: 'flex', alignItems: 'center',
                       background: 'rgba(0,0,0,0.3)', border: '1px solid rgba(255,255,255,0.1)',
-                      borderRadius: '10px', padding: '10px 14px', cursor: 'pointer',
+                      borderRadius: '10px', overflow: 'hidden', cursor: 'pointer',
                     }}>
-                      <div style={{
-                        width: '36px', height: '36px', borderRadius: '8px',
-                        background: tickerSettings.bgColor,
-                        border: '2px solid rgba(255,255,255,0.15)',
-                        flexShrink: 0, position: 'relative', overflow: 'hidden',
-                        backgroundImage: 'linear-gradient(45deg, #ccc 25%, transparent 25%), linear-gradient(-45deg, #ccc 25%, transparent 25%), linear-gradient(45deg, transparent 75%, #ccc 75%), linear-gradient(-45deg, transparent 75%, #ccc 75%)',
-                        backgroundSize: '8px 8px',
-                        backgroundPosition: '0 0, 0 4px, 4px -4px, -4px 0px',
-                      }}>
+                      <div className="checkerboard-pattern" style={{ flex: 1, height: '42px', position: 'relative' }}>
                         <div style={{ position: 'absolute', inset: 0, background: tickerSettings.bgColor }} />
                         <input
                           type="color"
@@ -1031,7 +1089,6 @@ export const SettingsScreen = () => {
                           style={{ opacity: 0, position: 'absolute', inset: 0, width: '100%', height: '100%', cursor: 'pointer', padding: 0, border: 'none' }}
                         />
                       </div>
-                      <span style={{ fontSize: '0.85rem', color: '#94A3B8', fontFamily: 'monospace' }}>{tickerSettings.bgColor}</span>
                     </label>
                     <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
                       <span style={{ fontSize: '0.65rem', color: '#64748B', fontWeight: 600, width: '36px' }}>{t('settings.display.alpha')}</span>
@@ -1047,37 +1104,6 @@ export const SettingsScreen = () => {
                     </div>
                   </div>
                 </div>
-              </div>
-            </section>
-
-            {/* Scroll & Repeat */}
-            <section style={sectionStyle}>
-              <h3 style={{ fontSize: '1rem', margin: '0 0 16px' }}>{t('settings.display.motion')}</h3>
-
-              <div style={{ flex: 1 }}>
-                <label style={labelStyle}>{t('settings.display.scroll_speed')}</label>
-                <input
-                  type="range" min={10} max={300} step={5}
-                  value={tickerSettings.scrollSpeed}
-                  onChange={e => updateTickerSetting('scrollSpeed', parseInt(e.target.value))}
-                  style={{ width: '100%', accentColor: '#3B82F6', marginBottom: '4px' }}
-                />
-                <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.72rem', color: '#475569' }}>
-                  <span>{t('settings.display.slow')} (10px/s)</span><span>{t('settings.display.fast')} (300px/s)</span>
-                </div>
-              </div>
-
-              <div style={{ marginTop: '16px', display: 'flex', alignItems: 'center', gap: '12px' }}>
-                <div style={{ flex: 1 }}>
-                  <label style={labelStyle}>{t('settings.display.repeat_count')}</label>
-                  <input
-                    type="number" min={1} max={10}
-                    value={tickerSettings.repeatCount}
-                    onChange={e => updateTickerSetting('repeatCount', parseInt(e.target.value))}
-                    style={{ ...inputStyle, width: '100%' }}
-                  />
-                </div>
-                <div style={{ fontSize: '0.8rem', color: '#64748b', paddingTop: '22px' }}>{t('settings.display.times')}</div>
               </div>
             </section>
 
@@ -1101,19 +1127,43 @@ export const SettingsScreen = () => {
                   {t('settings.display.test_banner')}
                 </button>
               </div>
-              <div style={{ borderRadius: '8px', overflow: 'hidden', height: '64px', display: 'flex', alignItems: 'center', background: tickerSettings.bgColor, border: '1px solid rgba(255,255,255,0.08)' }}>
-                <div
-                  ref={previewRef}
-                  style={{
-                    paddingLeft: '100%',
-                    animation: `marquee ${previewDuration}s linear infinite`,
-                    fontFamily: tickerSettings.fontFamily,
-                    fontSize: `${Math.min(tickerSettings.fontSize, 32)}px`,
-                    fontWeight: tickerSettings.fontWeight,
-                    color: tickerSettings.fgColor,
-                    whiteSpace: 'nowrap'
-                  }}>
-                  {t('settings.display.sample_text')}
+              <div className="checkerboard-pattern" style={{
+                borderRadius: '12px',
+                overflow: 'hidden',
+                height: `${tickerSettings.fontSize * 1.4}px`,
+                minHeight: '100px',
+                display: 'flex',
+                alignItems: 'center',
+                padding: '16px',
+                border: '1px solid rgba(255,255,255,0.08)',
+                position: 'relative'
+              }}>
+                <div style={{
+                  width: '100%',
+                  height: '100%',
+                  background: tickerSettings.bgColor,
+                  borderRadius: '6px',
+                  display: 'flex',
+                  alignItems: 'center',
+                  overflow: 'hidden',
+                  position: 'relative',
+                  boxShadow: '0 4px 12px rgba(0,0,0,0.3)'
+                }}>
+                  <div
+                    ref={previewRef}
+                    style={{
+                      position: 'relative',
+                      zIndex: 1,
+                      paddingLeft: '100%',
+                      animation: `marquee ${previewDuration}s linear infinite`,
+                      fontFamily: tickerSettings.fontFamily,
+                      fontSize: `${tickerSettings.fontSize}px`,
+                      fontWeight: tickerSettings.fontWeight,
+                      color: tickerSettings.fgColor,
+                      whiteSpace: 'nowrap'
+                    }}>
+                    {t('settings.display.sample_text')}
+                  </div>
                 </div>
               </div>
               <style>{`@keyframes marquee { 0% { transform: translateX(0) } 100% { transform: translateX(-100%) } }`}</style>
