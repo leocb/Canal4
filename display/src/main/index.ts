@@ -221,15 +221,14 @@ function schedulePeriodicUpdateCheck(): void {
 
 function createTickerWindow(): void {
   const primaryDisplay = screen.getPrimaryDisplay()
-  const { width, x: startX } = primaryDisplay.bounds
-  const { height, y: offsetY } = primaryDisplay.workArea
+  const { width, height, x: startX, y: startY } = primaryDisplay.bounds
 
   tickerWindow = new BrowserWindow({
     width: width,
-    height: 80, // Height of the ticker tape
+    height: 0, // Height is set dynamically by renderer
     x: startX,
-    y: offsetY + height - 80, // Position at bottom of screen
-    show: true,
+    y: startY + height, // Position off-screen until renderer provides height
+    show: false,
     frame: false,
     transparent: true,
     backgroundColor: '#00000000',
@@ -457,10 +456,9 @@ app.whenReady().then(async () => {
     const displays = screen.getAllDisplays();
     // Default to primary if the target didn't wake up yet or is disconnected
     const targetDisplay = displays.find(d => d.id === currentTickerConfig!.displayId) || screen.getPrimaryDisplay();
-    const { width, x: startX } = targetDisplay.bounds;
-    const { height, y: offsetY } = targetDisplay.workArea;
-    const windowHeight = currentTickerConfig.height || 80;
-    const y = currentTickerConfig.position === 'top' ? offsetY : offsetY + height - windowHeight;
+    const { width, height, x: startX, y: startY } = targetDisplay.bounds;
+    const windowHeight = currentTickerConfig.height || 0;
+    const y = currentTickerConfig.position === 'top' ? startY : startY + height - windowHeight;
     tickerWindow.setBounds({ x: startX, y, width, height: windowHeight });
   };
 
