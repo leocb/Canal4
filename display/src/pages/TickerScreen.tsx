@@ -127,20 +127,41 @@ export const TickerScreen = () => {
     }, [!!activeMessage, connected, activeMessage?.isTest]);
 
     useEffect(() => {
-        // Delay to allow DOM update for the hidden measuring element
-        setTimeout(() => {
+        const updatePosition = () => {
             if (window.api?.updateTickerPosition && textMeasureRef.current) {
                 const fontHeight = textMeasureRef.current.getBoundingClientRect().height;
+                // Avoid zero or tiny heights before DOM is ready
+                if (fontHeight < 5) return;
+
                 const margin = Math.ceil(fontHeight * 0.10); // proportional 10% margin
                 const finalMargin = Math.max(margin, 4); // minimum 4px
-                const windowHeight = Math.ceil(fontHeight + finalMargin * 2); // No border anymore
+                const windowHeight = Math.ceil(fontHeight + finalMargin * 2);
 
-                console.log("[Ticker] Measured font height:", fontHeight, "Calculated window height:", windowHeight);
-                console.log("[Ticker] Updating window position to:", settings.position, "Display:", settings.displayId);
+                console.log("[Ticker] Updating window. Measure height:", fontHeight, "Target windowHeight:", windowHeight);
                 window.api.updateTickerPosition(settings.position, settings.displayId, windowHeight);
             }
-        }, 50);
-    }, [settings.position, settings.displayId, settings.fontSize, settings.fontFamily]);
+        };
+
+        // Initial attempt and short delays for layout stabilization
+        updatePosition();
+        const t1 = setTimeout(updatePosition, 100);
+        const t2 = setTimeout(updatePosition, 500);
+
+        // Crucial: many custom fonts load asynchronously
+        document.fonts.ready.then(updatePosition);
+
+        // Best: Watch the measurement element itself
+        const observer = new ResizeObserver(updatePosition);
+        if (textMeasureRef.current) {
+            observer.observe(textMeasureRef.current);
+        }
+
+        return () => {
+            clearTimeout(t1);
+            clearTimeout(t2);
+            observer.disconnect();
+        };
+    }, [settings.position, settings.displayId, settings.fontSize, settings.fontFamily, settings.fontWeight]);
 
     // Recalculate animation duration whenever message or settings change
     useEffect(() => {
