@@ -44,6 +44,8 @@ export const ProfileScreen = () => {
       return;
     }
 
+    if (!user) return;
+
     setIsSaving(true);
     updateUserName({
       userId: user.userId,
@@ -59,7 +61,8 @@ export const ProfileScreen = () => {
 
   const handleDeleteAccount = async () => {
     setErrorText('');
-    if (deleteConfirmationName !== user?.name) {
+    if (!user) return;
+    if (deleteConfirmationName !== user.name) {
       setErrorText(t('profile.error_confirm_mismatch'));
       return;
     }

@@ -1,16 +1,19 @@
-import { useSpacetimeDB } from 'spacetimedb/react';
+import { useSpacetimeDB, useTable } from 'spacetimedb/react';
 import { tables } from '../module_bindings/index.ts';
-import { useReadyTable } from './useReadyTable';
 
 export function useAuth() {
   const { isActive, identity } = useSpacetimeDB();
-  const [users, usersReady] = useReadyTable(tables.UserView);
-  const [identities, identitiesReady] = useReadyTable(tables.UserIdentitySelfView);
+  const [users] = useTable(tables.UserView);
+  const [identities] = useTable(tables.UserIdentitySelfView);
 
-  const isReady = isActive && usersReady && identitiesReady;
+  // isReady reflects connection status, not subscription snapshot delivery.
+  // The SpacetimeDB React subscription for all tables is already established
+  // at the provider level; data from useTable is always available from the
+  // reactive cache regardless of per-hook subscribeApplied state.
+  const isReady = isActive;
 
   if (!isActive || !identity) {
-    return { user: null, isLoggedIn: false, identity: null, connected: false, isReady: !!isActive && isReady };
+    return { user: null, isLoggedIn: false, identity: null, connected: false, isReady: !!isActive };
   }
 
   const userIdentity = identities.find((i: any) => i.identity.toHexString() === identity.toHexString());
