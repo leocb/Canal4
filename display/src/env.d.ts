@@ -22,6 +22,7 @@ interface Window {
     openExternal: (url: string) => void,
     closeUpdateWindow: () => void,
     flushStorage: () => void,
+    getPlatform: () => Promise<string>,
   }
 }
 declare module '*?asset' {

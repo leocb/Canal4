@@ -9,6 +9,27 @@ import trayIconAsset from '../../resources/tray-icon.png?asset'
 app.commandLine.appendSwitch('disable-renderer-backgrounding');
 app.setName('Canal4');
 
+// ─── Global Error Handlers ──────────────────────────────────────────────────
+// Prevents process crashes and logs diagnostics for Windows Event Viewer crashes
+process.on('uncaughtException', (error) => {
+  console.error('[FATAL] Uncaught exception:', error);
+  console.error('[FATAL] Stack:', error.stack);
+  try {
+    const fs = require('fs');
+    const crashLog = join(app.getPath('userData'), 'crash.log');
+    fs.appendFileSync(crashLog, `[${new Date().toISOString()}] UNCAUGHT EXCEPTION: ${error.message}\n${error.stack}\n\n`);
+  } catch { /* ignore */ }
+});
+
+process.on('unhandledRejection', (reason) => {
+  console.error('[FATAL] Unhandled rejection:', reason);
+  try {
+    const fs = require('fs');
+    const crashLog = join(app.getPath('userData'), 'crash.log');
+    fs.appendFileSync(crashLog, `[${new Date().toISOString()}] UNHANDLED REJECTION: ${String(reason)}\n\n`);
+  } catch { /* ignore */ }
+});
+
 let tray: Tray | null = null;
 let tickerWindow: BrowserWindow | null = null;
 let settingsWindow: BrowserWindow | null = null;
@@ -217,6 +238,137 @@ function schedulePeriodicUpdateCheck(): void {
   }, 12 * 60 * 60 * 1_000);
 }
 
+// ─── Windows Task Scheduler (for crash-resilient startup) ─────────────────────
+
+/**
+ * Create or update a Windows Scheduled Task that auto-restarts the app on crash.
+ * Uses schtasks.exe (built-in Windows tool).
+ */
+async function createScheduledTask(): Promise<boolean> {
+  const exePath = process.execPath;
+  const taskName = 'Canal4';
+
+  const { execFile } = require('child_process');
+  const util = require('util');
+  const execFileAsync = util.promisify(execFile);
+
+  try {
+    // Step 1: Create the task via XML to get full control over all settings.
+    // The XML template configures:
+    //   - Run at user logon with a 30s delay
+    //   - Stop if running longer than 24h
+    //   - Restart on failure: up to 3 times, waiting 1 minute between retries
+    //   - Run with the interactive user's privileges (no admin needed for per-user task)
+    const escapedPath = exePath.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+    const taskXml = `<?xml version="1.0" encoding="UTF-16"?>
+<Task version="1.4" xmlns="http://schemas.microsoft.com/windows/2004/02/mit/task">
+  <RegistrationInfo>
+    <Description>Canal4 Display node — auto-starts and restarts on failure</Description>
+  </RegistrationInfo>
+  <Triggers>
+    <LogonTrigger>
+      <Enabled>true</Enabled>
+      <Delay>PT30S</Delay>
+    </LogonTrigger>
+  </Triggers>
+  <Principals>
+    <Principal id="Author">
+      <RunLevel>LeastPrivilege</RunLevel>
+    </Principal>
+  </Principals>
+  <Settings>
+    <Enabled>true</Enabled>
+    <AllowStartOnDemand>true</AllowStartOnDemand>
+    <AllowHardTerminate>true</AllowHardTerminate>
+    <StopIfGoingOnBatteries>false</StopIfGoingOnBatteries>
+    <StartWhenAvailable>true</StartWhenAvailable>
+    <RunOnlyIfNetworkAvailable>false</RunOnlyIfNetworkAvailable>
+    <IdleSettings>
+      <StopOnIdleEnd>false</StopOnIdleEnd>
+      <RestartOnIdle>false</RestartOnIdle>
+    </IdleSettings>
+    <RestartOnFailure>
+      <Interval>PT1M</Interval>
+      <Count>3</Count>
+    </RestartOnFailure>
+    <ExecutionTimeLimit>PT24H</ExecutionTimeLimit>
+    <Priority>7</Priority>
+    <MultipleInstancesPolicy>IgnoreNew</MultipleInstancesPolicy>
+  </Settings>
+  <Actions Context="Author">
+    <Exec>
+      <Command>${escapedPath}</Command>
+    </Exec>
+  </Actions>
+</Task>`;
+
+    // Write XML to a temp file (schtasks /create /xml reads from file)
+    const fs = require('fs');
+    const path = require('path');
+    const xmlPath = path.join(app.getPath('userData'), 'schtask-canal4.xml');
+    fs.writeFileSync(xmlPath, taskXml, 'utf-16le');
+
+    await execFileAsync('schtasks', [
+      '/create',
+      '/tn', taskName,
+      '/xml', xmlPath,
+      '/f' // Force — overwrites existing
+    ], { timeout: 15000 });
+
+    // Clean up temp XML file
+    try { fs.unlinkSync(xmlPath); } catch { /* ignore */ }
+
+    console.log('[TaskScheduler] Task created successfully:', taskName);
+    return true;
+  } catch (err: any) {
+    console.error('[TaskScheduler] Failed to create task:', err.message);
+    return false;
+  }
+}
+
+/**
+ * Remove the Windows Scheduled Task for Canal4.
+ */
+async function removeScheduledTask(): Promise<boolean> {
+  const { execFile } = require('child_process');
+  const util = require('util');
+  const execFileAsync = util.promisify(execFile);
+
+  try {
+    await execFileAsync('schtasks', [
+      '/delete',
+      '/tn', 'Canal4',
+      '/f'
+    ], { timeout: 15000 });
+    console.log('[TaskScheduler] Task removed successfully.');
+    return true;
+  } catch (err: any) {
+    console.error('[TaskScheduler] Failed to remove task:', err.message);
+    return false;
+  }
+}
+
+/**
+ * Check if the Canal4 Scheduled Task exists and whether the app auto-starts on logon.
+ */
+async function getScheduledTaskStatus(): Promise<boolean> {
+  const { execFile } = require('child_process');
+  const util = require('util');
+  const execFileAsync = util.promisify(execFile);
+
+  try {
+    await execFileAsync('schtasks', [
+      '/query',
+      '/tn', 'Canal4',
+      '/fo', 'CSV',
+      '/nh' // No header
+    ], { timeout: 10000 });
+    return true;
+  } catch {
+    return false;
+  }
+}
+
 // ─── Windows ──────────────────────────────────────────────────────────────────
 
 function createTickerWindow(): void {
@@ -225,7 +377,7 @@ function createTickerWindow(): void {
 
   tickerWindow = new BrowserWindow({
     width: width,
-    height: 0, // Height is set dynamically by renderer
+    height: 1, // Minimum 1px to avoid Windows GPU/driver crashes with zero-height transparent windows
     x: startX,
     y: startY + height, // Position off-screen until renderer provides height
     show: false,
@@ -236,7 +388,7 @@ function createTickerWindow(): void {
     alwaysOnTop: true,
     skipTaskbar: true,
     focusable: false, // Don't steal focus from user
-    type: 'panel',
+    type: process.platform === 'darwin' ? 'panel' : undefined, // 'panel' is macOS-only
     webPreferences: {
       preload: join(__dirname, '../preload/index.js'),
       sandbox: false,
@@ -299,14 +451,24 @@ function createSettingsWindow(tab: 'logs' | 'settings' | 'pairing' = 'pairing'):
 }
 
 function createTray() {
-  // Use the pre-resized tray icon (32x32); on macOS resize further to 16x16 template
-  let trayIconImage = nativeImage.createFromPath(trayIconAsset)
-  if (process.platform === 'darwin') {
-    trayIconImage = trayIconImage.resize({ width: 16, height: 16 })
-    trayIconImage.setTemplateImage(true)
+  try {
+    // Use the pre-resized tray icon (32x32); on macOS resize further to 16x16 template
+    let trayIconImage = nativeImage.createFromPath(trayIconAsset)
+    if (trayIconImage.isEmpty()) {
+      console.error('[Tray] Icon image is empty — creating a 32x32 transparent placeholder');
+      trayIconImage = nativeImage.createEmpty();
+    }
+    if (process.platform === 'darwin') {
+      trayIconImage = trayIconImage.resize({ width: 16, height: 16 })
+      trayIconImage.setTemplateImage(true)
+    }
+
+    tray = new Tray(trayIconImage)
+  } catch (err) {
+    console.error('[Tray] Failed to create tray icon:', err);
+    return; // Non-fatal — app can run without tray
   }
 
-  tray = new Tray(trayIconImage)
   const menuItems: any[] = [
     { label: 'Settings', click: () => createSettingsWindow('settings') },
     { type: 'separator' }
@@ -471,14 +633,24 @@ app.whenReady().then(async () => {
     updateTickerPosition();
   });
 
-  ipcMain.handle('get-login-item-settings', () => {
+  ipcMain.handle('get-login-item-settings', async () => {
+    if (process.platform === 'win32') {
+      return await getScheduledTaskStatus();
+    }
     const settings = app.getLoginItemSettings({
       path: process.execPath
     });
     return settings.openAtLogin || settings.executableWillLaunchAtLogin;
   });
 
-  ipcMain.handle('set-login-item-settings', (_event, openAtLogin: boolean) => {
+  ipcMain.handle('set-login-item-settings', async (_event, openAtLogin: boolean) => {
+    if (process.platform === 'win32') {
+      if (openAtLogin) {
+        return await createScheduledTask();
+      } else {
+        return !(await removeScheduledTask());
+      }
+    }
     app.setLoginItemSettings({
       openAtLogin,
       openAsHidden: true, // Keep it silent in background
@@ -487,6 +659,10 @@ app.whenReady().then(async () => {
     });
     const settings = app.getLoginItemSettings({ path: process.execPath });
     return settings.openAtLogin || settings.executableWillLaunchAtLogin;
+  });
+
+  ipcMain.handle('get-platform', () => {
+    return process.platform;
   });
 
   // App is fundamentally a background tray app, we only show Settings if opened directly on MacOS

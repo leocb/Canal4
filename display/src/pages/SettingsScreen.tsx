@@ -159,6 +159,7 @@ export const SettingsScreen = () => {
   const activeTab: Tab = (tab as Tab) || 'pairing';
   const [tickerSettings, setTickerSettingsState] = useState<TickerSettings>(loadTickerSettings());
   const [openAtLogin, setOpenAtLogin] = useState(false);
+  const [platform, setPlatform] = useState<string>('');
 
   const [tempStUri, setTempStUri] = useState(stUri);
   const [tempStDb, setTempStDb] = useState(stDb);
@@ -218,6 +219,9 @@ export const SettingsScreen = () => {
 
     if (window.api?.getLoginItemSettings) {
       window.api.getLoginItemSettings().then(setOpenAtLogin);
+    }
+    if (window.api?.getPlatform) {
+      window.api.getPlatform().then(setPlatform);
     }
   }, []);
 
@@ -849,7 +853,11 @@ export const SettingsScreen = () => {
               >
                 <div style={{ flex: 1 }}>
                   <div style={{ fontSize: '0.9rem', fontWeight: 600, color: '#F8FAFC' }}>{t('settings.general.start_with_system')}</div>
-                  <div style={{ fontSize: '0.75rem', color: '#94A3B8', marginTop: '4px' }}>{t('settings.general.start_with_system_helper')}</div>
+                  <div style={{ fontSize: '0.75rem', color: '#94A3B8', marginTop: '4px' }}>
+                    {platform === 'win32'
+                      ? t('settings.general.start_with_system_helper_win')
+                      : t('settings.general.start_with_system_helper')}
+                  </div>
                 </div>
                 <div style={{
                   width: '42px',

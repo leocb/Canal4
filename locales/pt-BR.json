@@ -506,7 +506,8 @@
     "general": {
       "title": "Geral",
       "start_with_system": "Iniciar com o sistema",
-      "start_with_system_helper": "Iniciar o Canal4 automaticamente ao ligar o computador."
+      "start_with_system_helper": "Iniciar o Canal4 automaticamente ao ligar o computador.",
+      "start_with_system_helper_win": "Usa o Agendador de Tarefas do Windows. O app reiniciará automaticamente até 3 vezes em caso de falha."
     },
     "common": {
       "quit": "Fechar",

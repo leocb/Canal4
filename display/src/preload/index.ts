@@ -30,6 +30,7 @@ const api = {
   openExternal: (url: string) => ipcRenderer.send('open-external', url),
   closeUpdateWindow: () => ipcRenderer.send('close-update-window'),
   flushStorage: () => ipcRenderer.send('flush-storage'),
+  getPlatform: () => ipcRenderer.invoke('get-platform'),
 }
 
 // Use `contextBridge` APIs to expose Electron APIs to
