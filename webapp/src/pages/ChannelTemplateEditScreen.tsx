@@ -63,8 +63,8 @@ export const ChannelTemplateEditScreen = () => {
   const [loaded, setLoaded] = useState(false);
   const [name, setName] = useState('');
   const [description, setDescription] = useState('');
-  const [initialSuffix, setInitialSuffix] = useState('');
-  const [finalPrefix, setFinalPrefix] = useState('');
+  const [firstPrefix, setFirstPrefix] = useState('');
+  const [lastSuffix, setLastSuffix] = useState('');
   const [fields, setFields] = useState<TemplateField[]>([]);
 
   const [loading, setLoading] = useState(false);
@@ -101,8 +101,8 @@ export const ChannelTemplateEditScreen = () => {
             rawFields = parsed;
           } else if (parsed && typeof parsed === 'object') {
             rawFields = parsed.fields || [];
-            setInitialSuffix(parsed.initialSuffix || '');
-            setFinalPrefix(parsed.finalPrefix || '');
+            setFirstPrefix(parsed.firstPrefix || parsed.initialSuffix || '');
+            setLastSuffix(parsed.lastSuffix || parsed.finalPrefix || '');
           }
 
           // Migration/Normalization
@@ -309,7 +309,7 @@ export const ChannelTemplateEditScreen = () => {
       if (idx !== fields.length - 1) result += ' '; // minor spacing heuristic
     });
 
-    return `${initialSuffix}${result}${finalPrefix}`.trim();
+    return `${firstPrefix}${result}${lastSuffix}`.trim();
   };
 
   const handleSave = async (e: React.FormEvent) => {
@@ -339,8 +339,8 @@ export const ChannelTemplateEditScreen = () => {
 
     try {
       const payloadString = JSON.stringify({
-        initialSuffix,
-        finalPrefix,
+        firstPrefix,
+        lastSuffix,
         fields
       });
 
@@ -469,8 +469,8 @@ export const ChannelTemplateEditScreen = () => {
             <label style={{ display: 'block', marginBottom: '8px', fontWeight: 500, fontSize: '0.9rem' }}>{t('template_edit.initial_suffix_label')}</label>
             <input
               type="text"
-              value={initialSuffix}
-              onChange={(e) => setInitialSuffix(e.target.value)}
+              value={firstPrefix}
+              onChange={(e) => setFirstPrefix(e.target.value)}
               disabled={loading}
               style={{ width: '100%' }}
             />
@@ -708,8 +708,8 @@ export const ChannelTemplateEditScreen = () => {
               <label style={{ display: 'block', marginBottom: '8px', fontWeight: 500, fontSize: '0.9rem' }}>{t('template_edit.final_prefix_label')}</label>
               <input
                 type="text"
-                value={finalPrefix}
-                onChange={(e) => setFinalPrefix(e.target.value)}
+                value={lastSuffix}
+                onChange={(e) => setLastSuffix(e.target.value)}
                 disabled={loading}
                 style={{ width: '100%' }}
               />

@@ -116,8 +116,8 @@ export const SendMessageScreen = () => {
   
   // Parse with backwards compatibility
   let parsedFields: TemplateField[] = [];
-  let initialSuffix = '';
-  let finalPrefix = '';
+  let firstPrefix = '';
+  let lastSuffix = '';
   
   if (selectedTemplate) {
     try {
@@ -126,8 +126,8 @@ export const SendMessageScreen = () => {
         parsedFields = parsed;
       } else if (parsed && typeof parsed === 'object') {
         parsedFields = parsed.fields || [];
-        initialSuffix = parsed.initialSuffix || '';
-        finalPrefix = parsed.finalPrefix || '';
+        firstPrefix = parsed.firstPrefix || parsed.initialSuffix || '';
+        lastSuffix = parsed.lastSuffix || parsed.finalPrefix || '';
       }
     } catch (e) {
       console.error("Failed to parse template fields:", e);
@@ -224,7 +224,7 @@ export const SendMessageScreen = () => {
     });
 
     // Wrap with root-level prefix/suffix
-    const finalContent = `${initialSuffix}${result.trim()}${finalPrefix}`;
+    const finalContent = `${firstPrefix}${result.trim()}${lastSuffix}`;
     return finalContent.replace(/\s+/g, ' '); // simple collapse spaces
   };
 
