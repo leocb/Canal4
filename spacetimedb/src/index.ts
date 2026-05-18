@@ -1080,13 +1080,58 @@ export const delete_message = spacetimedb.reducer(
       }
     }
 
-    const statuses = [...ctx.db.MessageDeliveryStatus.delivery_status_message_id.filter(messageId)];
-    for (const st of statuses) {
-      ctx.db.MessageDeliveryStatus.statusId.update({
-        ...st,
-        status: { tag: "Cancelled", value: "" },
-        updatedAt: ctx.timestamp,
+    // Mark the target message and all temporally-adjacent messages with the same
+    // content (original + repeats in the same group) as cancelled.
+    // The message rows are preserved in the DB for audit but flagged so the
+    // MessageView can filter them from non-moderator users.
+    const allInChannel = [...ctx.db.Message.message_channel_id.filter(msg.channelId)];
+
+    // Determine group by walking adjacent same-content messages in time order
+    const group: typeof allInChannel = [msg];
+
+    if (allInChannel.length > 1) {
+      const sorted = allInChannel.slice().sort((a, b) => {
+        const da = a.sentAt.microsSinceUnixEpoch;
+        const db = b.sentAt.microsSinceUnixEpoch;
+        if (da < db) return -1;
+        if (da > db) return 1;
+        return 0;
       });
+
+      const targetIdx = sorted.findIndex(m => m.messageId === messageId);
+      if (targetIdx !== -1) {
+        let gs = targetIdx;
+        while (gs > 0 && sorted[gs - 1].content === msg.content) gs--;
+        let ge = targetIdx;
+        while (ge < sorted.length - 1 && sorted[ge + 1].content === msg.content) ge++;
+        // Replace group with the expanded range
+        group.length = 0;
+        group.push(...sorted.slice(gs, ge + 1));
+      }
+    }
+
+    for (const gm of group) {
+      // Cancel existing delivery statuses so display nodes stop showing these
+      const statuses = [...ctx.db.MessageDeliveryStatus.delivery_status_message_id.filter(gm.messageId)];
+      if (statuses.length > 0) {
+        for (const st of statuses) {
+          ctx.db.MessageDeliveryStatus.statusId.update({
+            ...st,
+            status: { tag: "Cancelled", value: "" },
+            updatedAt: ctx.timestamp,
+          });
+        }
+      } else {
+        // No delivery statuses exist (no display devices paired).
+        // Create a sentinel cancelled status so the webapp can detect it.
+        ctx.db.MessageDeliveryStatus.insert({
+          statusId: 0n,
+          messageId: gm.messageId,
+          displayId: 0n, // sentinel — not a real display
+          status: { tag: "Cancelled", value: "" },
+          updatedAt: ctx.timestamp,
+        });
+      }
     }
   }
 );

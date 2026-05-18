@@ -68,7 +68,7 @@ export const ChannelScreen = () => {
         BigInt(ds.messageId) === BigInt(m.messageId) && ds.status.tag === 'Cancelled'
       );
 
-      if (isCancelled && !isModerator) return false;
+      if (isCancelled) return false;
 
       if (isModerator) return true;
       const ageMicros = BigInt(Date.now()) * 1000n - m.sentAt.microsSinceUnixEpoch;

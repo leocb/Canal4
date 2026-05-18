@@ -253,8 +253,11 @@ export const SettingsScreen = () => {
 
   const logList = useMemo(() => [...messages]
     .filter(m => pairedChannelIds.has(m.channelId))
+    .filter(m => !Array.from(deliveryStatuses || []).some((ds: any) =>
+      BigInt(ds.messageId) === BigInt(m.messageId) && ds.status.tag === 'Cancelled'
+    ))
     .sort((a, b) => Number(b.sentAt.microsSinceUnixEpoch - a.sentAt.microsSinceUnixEpoch))
-    .slice(0, 50), [messages, pairedChannelIds]);
+    .slice(0, 50), [messages, pairedChannelIds, deliveryStatuses]);
 
   const getTemplateName = (id?: bigint | null) =>
     id ? (templates.find(t => t.templateId === id)?.name ?? t('common.template_default_name', { id: id.toString() })) : t('settings.logs.manual');
