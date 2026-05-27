@@ -5,7 +5,7 @@ import { tables, reducers } from "./module_bindings/index";
 import { useTranslation } from "react-i18next";
 import { SettingsScreen } from "./pages/SettingsScreen";
 import { TickerScreen } from "./pages/TickerScreen";
-import { UpdateScreen } from "./pages/UpdateScreen";
+import { UpdateOverlay } from "./pages/UpdateOverlay";
 import { ErrorBoundary } from "./ErrorBoundary";
 import { useConnectivity } from "./SpacetimeDBProvider";
 
@@ -64,13 +64,16 @@ function App() {
   }, [connected, machineUid, myDevicesCount]);
 
   return (
-    <Routes>
-      <Route path="/ticker" element={<ErrorBoundary><TickerScreen /></ErrorBoundary>} />
-      <Route path="/settings" element={<ErrorBoundary><SettingsScreen /></ErrorBoundary>} />
-      <Route path="/settings/:tab" element={<ErrorBoundary><SettingsScreen /></ErrorBoundary>} />
-      <Route path="/update" element={<ErrorBoundary><UpdateScreen /></ErrorBoundary>} />
-      <Route path="*" element={<Navigate to="/settings/pairing" replace />} />
-    </Routes>
+    <>
+      {/* Update overlay only shows on settings windows (location is /settings/*) */}
+      <UpdateOverlay />
+      <Routes>
+        <Route path="/ticker" element={<ErrorBoundary><TickerScreen /></ErrorBoundary>} />
+        <Route path="/settings" element={<ErrorBoundary><SettingsScreen /></ErrorBoundary>} />
+        <Route path="/settings/:tab" element={<ErrorBoundary><SettingsScreen /></ErrorBoundary>} />
+        <Route path="*" element={<Navigate to="/settings/pairing" replace />} />
+      </Routes>
+    </>
   );
 }
 

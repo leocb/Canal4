@@ -506,8 +506,8 @@
     "general": {
       "title": "General",
       "start_with_system": "Start with system",
-      "start_with_system_helper": "Automatically start Canal4 when you log in to your computer.",
-      "start_with_system_helper_win": "Uses Windows Task Scheduler. App will auto-restart up to 3 times if it crashes."
+      "start_with_system_helper": "Automatically start Canal4 when you log in to your Mac.",
+      "start_with_system_helper_win": "Uses Windows Registry and Task Scheduler."
     },
     "common": {
       "quit": "Quit Canal4",

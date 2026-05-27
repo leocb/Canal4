@@ -7,7 +7,54 @@ import iconWin from '../../resources/icon.ico?asset'
 import trayIconAsset from '../../resources/tray-icon.png?asset'
 
 app.commandLine.appendSwitch('disable-renderer-backgrounding');
+
+// ─── GPU / Crash-Safe Startup ───────────────────────────────────────────────
+if (process.platform === 'win32') {
+  app.commandLine.appendSwitch('enable-transparent-visuals');
+}
+
+const fs_gpu = require('fs');
+const path_gpu = require('path');
+const crashCountPath = path_gpu.join(app.getPath('userData'), 'crash_count');
+let crashCount = 0;
+try {
+  crashCount = parseInt(fs_gpu.readFileSync(crashCountPath, 'utf-8'), 10) || 0;
+} catch { /* ignore */ }
+crashCount++;
+try {
+  fs_gpu.writeFileSync(crashCountPath, String(crashCount));
+} catch { /* ignore */ }
+
+const gpuFlagPath = path_gpu.join(app.getPath('userData'), 'disable-gpu');
+let gpuDisabledManually = false;
+try {
+  if (fs_gpu.existsSync(gpuFlagPath)) {
+    gpuDisabledManually = true;
+  }
+} catch { /* ignore */ }
+
+if (gpuDisabledManually || crashCount >= 3) {
+  console.warn('[Startup] Disabling hardware acceleration (manual=' + gpuDisabledManually + ', crashCount=' + crashCount + ').');
+  app.disableHardwareAcceleration();
+}
+
 app.setName('Canal4');
+
+// Prevent duplicate instances — the Task Scheduler can relaunch on crash, and the
+// registry Run key is no longer used, so a stale entry could open a second window.
+const gotLock = app.requestSingleInstanceLock();
+if (!gotLock) {
+  app.quit();
+} else {
+  app.on('second-instance', () => {
+    if (settingsWindow) {
+      settingsWindow.show();
+      settingsWindow.focus();
+    } else {
+      createSettingsWindow('logs');
+    }
+  });
+}
 
 // ─── Global Error Handlers ──────────────────────────────────────────────────
 // Prevents process crashes and logs diagnostics for Windows Event Viewer crashes
@@ -33,77 +80,33 @@ process.on('unhandledRejection', (reason) => {
 let tray: Tray | null = null;
 let tickerWindow: BrowserWindow | null = null;
 let settingsWindow: BrowserWindow | null = null;
-let updateWindow: BrowserWindow | null = null;
 let updateCheckTimer: ReturnType<typeof setInterval> | null = null;
 let powerSaveBlockerId: number = -1;
+let isQuitting = false;
 
 // ─── Auto-Updater ─────────────────────────────────────────────────────────────
 
-autoUpdater.autoDownload = false;          // We control when to download
-autoUpdater.autoInstallOnAppQuit = true;   // Allow it to install on quit if triggered
-autoUpdater.logger = console;              // Log to console for debugging in dev
+autoUpdater.autoDownload = false;
+autoUpdater.autoInstallOnAppQuit = true;
+autoUpdater.logger = console;
 
 /**
- * Trigger an update check. If an update is available it downloads and then
- * calls quitAndInstall(true, true) so the OS relaunches into the new version.
- * Always resolves (never rejects) — callers can safely await it.
+ * Broadcast a message to all BrowserWindows.
  */
-function createUpdateWindow(): Promise<void> {
-  const url = is.dev && process.env['ELECTRON_RENDERER_URL']
-    ? `${process.env['ELECTRON_RENDERER_URL']}/#/update`
-    : `file://${join(__dirname, '../renderer/index.html')}#/update`;
-
-  if (updateWindow) {
-    updateWindow.loadURL(url)
-    updateWindow.focus()
-    return Promise.resolve();
+function broadcastUpdateStatus(channel: string, ...args: any[]): void {
+  for (const win of BrowserWindow.getAllWindows()) {
+    try { win.webContents.send(channel, ...args); } catch { /* ignore */ }
   }
-
-  updateWindow = new BrowserWindow({
-    width: 450,
-    height: 300,
-    show: false,
-    frame: false,
-    resizable: false,
-    center: true,
-    alwaysOnTop: false,
-    backgroundColor: '#000000',
-    webPreferences: {
-      preload: join(__dirname, '../preload/index.js'),
-      sandbox: false,
-      webSecurity: !is.dev,
-    }
-  })
-
-  return new Promise((resolve) => {
-    updateWindow?.on('ready-to-show', () => {
-      updateWindow?.show()
-    })
-
-    updateWindow?.webContents.once('dom-ready', () => {
-      resolve();
-    })
-
-    updateWindow?.on('closed', () => {
-      updateWindow = null;
-    })
-
-    updateWindow?.loadURL(url)
-  });
 }
 
 /**
  * Trigger an update check. If an update is available it downloads and then
  * calls quitAndInstall(true, true) so the OS relaunches into the new version.
  */
-async function triggerUpdateCheckAndInstall(isManual = false): Promise<void> {
+async function triggerUpdateCheckAndInstall(): Promise<void> {
   if (is.dev) {
     console.log('[Updater] Skipping update check in dev mode.');
     return;
-  }
-
-  if (!updateWindow && !isManual) {
-    await createUpdateWindow();
   }
 
   return new Promise((resolve) => {
@@ -113,65 +116,43 @@ async function triggerUpdateCheckAndInstall(isManual = false): Promise<void> {
 
     const onNotAvailable = () => {
       console.log('[Updater] App is up-to-date.');
-      updateWindow?.webContents.send('update-status', 'up-to-date');
-      // settle() first so createTray() runs before the window closes —
-      // prevents a brief no-windows/no-tray state that can exit the process on Windows.
-      setTimeout(() => {
-        cleanup();
-        settle();
-        setTimeout(() => updateWindow?.close(), 300);
-      }, 1500);
+      broadcastUpdateStatus('update-status', 'up-to-date');
+      setTimeout(() => { cleanup(); settle(); }, 2000);
     };
 
     const onAvailable = async (info: { version: string }) => {
-      console.log(`[Updater] Update available: v${info.version}`);
-      if (!updateWindow) {
-        await createUpdateWindow();
-      }
+      console.log('[Updater] Update available: v' + info.version);
 
-      // macOS specific change: point user to GitHub release page instead of auto-downloading
       if (process.platform === 'darwin') {
-        console.log('[Updater] System is macOS — requiring manual download.');
-        updateWindow?.webContents.send('update-status', 'macos-manual', info.version);
+        console.log('[Updater] System is macOS -- requiring manual download.');
+        broadcastUpdateStatus('update-status', 'macos-manual', info.version);
         cleanup();
+        settle();
         return;
       }
 
-      updateWindow?.webContents.send('update-status', 'available', info.version);
+      broadcastUpdateStatus('update-status', 'available', info.version);
       autoUpdater.downloadUpdate().catch((e) => {
         console.error('[Updater] Download failed:', e.message);
-        updateWindow?.webContents.send('update-error', e.message);
+        broadcastUpdateStatus('update-error', e.message);
         cleanup();
+        settle();
       });
     };
 
     const onProgress = (progressObj: any) => {
-      updateWindow?.webContents.send('update-progress', progressObj.percent);
+      broadcastUpdateStatus('update-progress', progressObj.percent);
     };
 
     const onDownloaded = (info: { version: string }) => {
-      console.log(`[Updater] Update v${info.version} downloaded — relaunching now.`);
-      updateWindow?.webContents.send('update-status', 'ready');
+      console.log('[Updater] Update v' + info.version + ' downloaded -- relaunching now.');
+      broadcastUpdateStatus('update-status', 'ready');
       cleanup();
-      // Wait a bit so the user can see it's ready
       setTimeout(() => {
         console.log('[Updater] Finalizing update... Closing windows and stopping background tasks.');
-
-        // STOP power save blockers
-        try {
-          powerSaveBlocker.stop(powerSaveBlockerId);
-        } catch (e) { /* ignore */ }
-
-        // Close all windows except the update window
-        BrowserWindow.getAllWindows().forEach(win => {
-          if (win !== updateWindow) win.destroy();
-        });
-
-        // Some macOS versions need the app to be visible to quit & install correctly
-        if (process.platform === 'darwin') {
-          app.dock?.show();
-        }
-
+        try { powerSaveBlocker.stop(powerSaveBlockerId); } catch (e) { /* ignore */ }
+        BrowserWindow.getAllWindows().forEach(win => win.destroy());
+        if (process.platform === 'darwin') app.dock?.show();
         console.log('[Updater] Calling quitAndInstall(isSilent=true)...');
         autoUpdater.quitAndInstall(true, true);
       }, 2000);
@@ -179,9 +160,9 @@ async function triggerUpdateCheckAndInstall(isManual = false): Promise<void> {
 
     const onError = (err: Error) => {
       console.error('[Updater] Update check error:', err.message);
-      updateWindow?.webContents.send('update-error', err.message);
+      broadcastUpdateStatus('update-error', err.message);
       cleanup();
-      // settle() is not called here to keep the window open for the user
+      settle();
     };
 
     const cleanup = () => {
@@ -200,27 +181,26 @@ async function triggerUpdateCheckAndInstall(isManual = false): Promise<void> {
 
     autoUpdater.checkForUpdates().catch((e) => {
       console.error('[Updater] checkForUpdates failed:', e.message);
-      updateWindow?.webContents.send('update-error', e.message);
+      broadcastUpdateStatus('update-error', e.message);
       cleanup();
     });
   });
 }
 
 /**
- * Startup check — awaited before any UI is created.
+ * Startup check -- broadcasts status to the settings window overlay.
  * A 20-second timeout ensures a slow/offline network never blocks the app.
  */
 async function checkForUpdateBeforeLaunch(): Promise<void> {
   if (is.dev) return;
-
-  console.log('[Updater] Checking for update before launch…');
+  console.log('[Updater] Checking for update before launch...');
+  broadcastUpdateStatus('update-status', 'checking');
   const timeout = new Promise<void>((resolve) =>
     setTimeout(() => {
-      console.log('[Updater] Update check timed out — proceeding with launch.');
+      console.log('[Updater] Update check timed out -- proceeding with launch.');
       resolve();
     }, 20_000)
   );
-
   await Promise.race([triggerUpdateCheckAndInstall(), timeout]);
 }
 
@@ -232,38 +212,27 @@ function schedulePeriodicUpdateCheck(): void {
   if (is.dev) return;
 
   updateCheckTimer = setInterval(() => {
-    console.log('[Updater] Scheduled 12-hour update check…');
-    // triggerUpdateCheckAndInstall(true) means it will only open the window if an update is available
-    triggerUpdateCheckAndInstall(true);
+    console.log('[Updater] Scheduled 12-hour update check...');
+    triggerUpdateCheckAndInstall();
   }, 12 * 60 * 60 * 1_000);
 }
 
+
 // ─── Windows Task Scheduler (for crash-resilient startup) ─────────────────────
 
+const TASK_NAME = '\\leocb\\Canal4';
+
 /**
- * Create or update a Windows Scheduled Task that auto-restarts the app on crash.
- * Uses schtasks.exe (built-in Windows tool).
+ * Create the Windows Scheduled Task via XML. Uses UTF-16LE with BOM which is
+ * what schtasks.exe expects on Windows for proper encoding detection.
  */
 async function createScheduledTask(): Promise<boolean> {
   const exePath = process.execPath;
-  const taskName = 'Canal4';
-
-  const { execFile } = require('child_process');
-  const util = require('util');
-  const execFileAsync = util.promisify(execFile);
-
-  try {
-    // Step 1: Create the task via XML to get full control over all settings.
-    // The XML template configures:
-    //   - Run at user logon with a 30s delay
-    //   - Stop if running longer than 24h
-    //   - Restart on failure: up to 3 times, waiting 1 minute between retries
-    //   - Run with the interactive user's privileges (no admin needed for per-user task)
-    const escapedPath = exePath.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
-    const taskXml = `<?xml version="1.0" encoding="UTF-16"?>
+  const escapedPath = exePath.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+  const taskXml = `<?xml version="1.0" encoding="UTF-16"?>
 <Task version="1.4" xmlns="http://schemas.microsoft.com/windows/2004/02/mit/task">
   <RegistrationInfo>
-    <Description>Canal4 Display node — auto-starts and restarts on failure</Description>
+    <Description>Canal4 Display node - auto-starts and restarts on failure</Description>
   </RegistrationInfo>
   <Triggers>
     <LogonTrigger>
@@ -302,23 +271,31 @@ async function createScheduledTask(): Promise<boolean> {
   </Actions>
 </Task>`;
 
-    // Write XML to a temp file (schtasks /create /xml reads from file)
+  try {
     const fs = require('fs');
     const path = require('path');
+    const { execFile } = require('child_process');
+    const util = require('util');
+    const execFileAsync = util.promisify(execFile);
+
     const xmlPath = path.join(app.getPath('userData'), 'schtask-canal4.xml');
-    fs.writeFileSync(xmlPath, taskXml, 'utf-16le');
 
-    await execFileAsync('schtasks', [
-      '/create',
-      '/tn', taskName,
-      '/xml', xmlPath,
-      '/f' // Force — overwrites existing
-    ], { timeout: 15000 });
-
-    // Clean up temp XML file
+    // Delete stale file first (e.g. from a previous failed write with wrong encoding)
     try { fs.unlinkSync(xmlPath); } catch { /* ignore */ }
 
-    console.log('[TaskScheduler] Task created successfully:', taskName);
+    // Write as UTF-16LE with BOM so schtasks detects encoding correctly
+    fs.writeFileSync(xmlPath, '﻿' + taskXml, 'utf-16le');
+
+    await execFileAsync('powershell', [
+      '-NoProfile',
+      '-NonInteractive',
+      '-Command',
+      `Start-Process -Verb RunAs -FilePath schtasks -ArgumentList '/create /tn "${TASK_NAME}" /xml "${xmlPath}" /f' -Wait`
+    ], { timeout: 120000 });
+
+    try { fs.unlinkSync(xmlPath); } catch { /* ignore */ }
+
+    console.log('[TaskScheduler] Task created successfully:', TASK_NAME);
     return true;
   } catch (err: any) {
     console.error('[TaskScheduler] Failed to create task:', err.message);
@@ -330,41 +307,23 @@ async function createScheduledTask(): Promise<boolean> {
  * Remove the Windows Scheduled Task for Canal4.
  */
 async function removeScheduledTask(): Promise<boolean> {
-  const { execFile } = require('child_process');
-  const util = require('util');
-  const execFileAsync = util.promisify(execFile);
-
   try {
-    await execFileAsync('schtasks', [
-      '/delete',
-      '/tn', 'Canal4',
-      '/f'
-    ], { timeout: 15000 });
+    const { execFile } = require('child_process');
+    const util = require('util');
+    const execFileAsync = util.promisify(execFile);
+
+    // Elevate via PowerShell Start-Process -Verb RunAs (triggers UAC prompt)
+    await execFileAsync('powershell', [
+      '-NoProfile',
+      '-NonInteractive',
+      '-Command',
+      `Start-Process -Verb RunAs -FilePath schtasks -ArgumentList '/delete /tn "${TASK_NAME}" /f' -Wait`
+    ], { timeout: 120000 });
+
     console.log('[TaskScheduler] Task removed successfully.');
     return true;
   } catch (err: any) {
     console.error('[TaskScheduler] Failed to remove task:', err.message);
-    return false;
-  }
-}
-
-/**
- * Check if the Canal4 Scheduled Task exists and whether the app auto-starts on logon.
- */
-async function getScheduledTaskStatus(): Promise<boolean> {
-  const { execFile } = require('child_process');
-  const util = require('util');
-  const execFileAsync = util.promisify(execFile);
-
-  try {
-    await execFileAsync('schtasks', [
-      '/query',
-      '/tn', 'Canal4',
-      '/fo', 'CSV',
-      '/nh' // No header
-    ], { timeout: 10000 });
-    return true;
-  } catch {
     return false;
   }
 }
@@ -414,13 +373,13 @@ function createTickerWindow(): void {
   tickerWindow.loadURL(url)
 }
 
-function createSettingsWindow(tab: 'logs' | 'settings' | 'pairing' = 'pairing'): void {
+function createSettingsWindow(tab: 'logs' | 'settings' | 'pairing' = 'logs'): void {
   const url = is.dev && process.env['ELECTRON_RENDERER_URL']
     ? `${process.env['ELECTRON_RENDERER_URL']}/#/settings/${tab}`
     : `file://${join(__dirname, '../renderer/index.html')}#/settings/${tab}`;
 
   if (settingsWindow) {
-    settingsWindow.loadURL(url)
+    settingsWindow.show()
     settingsWindow.focus()
     return;
   }
@@ -443,6 +402,13 @@ function createSettingsWindow(tab: 'logs' | 'settings' | 'pairing' = 'pairing'):
     settingsWindow?.show()
   })
 
+  settingsWindow.on('close', (event) => {
+    if (!isQuitting) {
+      event.preventDefault();
+      settingsWindow?.hide();
+    }
+  })
+
   settingsWindow.on('closed', () => {
     settingsWindow = null;
   })
@@ -450,12 +416,21 @@ function createSettingsWindow(tab: 'logs' | 'settings' | 'pairing' = 'pairing'):
   settingsWindow.loadURL(url)
 }
 
+function showSettingsWindow() {
+  if (settingsWindow) {
+    settingsWindow.show();
+    settingsWindow.focus();
+  } else {
+    createSettingsWindow('logs');
+  }
+}
+
 function createTray() {
   try {
     // Use the pre-resized tray icon (32x32); on macOS resize further to 16x16 template
     let trayIconImage = nativeImage.createFromPath(trayIconAsset)
     if (trayIconImage.isEmpty()) {
-      console.error('[Tray] Icon image is empty — creating a 32x32 transparent placeholder');
+      console.error('[Tray] Icon image is empty -- creating a 32x32 transparent placeholder');
       trayIconImage = nativeImage.createEmpty();
     }
     if (process.platform === 'darwin') {
@@ -464,13 +439,14 @@ function createTray() {
     }
 
     tray = new Tray(trayIconImage)
+    tray.on('click', () => showSettingsWindow());
   } catch (err) {
     console.error('[Tray] Failed to create tray icon:', err);
-    return; // Non-fatal — app can run without tray
+    return; // Non-fatal -- app can run without tray
   }
 
   const menuItems: any[] = [
-    { label: 'Settings', click: () => createSettingsWindow('settings') },
+    { label: 'Settings', click: () => showSettingsWindow() },
     { type: 'separator' }
   ];
 
@@ -492,7 +468,7 @@ ipcMain.on('update-tray', (_event, { settingsLabel, quitLabel, tooltip }) => {
   if (!tray) return;
 
   const menuItems: any[] = [
-    { label: settingsLabel, click: () => createSettingsWindow('settings') },
+    { label: settingsLabel, click: () => showSettingsWindow() },
     { type: 'separator' }
   ];
 
@@ -513,7 +489,7 @@ ipcMain.on('update-tray', (_event, { settingsLabel, quitLabel, tooltip }) => {
 app.whenReady().then(async () => {
   electronApp.setAppUserModelId('org.canal4.display')
 
-  // Hide from macOS Dock — this is a background tray-only app
+  // Hide from macOS Dock -- this is a background tray-only app
   if (process.platform === 'darwin') {
     app.dock?.hide()
   }
@@ -522,8 +498,9 @@ app.whenReady().then(async () => {
     optimizer.watchWindowShortcuts(window)
   })
 
-  // Check for update before showing any UI — relaunch automatically if one is found
-  await checkForUpdateBeforeLaunch();
+  // Open settings window first, then check for updates (shows overlay)
+  createSettingsWindow('logs')
+  checkForUpdateBeforeLaunch().catch(err => console.error('[Updater] Update check failed:', err));
 
   createTray()
   createTickerWindow()
@@ -551,7 +528,6 @@ app.whenReady().then(async () => {
 
   // Handle IPC requests
   ipcMain.on('open-external', (_event, url) => shell.openExternal(url));
-  ipcMain.on('close-update-window', () => updateWindow?.close());
   ipcMain.on('flush-storage', () => session.defaultSession.flushStorageData());
   ipcMain.handle('get-machine-id', () => displayData.id);
   ipcMain.handle('get-token', () => displayData.token);
@@ -577,7 +553,7 @@ app.whenReady().then(async () => {
     // We allow empty string/null to clear the token, only skip if strictly undefined or same as current
     if (token === undefined || token === displayData.token) return;
 
-    console.log(`[Main] Updating token (length: ${token?.length || 0})`);
+    console.log('[Main] Updating token (length: ' + (token?.length || 0) + ')');
     displayData.token = token || '';
     fs.writeFileSync(dataPath, JSON.stringify(displayData));
 
@@ -635,11 +611,23 @@ app.whenReady().then(async () => {
 
   ipcMain.handle('get-login-item-settings', async () => {
     if (process.platform === 'win32') {
-      return await getScheduledTaskStatus();
+      // Check Task Scheduler existence — this is the only startup mechanism now
+      try {
+        const { execFile } = require('child_process');
+        const util = require('util');
+        const execFileAsync = util.promisify(execFile);
+        await execFileAsync('schtasks', [
+          '/query',
+          '/tn', TASK_NAME,
+          '/fo', 'CSV',
+          '/nh'
+        ], { timeout: 10000 });
+        return true;
+      } catch {
+        return false;
+      }
     }
-    const settings = app.getLoginItemSettings({
-      path: process.execPath
-    });
+    const settings = app.getLoginItemSettings({ path: process.execPath });
     return settings.openAtLogin || settings.executableWillLaunchAtLogin;
   });
 
@@ -653,7 +641,7 @@ app.whenReady().then(async () => {
     }
     app.setLoginItemSettings({
       openAtLogin,
-      openAsHidden: true, // Keep it silent in background
+      openAsHidden: true,
       path: process.execPath,
       name: 'Canal4'
     });
@@ -667,7 +655,7 @@ app.whenReady().then(async () => {
 
   // App is fundamentally a background tray app, we only show Settings if opened directly on MacOS
   app.on('activate', function () {
-    if (!settingsWindow) createSettingsWindow('pairing')
+    if (!settingsWindow) createSettingsWindow('logs')
   })
 })
 
@@ -677,76 +665,44 @@ app.on('window-all-closed', () => {
 })
 
 app.on('before-quit', () => {
+  isQuitting = true;
   if (updateCheckTimer) {
     clearInterval(updateCheckTimer);
     updateCheckTimer = null;
   }
+  try { fs_gpu.writeFileSync(crashCountPath, '0'); } catch { /* ignore */ }
 })
 
 // ─── Testing / Debugging ──────────────────────────────────────────────────────
 
 async function simulateUpdateFlow(): Promise<void> {
-  await createUpdateWindow();
-
-  const send = (channel: string, ...args: any[]) => updateWindow?.webContents.send(channel, ...args);
-
-  send('update-status', 'checking');
+  broadcastUpdateStatus('update-status', 'checking');
   await new Promise(r => setTimeout(r, 2000));
-
-  send('update-status', 'available', '1.2.3');
+  broadcastUpdateStatus('update-status', 'available', '1.2.3');
   await new Promise(r => setTimeout(r, 1500));
-
   for (let i = 0; i <= 100; i += 5) {
-    send('update-progress', i);
+    broadcastUpdateStatus('update-progress', i);
     await new Promise(r => setTimeout(r, 200));
   }
-
-  send('update-status', 'ready');
-  console.log('[Updater Simulation] In a real update, the app would restart now.');
-
-  // No relaunch in simulation
-  setTimeout(() => {
-    updateWindow?.close();
-  }, 5000);
+  broadcastUpdateStatus('update-status', 'ready');
+  console.log('[Updater Simulation] Complete.');
 }
 
 async function simulateUpdateErrorFlow(): Promise<void> {
-  await createUpdateWindow();
-
-  const send = (channel: string, ...args: any[]) => updateWindow?.webContents.send(channel, ...args);
-
-  send('update-status', 'checking');
+  broadcastUpdateStatus('update-status', 'checking');
   await new Promise(r => setTimeout(r, 1000));
-
-  send('update-error', 'Mock Error: Signature verify failed (Code: 1234)');
-  console.log('[Updater] Error simulation complete. Window should stay open.');
+  broadcastUpdateStatus('update-error', 'Mock Error: Signature verify failed (Code: 1234)');
 }
 
 async function simulateUpdateTranslocationErrorFlow(): Promise<void> {
-  await createUpdateWindow();
-
-  const send = (channel: string, ...args: any[]) => updateWindow?.webContents.send(channel, ...args);
-
-  send('update-status', 'checking');
+  broadcastUpdateStatus('update-status', 'checking');
   await new Promise(r => setTimeout(r, 1000));
-
-  send('update-error', 'updater.error_translocation');
-  console.log('[Updater Simulation] Translocation error simulation complete. Window should stay open.');
+  broadcastUpdateStatus('update-error', 'updater.error_translocation');
 }
 
-ipcMain.on('simulate-update', () => {
-  simulateUpdateFlow().catch(console.error);
-});
-
-ipcMain.on('simulate-update-error', () => {
-  simulateUpdateErrorFlow().catch(console.error);
-});
-
-ipcMain.on('simulate-update-translocation', () => {
-  simulateUpdateTranslocationErrorFlow().catch(console.error);
-});
-
-ipcMain.on('simulate-macos-update', async () => {
-  await createUpdateWindow();
-  updateWindow?.webContents.send('update-status', 'macos-manual', '1.2.3');
+ipcMain.on('simulate-update', () => simulateUpdateFlow().catch(console.error));
+ipcMain.on('simulate-update-error', () => simulateUpdateErrorFlow().catch(console.error));
+ipcMain.on('simulate-update-translocation', () => simulateUpdateTranslocationErrorFlow().catch(console.error));
+ipcMain.on('simulate-macos-update', () => {
+  broadcastUpdateStatus('update-status', 'macos-manual', '1.2.3');
 });
