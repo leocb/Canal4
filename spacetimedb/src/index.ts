@@ -507,13 +507,21 @@ export const login_with_passkey = spacetimedb.reducer(
       throw new SenderError("api_errors.invalid_signature");
     }
 
-    // 7. Link identity
+    // 7. Link identity and refresh session
     const existingIdentity = ctx.db.UserIdentity.identity.find(ctx.sender);
     if (!existingIdentity || existingIdentity.userId !== expectedUser.userId) {
+      // Identity is new or belongs to a different user — replace it
       if (existingIdentity) ctx.db.UserIdentity.identity.delete(ctx.sender);
       ctx.db.UserIdentity.insert({
         identity: ctx.sender,
         userId: expectedUser.userId,
+        lastLogin: ctx.timestamp,
+      });
+    } else {
+      // Same identity + same user — still refresh lastLogin so the session
+      // does not remain stale after a long absence.
+      ctx.db.UserIdentity.identity.update({
+        ...existingIdentity,
         lastLogin: ctx.timestamp,
       });
     }
@@ -1026,11 +1034,9 @@ export const send_message = spacetimedb.reducer(
       throw new SenderError("api_errors.blocked_from_sending");
     }
 
-    const myVenueMembership = [...ctx.db.VenueMember.venue_member_venue_id.filter(ch.venueId)].find(m => m.userId === userId);
-
     const myChannelRoleRow = [...ctx.db.ChannelMemberRole.channel_member_role_channel_id.filter(channelId)].find(r => r.userId === userId);
     const userRole = myChannelRoleRow?.role.tag;
-    const isOwner = myVenueMembership?.role.tag === "owner" || userRole === "owner";
+    const isOwner = member.role.tag === "owner" || userRole === "owner";
 
     if (!isOwner && userRole !== "admin" && userRole !== "moderator") {
       throw new SenderError("api_errors.send_message_forbidden");
