@@ -1,5 +1,7 @@
 # Canal4
 
+[![Build & Push Docker Images](https://github.com/leocb/Canal4/actions/workflows/build-webapp.yml/badge.svg)](https://github.com/leocb/Canal4/actions/workflows/build-webapp.yml)
+
 **Canal4** is an open-source, real-time broadcast notification system for venues. It lets venue staff send structured broadcast messages through a web dashboard, which are instantly delivered and displayed as scrolling ticker banners on dedicated desktop display nodes (e.g. lobby TVs, back-office screens).
 
 Built on [SpacetimeDB](https://spacetimedb.com) for real-time, low-latency synchronization — no polling, no REST round-trips.
