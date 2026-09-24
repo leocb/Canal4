@@ -336,7 +336,6 @@ export const UserView = spacetimedb.view({ name: "user_view", public: true }, t.
 export const UserIdentitySelfView = spacetimedb.view({ name: "user_identity_self_view", public: true }, t.array(UserIdentity.rowType), (ctx) => {
   if (!ctx.sender) return [];
   const ui = ctx.db.UserIdentity.identity.find(ctx.sender);
-  console.log("UserIdentitySelfView", ctx.sender, ui);
   return ui ? [ui] : [];
 });
 

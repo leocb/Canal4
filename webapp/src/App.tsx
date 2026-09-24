@@ -1,5 +1,5 @@
-import { useEffect } from 'react';
-import { Routes, Route, Navigate } from 'react-router-dom';
+import { useEffect, useRef } from 'react';
+import { Routes, Route, Navigate, useNavigate } from 'react-router-dom';
 import { useReducer } from 'spacetimedb/react';
 import { reducers } from './module_bindings';
 import { SpacetimeDBProvider } from './SpacetimeDBProvider';
@@ -35,13 +35,42 @@ function AppContent() {
   const { status, nextRetryIn, reconnect, connectionError, isInitialLoad } = useConnectivity();
   const { isLoggedIn } = useAuth();
   const extendSession = useReducer(reducers.extendSession);
+  const navigate = useNavigate();
+  const extendSessionRef = useRef(extendSession);
+  extendSessionRef.current = extendSession;
 
-  // Extend session on mount/re-connect if logged in
+  // Extend session on mount/re-connect if logged in; on failure force re-login
   useEffect(() => {
-    if (status === 'online' && isLoggedIn) {
-      extendSession();
-    }
-  }, [status, isLoggedIn, extendSession]);
+    if (status !== 'online' || !isLoggedIn) return;
+
+    extendSession().catch((err: unknown) => {
+      const msg = err instanceof Error ? err.message : String(err);
+      if (msg.includes('session_expired')) {
+        console.warn('[STDB] Session expired on extend, forcing re-login.');
+        localStorage.removeItem('auth_token');
+        navigate('/login', { replace: true });
+      }
+    });
+  }, [status, isLoggedIn, extendSession, navigate]);
+
+  // Periodic heartbeat – keeps the server-side session alive while the tab is open
+  useEffect(() => {
+    if (status !== 'online' || !isLoggedIn) return;
+
+    const HEARTBEAT_INTERVAL_MS = 5 * 60 * 1000; // 5 minutes
+    const id = setInterval(() => {
+      extendSessionRef.current().catch((err: unknown) => {
+        const msg = err instanceof Error ? err.message : String(err);
+        if (msg.includes('session_expired')) {
+          console.warn('[STDB] Session expired during heartbeat, forcing re-login.');
+          localStorage.removeItem('auth_token');
+          navigate('/login', { replace: true });
+        }
+      });
+    }, HEARTBEAT_INTERVAL_MS);
+
+    return () => clearInterval(id);
+  }, [status, isLoggedIn, navigate]);
 
   // Show the friendly overlay for BOTH initial loading and reconnection
   if (status !== 'online') {
